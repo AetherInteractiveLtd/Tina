@@ -1,0 +1,36 @@
+{
+    "name": "My Cafe",
+    "version": "v0.1-patch4",
+    "description": "Cute cafe/farming game!",
+    "config": {
+        "net": {
+            "compression": false
+        },
+        "supported_languages": [
+            "en"
+        ],
+        "max_fps": 60,
+        "max_players": 100
+    },
+    "tina": "dev",
+    "credits": {
+        "designers": [
+            "TalesOfLuna | @RigidStudios",
+            "SashkoKit | @SashkoKit"
+        ],
+        "programmers": [
+            "TalesOfLuna | @RigidStudios",
+            "Ffrostfall | @ffrostfall",
+            "Siriuslatte | @siriuslatte"
+        ],
+        "artists": [
+            "Nexoova | @Nexoova"
+        ],
+        "musicians": [
+            "Augment | @AUGMENT"
+        ],
+        "translators": [
+            "TalesOfLuna | @RigidStudios"
+        ]
+    }
+}
