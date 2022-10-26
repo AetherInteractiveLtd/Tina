@@ -12,7 +12,7 @@
 		"resolveJsonModule": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
-		"moduleDetection": "force",
+		// "moduleDetection": "force",
 		"strict": true,
 		"target": "ESNext",
 		"typeRoots": ["node_modules/@rbxts"],
