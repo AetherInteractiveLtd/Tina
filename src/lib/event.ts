@@ -54,18 +54,18 @@ class EventSystem<EventInterface extends Record<keyof EventInterface, Callback>>
 		}
 	}
 
-	fire(eventName: string, ...args: unknown[]) {
+	fire<T extends keyof EventInterface>(eventName: T, ...args: Parameters<EventInterface[T]>): void {
 		const event = this.events.get(eventName);
-		if (event !== undefined) {
-			event._callbacks.forEach((callback) => {
-				callback(...args);
-			});
+		if (event === undefined) return print(`No event listeners for event ${eventName}`); // TODO: Switch to Tina's Logger
+		
+		event._callbacks.forEach((callback) => {
+			callback(...args);
+		});
 
-			if (event._waitingThreads.size() >= 0) {
-				event._waitingThreads.forEach((thread) => {
-					coroutine.resume(thread);
-				});
-			}
+		if (event._waitingThreads.size() > 0) {
+			event._waitingThreads.forEach((thread) => {
+				coroutine.resume(thread);
+			});
 		}
 	}
 }
