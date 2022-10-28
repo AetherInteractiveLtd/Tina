@@ -14,10 +14,9 @@ class Event<callback extends defined> {
 		return this;
 	}
 
-	await(): this {
+	await() {
 		this._waitingThreads.push(coroutine.running());
-		coroutine.yield();
-		return this;
+		return coroutine.yield();
 	}
 
 	log(logType: "log" | "err" | "warn", FormatString: string): this {
@@ -63,11 +62,20 @@ class EventSystem<EventInterface extends Record<keyof EventInterface, Callback>>
 
 			if (event._waitingThreads.size() >= 0) {
 				event._waitingThreads.forEach((thread) => {
-					coroutine.resume(thread);
+					coroutine.resume(thread, ...args);
 				});
 			}
 		}
 	}
 }
+
+interface eventList {
+	eventA: (test: string, testB: number) => void;
+	eventB: (aaaa: string) => void;
+}
+
+const ev = new EventSystem<eventList>();
+
+ev.when("eventA").do((test: string, testB: number) => {});
 
 export = EventSystem;
