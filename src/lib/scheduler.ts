@@ -5,12 +5,12 @@ type ScheduledFunction = {
 	func: (deltaTime: number) => void;
 };
 
-const functions: Array<ScheduledFunction> = [];
+const functions: Map<string, ScheduledFunction> = new Map();
 
 RunService.Heartbeat.Connect(() => {
+	const currentTime = os.clock();
 	functions.forEach((v, k) => {
 		task.spawn(() => {
-			const currentTime = os.clock();
 			debug.profilebegin(`scheduled_${v.name || k}`);
 			v.func(currentTime);
 			debug.profileend();
@@ -19,12 +19,21 @@ RunService.Heartbeat.Connect(() => {
 });
 
 export namespace Scheduler {
-	export function add(func: (deltaTime: number) => void, name: string | undefined) {
+	export function add(func: (deltaTime: number) => void, name: string): void {
 		const result: ScheduledFunction = {
 			func: func,
 			name: name || "unnamed",
 		};
 
-		functions.push(result);
+		if (functions.has(name)) {
+			warn("Duplicate function exists in Scheduler, choose a different name. Defaulting to a GUID"); // TODO, switch to logger
+			name = HttpService.GenerateGUID(false);
+		}
+
+		functions.set(name, result);
+	}
+
+	export function del(name: string) {
+		functions.delete(name);
 	}
 }

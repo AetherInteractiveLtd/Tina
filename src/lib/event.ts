@@ -63,7 +63,7 @@ class EventSystem<EventInterface extends Record<keyof EventInterface, Callback>>
 
 			if (event._waitingThreads.size() >= 0) {
 				event._waitingThreads.forEach((thread) => {
-					coroutine.resume(thread);
+					coroutine.resume(thread, ...args);
 				});
 			}
 		}
