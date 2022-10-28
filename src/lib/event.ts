@@ -42,11 +42,11 @@ class EventSystem<EventInterface extends Record<keyof EventInterface, Callback>>
 
 	constructor() {}
 
-	when(eventName: keyof EventInterface): Event<memberof<EventInterface>> {
+	when<T extends keyof EventInterface>(eventName: T): Event<EventInterface[T]> {
 		if (this.events.get(eventName as string)) {
-			return this.events.get(eventName as string) as Event<memberof<EventInterface>>;
+			return this.events.get(eventName as string) as Event<EventInterface[T]>;
 		} else {
-			const event = new Event<memberof<EventInterface>>(eventName as string);
+			const event = new Event<EventInterface[T]>(eventName as string);
 
 			this.events.set(eventName as string, event);
 
