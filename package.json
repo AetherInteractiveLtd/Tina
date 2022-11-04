@@ -1,12 +1,11 @@
 {
-  "name": "@rbxts/Tina",
+  "name": "@rbxts/tina",
   "version": "1.0.0",
   "description": "",
   "main": "out/init.lua",
   "scripts": {
     "build": "rbxtsc",
-    "watch": "rbxtsc -w",
-    "prepublishOnly": "npm run build"
+    "watch": "rbxtsc -w"
   },
   "keywords": [],
   "author": "",
