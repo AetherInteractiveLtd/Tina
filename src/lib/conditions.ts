@@ -1,7 +1,7 @@
 type TConditionCallback = () => boolean;
 
 export class Conditions {
-	public static evaluate(condition: TConditionCallback): boolean {
+	public static eval(condition: TConditionCallback): boolean {
 		return condition();
 	}
 
