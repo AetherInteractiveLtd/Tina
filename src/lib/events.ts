@@ -1,4 +1,4 @@
-import { IBaseEvents, TEventToken, TInferParameters, TInferReturn } from "../types/events";
+import { IBaseEvents, TEventToken, TInferParameters, TInferReturn } from "./types/events";
 
 class EventListener<T> {
 	private readonly listeners: Array<Callback> = new Array();
