@@ -64,6 +64,7 @@ function server._init()
 				table.insert(sendStructure[v.to :: Player][v.id], v.contents)
 			end
 		end
+		table.clear(queue)
 
 		local finishTime = os.clock() - startTime
 		if finishTime >= 0.001 then

@@ -51,6 +51,7 @@ function client._init()
 		end
 
 		RemoteEvent:FireServer(toSend)
+		table.clear(queue)
 
 		local finish = os.clock()
 
