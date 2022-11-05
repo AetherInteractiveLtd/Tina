@@ -1,43 +1,50 @@
-import { IBaseEvents, TEventToken, TInferParameters, TInferReturn } from "./types/events";
+type TEventToken<T> = Extract<keyof T, string | symbol>;
+interface IBaseEvents {}
 
-class EventListener<T> {
+class EventListener<T extends unknown[]> {
 	private readonly listeners: Array<Callback> = new Array();
 
-	public do<X extends TInferReturn<T>>(handler: (...args: TInferParameters<T>) => X): EventListener<X> {
-		this.listeners.push(handler);
+	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
+		this.listeners.push(func);
 
-		return this as unknown as EventListener<X>;
+		return this as unknown as EventListener<[X]>;
 	}
 
-	public call<T extends unknown[]>(...args: T) {
+	public async call<T extends unknown[]>(...args: T): Promise<void> {
 		let lastCallReturn: unknown[] | undefined;
 
 		for (const handler of this.listeners) {
-			lastCallReturn = handler(...(lastCallReturn !== undefined ? lastCallReturn : args));
+			lastCallReturn = [handler(...(lastCallReturn ? lastCallReturn : args))];
 		}
 	}
 }
 
 export abstract class EventEmitter<Events extends IBaseEvents = {}> {
-	private readonly events: Map<TEventToken<Events>, EventListener<Events[TEventToken<Events>]>> = new Map();
+	protected readonly events: Map<TEventToken<Events>, Array<EventListener<Parameters<Events[TEventToken<Events>]>>>> =
+		new Map();
 
-	protected when<T extends TEventToken<Events>>(token: T): EventListener<Events[T]> {
+	protected when<T extends TEventToken<Events>, S extends Parameters<Events[TEventToken<Events>]>>(
+		token: T,
+	): EventListener<S> {
 		const hasEvent = this.events.has(token);
-		let event!: EventListener<Events[T]>;
+		const event = new EventListener<S>();
 
 		if (!hasEvent) {
-			const eventListener = new EventListener<Events[T]>();
-			this.events.set(token, eventListener);
+			const eventsArray: Array<EventListener<S>> = new Array();
 
-			event = eventListener;
-		} else event = this.events.get(token) as EventListener<Events[T]>;
+			eventsArray.push(event);
+			this.events.set(token, eventsArray);
+		} else this.events.get(token)!.push(event);
 
 		return event;
 	}
 
-	protected async emit<T extends TEventToken<Events>>(token: T, ...args: TInferParameters<Events[T]>): Promise<void> {
-		const event = this.events.get(token);
+	protected async emit<T extends TEventToken<Events>>(token: T, ...args: Parameters<Events[T]>): Promise<void> {
+		const hasEvent = this.events.has(token);
+		if (!hasEvent) return;
 
-		if (event !== undefined) event.call(...args);
+		for (const thread of this.events.get(token)!) {
+			thread.call(...args);
+		}
 	}
 }
