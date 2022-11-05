@@ -1,10 +1,19 @@
-type severityLevels = -1 | 0 | 1 | 2 | 3 | 4 | 5; // (-1 = meta, 0 = info, 1 = debug, 2 = warn, 3 = error, 4 = fatal, 5 = shutdown)
-type outputObject = {
+enum severityLevels {
+	meta = -1,
+	info = 0,
+	debug = 1,
+	warn = 2,
+	error = 3,
+	fatal = 4,
+	shutdown = 5,
+}
+
+interface IOutputObject {
 	level: severityLevels;
 	text: string;
-};
+}
 
-const output: outputObject[] = [];
+const output: IOutputObject[] = [];
 
 const backslash = string.char(92); // for some reason I can't store a backslash as a single character. ._.
 
@@ -29,7 +38,7 @@ class Scope {
 			stringToPrint = `${stringToPrint}${tostring(value)} `;
 		});
 
-		output.unshift({
+		output.push({
 			level: severity,
 			text: `[${this.name}]: ${stringToPrint}`,
 		});
