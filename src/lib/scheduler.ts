@@ -19,7 +19,7 @@ RunService.Heartbeat.Connect(() => {
 });
 
 export namespace Scheduler {
-	export function add(func: (deltaTime: number) => void, name: string): void {
+	export function add(name: string, func: (deltaTime: number) => void): void {
 		const result: ScheduledFunction = {
 			func: func,
 			name: name || "unnamed",
