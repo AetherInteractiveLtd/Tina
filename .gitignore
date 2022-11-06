@@ -1,13 +1,9 @@
 /node_modules
 /out
 /include
+
 *.tsbuildinfo
 *.tgz
 
-/.vscode
-
 # For mac users
 *.DS_store
-
-# Test related stuff
-/tests
