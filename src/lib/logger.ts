@@ -1,4 +1,4 @@
-enum severityLevels {
+enum ESeverityLevels {
 	meta = -1,
 	info = 0,
 	debug = 1,
@@ -9,7 +9,7 @@ enum severityLevels {
 }
 
 interface IOutputObject {
-	level: severityLevels;
+	level: ESeverityLevels;
 	text: string;
 }
 
@@ -46,7 +46,7 @@ class Scope {
 	info(...args: string[]) {
 		this.log(0, ...args);
 	}
-	debug(...args: any[]) {
+	debug(...args: string[]) {
 		const traceback = debug.traceback();
 
 		const splitStrings: string[] = string.split(traceback, "\n");
@@ -56,13 +56,13 @@ class Scope {
 
 		this.log(1, ...args);
 	}
-	warn(...args: any[]) {
+	warn(...args: string[]) {
 		this.log(2, ...args);
 	}
-	error(...args: any[]) {
+	error(...args: string[]) {
 		this.log(3, ...args);
 	}
-	fatal(...args: any[]) {
+	fatal(...args: string[]) {
 		this.log(4, ...args);
 	}
 }
