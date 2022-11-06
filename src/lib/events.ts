@@ -1,6 +1,3 @@
-type TEventToken<T> = Extract<keyof T, string | symbol>;
-interface IBaseEvents {}
-
 class EventListener<T extends unknown[]> {
 	private readonly listeners: Array<Callback> = new Array();
 
@@ -14,18 +11,15 @@ class EventListener<T extends unknown[]> {
 		let lastCallReturn: unknown[] | undefined;
 
 		for (const handler of this.listeners) {
-			lastCallReturn = [handler(...(lastCallReturn ? lastCallReturn : args))];
+			lastCallReturn = [handler(...(lastCallReturn ?? args))];
 		}
 	}
 }
 
-export abstract class EventEmitter<Events extends IBaseEvents = {}> {
-	protected readonly events: Map<TEventToken<Events>, Array<EventListener<Parameters<Events[TEventToken<Events>]>>>> =
-		new Map();
+export abstract class EventEmitter<Events extends {}> {
+	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
-	protected when<T extends TEventToken<Events>, S extends Parameters<Events[TEventToken<Events>]>>(
-		token: T,
-	): EventListener<S> {
+	protected when<T extends keyof Events, S extends Parameters<Events[T]>>(token: T): EventListener<S> {
 		const hasEvent = this.events.has(token);
 		const event = new EventListener<S>();
 
@@ -39,7 +33,7 @@ export abstract class EventEmitter<Events extends IBaseEvents = {}> {
 		return event;
 	}
 
-	protected async emit<T extends TEventToken<Events>>(token: T, ...args: Parameters<Events[T]>): Promise<void> {
+	protected async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 

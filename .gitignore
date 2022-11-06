@@ -2,5 +2,12 @@
 /out
 /include
 *.tsbuildinfo
-*.toml
 *.tgz
+
+/.vscode
+
+# For mac users
+*.DS_store
+
+# Test related stuff
+/tests

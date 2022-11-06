@@ -49,5 +49,5 @@ namespace Tina {
 
 export default Tina;
 
-export { Conditions } from "./lib/conditions";
+export { X } from "./lib/conditions";
 export { EventEmitter } from "./lib/events";
