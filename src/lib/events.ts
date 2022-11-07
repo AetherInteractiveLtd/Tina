@@ -1,5 +1,6 @@
 class EventListener<T extends unknown[]> {
-	private readonly listeners: Array<Callback> = new Array();
+	protected readonly listeners: Array<Callback> = new Array();
+	protected readonly yieldThreads: Array<thread> = new Array();
 
 	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
 		this.listeners.push(func);
@@ -7,11 +8,21 @@ class EventListener<T extends unknown[]> {
 		return this as unknown as EventListener<[X]>;
 	}
 
+	public await(): LuaTuple<unknown[]> {
+		this.yieldThreads.push(coroutine.running());
+
+		return coroutine.yield();
+	}
+
 	public async call<T extends unknown[]>(...args: T): Promise<void> {
 		let lastCallReturn: unknown[] | undefined;
 
 		for (const handler of this.listeners) {
 			lastCallReturn = [handler(...(lastCallReturn ?? args))];
+		}
+
+		if (this.yieldThreads.size() > 0) {
+			for (const thread of this.yieldThreads) coroutine.resume(thread);
 		}
 	}
 }
