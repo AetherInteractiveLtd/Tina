@@ -51,5 +51,3 @@ export default Tina;
 
 export { X } from "./lib/conditions";
 export { EventEmitter } from "./lib/events";
-
-export default Tina;
