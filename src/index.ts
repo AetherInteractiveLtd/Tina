@@ -1,5 +1,4 @@
 import { Manifest } from "./lib/types/manifest";
-import { NetworkConfig } from "./lib/types/network";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
