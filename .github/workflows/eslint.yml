@@ -24,4 +24,5 @@ jobs:
       - run: npm i
 
       # Run ESLint
-      - uses: eslint/github-action@v0
+      - name: Run ESLint
+        run: eslint . --ext .js,.jsx,.ts,.tsx
