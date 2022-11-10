@@ -18,7 +18,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
+      - name: Setup NodeJS
+        uses: actions/setup-node
       - name: Install Roblox-TS
         run: |
           npm i
