@@ -17,6 +17,6 @@
   "dependencies": {
     "@rbxts/services": "^1.5.1",
     "@rbxts/testez": "^0.3.1-ts.7",
-    "@rbxts/tina": "file:../builds/rbxts-tina-1.0.0.tgz"
+    "@rbxts/tina": "file:../build/rbxts-tina-1.0.0.tgz"
   }
 }

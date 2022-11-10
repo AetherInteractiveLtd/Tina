@@ -2,6 +2,10 @@
 /out
 /include
 
+/tests/node_modules
+/tests/out
+/tests/include
+
 *.tsbuildinfo
 *.tgz
 
