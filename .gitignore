@@ -1,4 +1,14 @@
 /node_modules
 /out
 /include
+
+/tests/node_modules
+/tests/out
+/tests/include
+/tests/test.rbxlx
+
 *.tsbuildinfo
+*.tgz
+
+# For mac users
+*.DS_store

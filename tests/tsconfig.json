@@ -1,7 +1,4 @@
 {
-	"include": ["./src"],
-	"exclude": ["./tests"],
-
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
 		"downlevelIteration": true,
@@ -19,7 +16,8 @@
 		"typeRoots": ["node_modules/@rbxts"],
 		"rootDir": "src",
 		"outDir": "out",
+		"baseUrl": "../src",
 		"incremental": false,
-		"declaration": true
+		"declaration": false
 	}
 }
