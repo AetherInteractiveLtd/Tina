@@ -7,9 +7,7 @@ export enum Protocol {
 	NET = "NET",
 }
 
-interface DefaultUserData {
-
-}
+interface DefaultUserData {}
 
 namespace Tina {
 	export function registerGame(name: string, manifest: Manifest) {
@@ -17,51 +15,41 @@ namespace Tina {
 	}
 
 	export class TinaGame {
-		core() {
-
-		}
+		core() {}
 	}
 
 	export namespace Mirror {
 		export class User {
-			constructor(id: number) {
-			}
+			constructor(id: number) {}
 
 			static fromPlayer(plr: Player) {
 				return new User(plr.UserId);
 			}
 
-			load() {
+			load() {}
 
-			}
-
-			unload() {
-
-			}
+			unload() {}
 		}
 	}
 
 	export namespace Net {
-		class Endpoint {
+		class Endpoint {}
 
-		}
-
-		export class NetworkProtocol {
-
-		}
+		export class NetworkProtocol {}
 
 		export function protocol(protocol: Protocol, tree?: unknown): NetworkProtocol {
 			return new NetworkProtocol();
 		}
 
-		export function registerNetwork(tree: { [key: string]: NetworkProtocol }) {
+		export function registerNetwork(tree: { [key: string]: NetworkProtocol }) {}
 
-		}
-
-		export function endpoint<T>() {
-
-		}
+		export function endpoint<T>() {}
 	}
 }
+
+export default Tina;
+
+export { X } from "./lib/conditions";
+export { EventEmitter } from "./lib/events";
 
 export default Tina;
