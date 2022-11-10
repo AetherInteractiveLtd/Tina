@@ -32,6 +32,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "@eslint/github-action": "^0.1.0",
     "roblox-ts": "^2.0.4"
   }
 }
