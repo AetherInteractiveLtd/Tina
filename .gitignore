@@ -2,4 +2,3 @@
 /out
 /include
 *.tsbuildinfo
-src/lib/logger.ts
