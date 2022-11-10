@@ -15,6 +15,8 @@ interface IOutputObject {
 
 const output: IOutputObject[] = [];
 
+const backslash = string.char(92); // for some reason I can't store a backslash as a single character. ._.
+
 class Scope {
 	name = "unnamed";
 
@@ -30,7 +32,7 @@ class Scope {
 		return output;
 	}
 
-	log(severity: ESeverityLevels, ...toPrint: any[]) {
+	log(severity: severityLevels, ...toPrint: any[]) {
 		let stringToPrint = "";
 		toPrint.forEach((value) => {
 			stringToPrint = `${stringToPrint}${tostring(value)} `;
