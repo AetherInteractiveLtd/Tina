@@ -18,11 +18,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Setup NodeJS
-        uses: actions/setup-node
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
       - name: Install Roblox-TS
         run: |
-          npm i
+          npm i -g roblox-ts@2.0.4
+      
       - name: Run Roblox-TS
         run: rbxtsc --verbose
         continue-on-error: true
