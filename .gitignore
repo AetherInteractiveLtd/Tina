@@ -1,9 +1,4 @@
 /node_modules
 /out
 /include
-
 *.tsbuildinfo
-*.tgz
-
-# For mac users
-*.DS_store
