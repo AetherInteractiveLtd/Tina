@@ -32,7 +32,7 @@ class Scope {
 		return output;
 	}
 
-	log(severity: severityLevels, ...toPrint: any[]) {
+	log(severity: ESeverityLevels, ...toPrint: defined[]) {
 		let stringToPrint = "";
 		toPrint.forEach((value) => {
 			stringToPrint = `${stringToPrint}${tostring(value)} `;
