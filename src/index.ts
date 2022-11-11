@@ -1,3 +1,5 @@
+import TinaCore from "./lib/core";
+import TinaGame from "./lib/core/game";
 import { Manifest } from "./lib/types/manifest";
 
 export enum Protocol {
@@ -50,8 +52,11 @@ namespace Tina {
 	 */
 	export function setUserClass(char: new (userId: number) => Mirror.User): void {}
 
-	export class TinaGame {
-		core() {}
+	/**
+	 * Fetch the Tina core, a replacement for the `game` object in the vanilla Roblox API.
+	 */
+	export function core(): TinaCore {
+		return new TinaCore();
 	}
 
 	/**

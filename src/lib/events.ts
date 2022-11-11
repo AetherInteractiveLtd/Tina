@@ -2,6 +2,14 @@ class EventListener<T extends unknown[]> {
 	protected readonly listeners: Array<Callback> = new Array();
 	protected readonly yieldThreads: Array<thread> = new Array();
 
+	/**
+	 * Respond to an emitted event.
+	 *
+	 * *NOTE: Carefully check that your parameter types are correct; for example if you have used `Tina.setUserClass`, any `player` is **purposefully** of type `any` so that you may replace it with your custom user class*
+	 *
+	 * @param func
+	 * @returns The same EventListener chain, any following functions will receive as parameters whatever this function returned.
+	 */
 	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
 		this.listeners.push(func);
 
@@ -14,6 +22,7 @@ class EventListener<T extends unknown[]> {
 		return coroutine.yield();
 	}
 
+	/** @hidden */
 	public async call<T extends unknown[]>(...args: T): Promise<void> {
 		let lastCallReturn: unknown[] | undefined;
 
@@ -30,7 +39,7 @@ class EventListener<T extends unknown[]> {
 export abstract class EventEmitter<Events extends {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
-	protected when<T extends keyof Events, S extends Parameters<Events[T]>>(token: T): EventListener<S> {
+	public when<T extends keyof Events, S extends Parameters<Events[T]>>(token: T): EventListener<S> {
 		const hasEvent = this.events.has(token);
 		const event = new EventListener<S>();
 
