@@ -10,9 +10,45 @@ export enum Protocol {
 interface DefaultUserData {}
 
 namespace Tina {
-	export function registerGame(name: string, manifest: Manifest) {
+	/**
+	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
+	 *
+	 * Register the game instance with Tina, this is required for Tina to work. All `Process`es will only begin **after** this is called.
+	 *
+	 * @param name Name of the game
+	 * @returns The game instance, this isn't very useful but contains certain global methods.
+	 */
+	export function registerGame(name: string): TinaGame {
+		// TODO: Auto-Detect `manifest.tina.json` and load it.
 		return new TinaGame();
 	}
+
+	/**
+	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
+	 *
+	 * Override the default User/Player class (useful to define your own behaviours and overall data liveries)
+	 *
+	 * #### Usage example:
+	 *
+	 * ```ts
+	 * import Tina from "@rbxts/tina";
+	 *
+	 * class User extends Tina.User {
+	 * 	 constructor(userId: number) {
+	 * 		super(userId);
+	 *   }
+	 * }
+	 *
+	 * Tina.registerGame("MyGame");
+	 * Tina.setUserClass(User);
+	 *
+	 * ```
+	 *
+	 * *NOTE: The Client and Server can use their own User classes, but they should remain compatible with each other.*
+	 *
+	 * @param char The new User class constructor
+	 */
+	export function setUserClass(char: new (userId: number) => Mirror.User) {}
 
 	export class TinaGame {
 		core() {}
@@ -33,6 +69,7 @@ namespace Tina {
 	}
 
 	export namespace Net {
+		// TODO: Move this and rework it @siriuslatte
 		class Endpoint {}
 
 		export class NetworkProtocol {}
@@ -47,7 +84,11 @@ namespace Tina {
 	}
 }
 
+/** Export Tina itself */
 export default Tina;
 
+/** Export Conditions Library */
 export { X } from "./lib/conditions";
+
+/** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
