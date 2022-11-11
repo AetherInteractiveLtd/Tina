@@ -26,7 +26,7 @@ namespace Tina {
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
 	 *
-	 * Override the default User/Player class (useful to define your own behaviours and overall data liveries)
+	 * Override the default User/Player class (useful to define your own behaviours and overall data liveries).
 	 *
 	 * #### Usage example:
 	 *
@@ -48,12 +48,17 @@ namespace Tina {
 	 *
 	 * @param char The new User class constructor
 	 */
-	export function setUserClass(char: new (userId: number) => Mirror.User) {}
+	export function setUserClass(char: new (userId: number) => Mirror.User): void {}
 
 	export class TinaGame {
 		core() {}
 	}
 
+	/**
+	 * `Tina.Mirror` defines any built-in classes that can be replaced.
+	 *
+	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
+	 */
 	export namespace Mirror {
 		export class User {
 			constructor(id: number) {}
