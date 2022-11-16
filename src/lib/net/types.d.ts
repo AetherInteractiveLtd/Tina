@@ -15,7 +15,7 @@ export interface EndpointsDeclaration {
 }
 
 export interface DirectoryDeclaration {
-	[x: string]: DirectoryDeclaration | (() => void);
+	[x: string]: RemoteObjectDeclaration<defined[]>;
 }
 
 /**
@@ -36,4 +36,8 @@ export interface DirectoryObjectDeclaration<T> {
  *
  * Remotes class implementation for bootstrapping
  */
-export interface RemoteObjectDeclaration<T extends unknown[]> {}
+export interface RemoteObjectDeclaration<T extends unknown[]> {
+	condition<X extends () => boolean | boolean>(condition: X): BaseEvent<T>;
+	do<X>(func: (...args: [...T]) => X): BaseEvent<[X]>;
+	when(): BaseEvent<T>;
+}

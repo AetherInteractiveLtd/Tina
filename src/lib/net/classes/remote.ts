@@ -53,7 +53,13 @@ export class RemoteClass<T extends unknown[]> implements BaseEvent<T> {
 				...args,
 			);
 		} else if (action === EAction.DO) {
-			this._call(iteration + 1, conditionPassed, isAFunction(handlerOrCondition) && [...handlerOrCondition()]);
+			if (conditionPassed) {
+				this._call(
+					iteration + 1,
+					conditionPassed,
+					isAFunction(handlerOrCondition) && [...handlerOrCondition()],
+				);
+			}
 		}
 	}
 }

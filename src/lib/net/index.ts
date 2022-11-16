@@ -47,5 +47,18 @@ export namespace Network {
  * Little testing place for typings
  */
 const EndpointsDeclaration = Network.registerEndpoints({
-	game: Network.directory({}),
+	game: Network.directory({
+		startGame: Network.Method.ServerToClient<[number]>(),
+	}),
 });
+
+/**
+ * Non-workable test, but it isn't intended to work either way, it's for typing testing.
+ */
+EndpointsDeclaration.path("game")
+	.get("startGame")
+	.do((guessingNumber: number) => {
+		return "";
+	})
+	.condition(GAMESTATE.is(EGameState.Won)) // This won't let it run until I implement state as well, will test with falsy and truthy values instead on the unit test
+	.do((winnerName: string) => print(`${winnerName} has won the gamed!`)); // This will ONLY run, only and only if the previous condition was satisfied as true, if not, will jump over the next.
