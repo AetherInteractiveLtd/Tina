@@ -10,6 +10,7 @@ export class RouterClass<T extends EndpointsDeclaration> implements RouterDeclar
 	/**
 	 * TODO: add functionality.
 	 *
+	 *
 	 * @param endpoints as EndpointsDeclaration, should denote the directories, remotes, etc. declared/registered to be an endpoint in your network layer.
 	 */
 	constructor(endpoints: T) {}
