@@ -1,5 +1,5 @@
 /**
- * !TODO: add methods functionality, add extra functionality to the Networking (feel like something is missing), add middleware.
+ * TODO: add methods functionality, add extra functionality to the Networking (feel like something is missing), add middleware.
  */
 
 import { DirectoryClass } from "./classes/directory";
