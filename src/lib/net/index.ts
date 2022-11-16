@@ -2,6 +2,7 @@
  * !TODO: add methods functionality, add extra functionality to the Networking (feel like something is missing), add middleware.
  */
 
+import { X } from "../conditions";
 import { DirectoryClass } from "./classes/directory";
 import { RemoteClass } from "./classes/remote";
 import { RouterClass } from "./classes/router";
@@ -60,5 +61,5 @@ EndpointsDeclaration.path("game")
 	.do((guessingNumber: number) => {
 		return "";
 	})
-	.condition(GAMESTATE.is(EGameState.Won)) // This won't let it run until I implement state as well, will test with falsy and truthy values instead on the unit test
+	.condition(X.EVAL(X.AND(true, true))) // This won't let it run until I implement state as well, will test with falsy and truthy values instead on the unit test
 	.do((winnerName: string) => print(`${winnerName} has won the gamed!`)); // This will ONLY run, only and only if the previous condition was satisfied as true, if not, will jump over the next.

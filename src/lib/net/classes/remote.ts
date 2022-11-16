@@ -23,7 +23,7 @@ export class RemoteClass<T extends unknown[]> implements BaseEvent<T> {
 		return this as unknown as BaseEvent<[X]>;
 	}
 
-	public condition<X extends () => boolean | boolean>(condition: X): BaseEvent<T> {
+	public condition<X extends (() => boolean) | boolean>(condition: X): BaseEvent<T> {
 		this.listeners.push([condition, EAction.COND]);
 
 		return this as unknown as BaseEvent<T>;

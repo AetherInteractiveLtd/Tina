@@ -2,7 +2,7 @@
  * Remotes type, later on some of them are used for inferance on the event being used
  */
 export interface BaseEvent<T extends unknown[]> {
-	condition<X extends () => boolean | boolean>(condition: X): BaseEvent<T>;
+	condition<X extends (() => boolean) | boolean>(condition: X): BaseEvent<T>;
 	do<X>(func: (...args: [...T]) => X): BaseEvent<[X]>;
 	when(): BaseEvent<T>;
 }
