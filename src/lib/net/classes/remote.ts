@@ -1,5 +1,5 @@
 /**
- * !TODO: Add server/client differentation, yeah I know this should have made from the very first start, but lol,
+ * TODO: Add server/client differentation, yeah I know this should have made from the very first start, but lol,
  * that will take a bit of my brain, but i already got something planned out for this.
  */
 
@@ -30,7 +30,7 @@ export class RemoteClass<T extends unknown[]> implements BaseEvent<T> {
 	}
 
 	/**
-	 * !TODO: when() should denote the creation of a brother node of listeners which will run asynchronously when required.
+	 * TODO: when() should denote the creation of a brother node of listeners which will run asynchronously when required.
 	 *
 	 * Maybe here the differentation between contexts can be done?
 	 *

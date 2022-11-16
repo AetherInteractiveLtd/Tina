@@ -1,3 +1,5 @@
+--[[ Code source from BridgeNet RC, authorised for use by license holder. ]]
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 

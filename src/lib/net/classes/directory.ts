@@ -4,7 +4,7 @@ export class DirectoryClass<T extends DirectoryDeclaration> implements Directory
 	protected readonly directory: Map<keyof T, unknown> = new Map();
 
 	/**
-	 * !TODO: add functionality.
+	 * TODO: add functionality.
 	 *
 	 * @param directory as DirectoryDeclaration, should denote all the events made and registered.
 	 */
@@ -15,7 +15,7 @@ export class DirectoryClass<T extends DirectoryDeclaration> implements Directory
 	}
 
 	/**
-	 * !TODO: add differentation between production and development enviroment, using yaml transformer.
+	 * TODO: add differentation between production and development enviroment, using yaml transformer.
 	 */
 	public developmentOnly() {}
 }
