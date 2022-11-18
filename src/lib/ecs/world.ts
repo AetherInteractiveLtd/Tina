@@ -1,5 +1,13 @@
 import { Entity, EntityId } from "./entity";
 
+export interface WorldOptions {
+	/**
+	 * Define the initial entity pool size for entities. This is the number of
+	 * expected entites in the world. More can be created as needed.
+	 */
+	entityPoolSize?: number;
+}
+
 /**
  * The world is the container for all the ECS data, which stores all the
  * entities and their components, queries, and run systems.
@@ -9,9 +17,13 @@ import { Entity, EntityId } from "./entity";
  */
 export class World {
 	private numberOfEntities: number;
+	private nextId: number;
+	private entityStorage: Map<EntityId, Entity>;
 
-	constructor() {
+	constructor(options: WorldOptions = {}) {
 		this.numberOfEntities = 0;
+		this.nextId = 1;
+		this.entityStorage = new Map<EntityId, Entity>();
 	}
 
 	/**
@@ -28,7 +40,11 @@ export class World {
 	 * Creates a new entity in the world.
 	 */
 	public add(): Entity {
-		return this.createEntity();
+		return this.createEntity(this.nextId);
+	}
+
+	public addAt(entityId: EntityId): Entity {
+		return this.createEntity(entityId);
 	}
 
 	/**
@@ -68,12 +84,25 @@ export class World {
 	 */
 	public pause(): void {}
 
+	public has(entityId: EntityId): boolean {
+		return this.entityStorage.has(entityId);
+	}
+
 	/**
 	 * Initialises a new entity and adds it to the world.
 	 * @returns
 	 */
-	private createEntity(): Entity {
-		const id = 0; // TODO: Generate a unique id.
+	private createEntity(id: EntityId): Entity {
+		if (this.has(id)) {
+			throw error(`Entity with id ${id} already exists.`);
+		}
+
+		this.numberOfEntities++;
+
+		if (id >= this.nextId) {
+			this.nextId = id + 1;
+		}
+
 		return new Entity(id);
 	}
 }
