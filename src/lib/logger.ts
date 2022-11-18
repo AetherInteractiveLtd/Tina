@@ -18,11 +18,11 @@ const output: IOutputObject[] = [];
 class Scope {
 	name = "unnamed";
 
-	constructor(scopeName: string, printToFile: boolean) {
+	constructor(scopeName: string, printToFile = false) {
 		this.name = scopeName;
 	}
 
-	static scope(scopeName: string, printToFile: boolean) {
+	static scope(scopeName: string, printToFile = false) {
 		return new this(scopeName, printToFile);
 	}
 
@@ -30,10 +30,10 @@ class Scope {
 		return output;
 	}
 
-	log(severity: ESeverityLevels, ...toPrint: defined[]) {
+	log(severity: ESeverityLevels, ...toPrint: unknown[]) {
 		let stringToPrint = "";
-		toPrint.forEach((value) => {
-			stringToPrint = `${stringToPrint}${tostring(value)} `;
+		(toPrint as defined[]).forEach((value) => {
+			stringToPrint = `${stringToPrint} ${tostring(value)} `;
 		});
 
 		output.push({
@@ -41,10 +41,10 @@ class Scope {
 			text: `[${this.name}]: ${stringToPrint}`,
 		});
 	}
-	info(...args: string[]) {
+	info(...args: unknown[]) {
 		this.log(0, ...args);
 	}
-	debug(...args: string[]) {
+	debug(...args: unknown[]) {
 		const traceback = debug.traceback();
 
 		const splitStrings: string[] = string.split(traceback, "\n");
@@ -54,13 +54,13 @@ class Scope {
 
 		this.log(1, ...args);
 	}
-	warn(...args: string[]) {
+	warn(...args: unknown[]) {
 		this.log(2, ...args);
 	}
-	error(...args: string[]) {
+	error(...args: unknown[]) {
 		this.log(3, ...args);
 	}
-	fatal(...args: string[]) {
+	fatal(...args: unknown[]) {
 		this.log(4, ...args);
 	}
 }
