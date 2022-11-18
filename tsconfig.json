@@ -1,6 +1,6 @@
 {
-	"include": ["./src"],
-	"exclude": ["./tests"],
+	"include": ["src"],
+	"exclude": ["tests", "transformer"],
 
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,

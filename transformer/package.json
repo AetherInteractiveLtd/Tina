@@ -1,0 +1,38 @@
+{
+  "name": "@rbxtina/yaml-to-dts",
+  "version": "1.0.0",
+  "description": "General purpose yaml configuration files converter.",
+  "main": "out/index.js",
+  "scripts": {
+    "build": "tsc --build --verbose",
+    "watch": "tsc -w",
+    "test": "node ./out/index.js"
+  },
+  "keywords": [
+    "tina-transformer"
+  ],
+  "author": "siriuslatte",
+  "license": "ISC",
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siriuslatte/yaml-to-dts.git"
+  },
+
+  "devDependencies": {
+    "@rbxts/types": "^1.0.428",
+    "@types/js-yaml": "^4.0.5",
+    "@types/node": "^14.18.33",
+    "@typescript-eslint/eslint-plugin": "^4.9.0",
+    "@typescript-eslint/parser": "^4.9.0",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.2.1"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "js-yaml": "^4.1.0",
+    "ts-morph": "^16.0.0"
+  }
+}

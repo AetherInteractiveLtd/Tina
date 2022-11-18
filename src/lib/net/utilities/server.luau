@@ -104,7 +104,7 @@ function server._init()
 	end)
 end
 
-function server.create(name: string)
+function server.createIdentifier(name: string)
 	local id = identifiers.createIdentifier(name)
 	validBridges[id] = true
 	return id
