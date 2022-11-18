@@ -20,9 +20,9 @@ import {
 export namespace Network {
 	export namespace Method {}
 
-	export function registerEndpoints<T extends BaseEndpoints, U extends EndpointsDeclaration<T>>(
-		endpoints: U,
-	): RouterDeclaration<T, U> {
+	export function registerEndpoints<T extends EndpointsDeclaration<BaseEndpoints>>(
+		endpoints: T,
+	): RouterDeclaration<T> {
 		return new RouterClass(endpoints);
 	}
 
