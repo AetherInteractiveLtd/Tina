@@ -3,10 +3,6 @@
     Yaml format to Luau with .d.ts (for roblox-ts workflows)
     <br>
     <br>
-    <div align=center>
-        <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/siriuslatte/yaml-to-dts?style=for-the-badge">
-        <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/siriuslatte/yaml-to-dts?style=for-the-badge">
-    </div>
 </div>
 
 <br>

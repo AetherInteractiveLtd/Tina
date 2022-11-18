@@ -1,6 +1,6 @@
 {
   "name": "@rbxtina/yaml-to-dts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "General purpose yaml configuration files converter.",
   "main": "out/index.js",
   "scripts": {
@@ -16,7 +16,7 @@
 
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/siriuslatte/yaml-to-dts.git"
+    "url": "git+https://github.com/AetherInteractiveLtd/Tina"
   },
 
   "devDependencies": {
