@@ -6,14 +6,16 @@ import { BaseEndpointObjectDeclaration } from "./remotes/types";
 export interface BaseEndpoints {}
 export interface BaseDirectory {}
 
-export type EndpointsDeclaration<T extends BaseEndpoints> = Record<
+export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<
 	string,
-	BaseEndpointObjectDeclaration<[Parameters<T[Extract<keyof T, string | symbol>]>]> | DirectoryDeclaration<T>
+	BaseEndpointObjectDeclaration<[...Parameters<T[Extract<keyof T, string | symbol>]>]> | DirectoryDeclaration<T>
 >;
 
-export type DirectoryDeclaration<T extends BaseDirectory> = {
-	[x in keyof T]: BaseEndpointObjectDeclaration<[T[x]]> | DirectoryDeclaration<T>;
-};
+export interface DirectoryDeclaration<T extends BaseDirectory>
+	extends Record<
+		string,
+		BaseEndpointObjectDeclaration<[T[Extract<keyof T, string | symbol>]]> | DirectoryDeclaration<T>
+	> {}
 
 /**
  * Router class implementation for bootstrapping
