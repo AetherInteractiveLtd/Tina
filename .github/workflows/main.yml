@@ -1,6 +1,7 @@
 name: CI
 on:
   push:
+    branches: [ "main" ]
   pull_request:
     # The branches below must be a subset of the branches above
     branches: [ "main" ]
@@ -47,11 +48,14 @@ jobs:
 
       - name: Install Roblox-TS
         run: |
-          npm i -g roblox-ts@2.0.4
+          npm i roblox-ts@2.0.4
       
       - name: Install Dependencies
         run: npm i
       
       - name: Run Roblox-TS
-        run: rbxtsc --verbose
-        continue-on-error: true
+        shell: bash
+        run: npx rbxtsc --verbose
+      
+      - name: Done
+        run: echo done
