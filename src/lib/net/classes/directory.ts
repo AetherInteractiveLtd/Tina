@@ -27,5 +27,7 @@ export class RepositoryClass<T extends RepositoryDeclaration<BaseEndpoints>> imp
 	/**
 	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, tomorrow morning!
 	 */
-	public developmentOnly(): RepositoryObjectDeclaration<T> {}
+	public developmentOnly(): RepositoryObjectDeclaration<T> {
+		return this as RepositoryObjectDeclaration<T>;
+	}
 }
