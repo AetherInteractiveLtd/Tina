@@ -21,7 +21,7 @@ export class RouterClass<T extends EndpointsDeclaration<BaseEndpoints>> implemen
 	 * @param path as keyof T, should be an acceptable key of the dictionary passed with all the endpoints on `registerEndpoints`.
 	 * @returns a directory or a Remote.
 	 */
-	public dir<X extends keyof T>(path: X): T[X] {
+	public get<X extends keyof T>(path: X): T[X] {
 		return this.routes[path] as unknown as T[X];
 	}
 }

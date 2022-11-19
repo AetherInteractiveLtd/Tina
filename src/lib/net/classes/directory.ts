@@ -1,16 +1,16 @@
-import { BaseDirectory, BaseEndpoints, DirectoryDeclaration, DirectoryObjectDeclaration } from "./types";
+import { BaseDirectory, BaseEndpoints, RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
 
-export class DirectoryClass<T extends DirectoryDeclaration<BaseEndpoints>> implements DirectoryObjectDeclaration<T> {
-	protected readonly directory: T = {} as T;
+export class RepositoryClass<T extends RepositoryDeclaration<BaseEndpoints>> implements RepositoryObjectDeclaration<T> {
+	protected readonly networkObjects: Map<keyof T, T[keyof T]> = new Map();
 
 	/**
 	 * Should construct a directory from everything inside of it.
 	 *
-	 * @param _directory as DirectoryDeclaration, should denote all the events made and registered.
+	 * @param repository as DirectoryDeclaration, should denote all the events made and registered.
 	 */
-	constructor(_directory: T) {
-		for (const [path, networkObject] of pairs(_directory)) {
-			this.directory[path as keyof T] = networkObject as T[keyof T];
+	constructor(repository: T) {
+		for (const [path, networkObject] of pairs(repository)) {
+			this.networkObjects.set(path as keyof T, networkObject as T[keyof T]);
 		}
 	}
 
@@ -21,11 +21,11 @@ export class DirectoryClass<T extends DirectoryDeclaration<BaseEndpoints>> imple
 	 * @returns it can be an Endpoint or another directory.
 	 */
 	public path<X extends keyof T>(pathTo: X): T[X] {
-		return this.directory[pathTo] as T[X];
+		return this.networkObjects.get(pathTo) as T[X];
 	}
 
 	/**
 	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, tomorrow morning!
 	 */
-	public developmentOnly(): DirectoryObjectDeclaration<T> {}
+	public developmentOnly(): RepositoryObjectDeclaration<T> {}
 }
