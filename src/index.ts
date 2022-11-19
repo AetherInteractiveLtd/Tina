@@ -1,6 +1,6 @@
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import { Manifest } from "./lib/types/manifest";
+import logger from "./lib/logger";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -21,7 +21,7 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
-		// TODO: Auto-Detect `manifest.tina.json` and load it.
+		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
 	}
 
@@ -41,8 +41,8 @@ namespace Tina {
 	 *   }
 	 * }
 	 *
+	 * Tina.setUserClass(User); // THIS SHOULD BE CALLED **BEFORE** `Tina.registerGame`
 	 * Tina.registerGame("MyGame");
-	 * Tina.setUserClass(User);
 	 *
 	 * ```
 	 *
@@ -50,7 +50,10 @@ namespace Tina {
 	 *
 	 * @param char The new User class constructor
 	 */
-	export function setUserClass(char: new (userId: number) => Mirror.User): void {}
+	export function setUserClass(char: new (userId: number) => Mirror.User): void {
+		TINA_USER_CLASS = char;
+		logger.warn("The User Class has been changed to:", char);
+	}
 
 	/**
 	 * Fetch the Tina core, a replacement for the `game` object in the vanilla Roblox API.
@@ -65,11 +68,11 @@ namespace Tina {
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
 	export namespace Mirror {
-		export class User {
+		export abstract class User {
 			constructor(id: number) {}
 
 			static fromPlayer(plr: Player) {
-				return new User(plr.UserId);
+				return new TINA_USER_CLASS(plr.UserId);
 			}
 
 			load() {}
@@ -102,3 +105,7 @@ export { X } from "./lib/conditions";
 
 /** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
+
+let TINA_USER_CLASS: new (id: number) => Tina.Mirror.User = Tina.Mirror.User as never as new (
+	id: number,
+) => Tina.Mirror.User;
