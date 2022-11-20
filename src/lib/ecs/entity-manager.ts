@@ -10,21 +10,20 @@ import { World } from "./world";
  * reasonable number as growth during a game could be potentially expensive).
  */
 class EntityPool {
+	private worldName: string;
 	private entities: Array<Entity>;
 	private entitiesInUse: number;
 	private firstAvailable: Entity;
 	private size: number;
-	private attachedWorld: string;
 
-	constructor(private readonly entityManager: EntityManager, initialSize: number, attachedWorld: string) {
+	constructor(private readonly entityManager: EntityManager, initialSize: number, worldName: string) {
+		this.worldName = worldName;
 		this.entitiesInUse = 0;
 		this.size = 0;
-		this.attachedWorld = attachedWorld;
 
 		this.entities = new Array<Entity>(initialSize);
 		this.expand(initialSize);
 		this.firstAvailable = this.entities[0];
-		this.setupEntityStorage(0 /**, initialSize*/);
 	}
 
 	/**
@@ -40,16 +39,11 @@ class EntityPool {
 			// The pool is empty, so expand it by roughly 10%.
 			// This could be a potentially expensive operation.
 			warn(
-				`Entity pool for ${this.attachedWorld} is currently empty. Expanding by 10%. If this is a problem, ",
+				`Entity pool for ${this.worldName} is currently empty. Expanding by 10%. If this is a problem, ",
 				"consider increasing the initial size of the pool.`,
 			);
 			debug.profilebegin("EntityPool.expand");
-
-			const extraEntities = math.round(this.size * 0.1) + 1;
-			const currentSize = this.size;
-			this.expand(extraEntities);
-			this.setupEntityStorage(currentSize - 1 /**, extraEntities*/);
-
+			this.expand(math.round(this.size * 0.1) + 1);
 			debug.profileend();
 		}
 
@@ -71,18 +65,6 @@ class EntityPool {
 	}
 
 	/**
-	 * Expands the entity pool by the given number of entities.
-	 * @param count The number of entities to add to the pool.
-	 */
-	public expand(count: number) {
-		for (let i = 0; i < count; i++) {
-			const entity = new Entity(this.entityManager);
-			this.entities.push(entity);
-		}
-		this.size += count;
-	}
-
-	/**
 	 * @returns The number of entities that are currently in use by the pool.
 	 */
 	public getEntitiesInUse(): number {
@@ -90,13 +72,26 @@ class EntityPool {
 	}
 
 	/**
+	 * Expands the entity pool by the given number of entities.
+	 * @param newEntities The number of entities to add to the pool.
+	 */
+	private expand(newEntities: number) {
+		for (let i = 0; i < newEntities; i++) {
+			const entity = new Entity(this.entityManager);
+			this.entities.push(entity);
+		}
+		this.setupEntityStorage(this.size);
+		this.size += newEntities;
+	}
+
+	/**
 	 * Setup the entity storage for the given range of entities.
-	 * @param entitiesToSetup The number of new entities to setup.
+	 * @param initialSize The current size of the entity pool.
 	 */
 	private setupEntityStorage(initialSize: number /** entitiesToSetup: number*/) {
 		// Rather than using a separate list in the entity pool, we can just
-		// set up a linked list of entities in the pool which chains together
-		// every unused entity in the pool.
+		// set up a linked list of entities which chains together every unused
+		// entity in the pool.
 		for (let i = initialSize; i < this.size - 1; i++) {
 			this.entities[i].next = this.entities[i + 1];
 		}
@@ -130,17 +125,16 @@ export class EntityManager {
 	}
 
 	/**
-	 *
-	 * @param id
-	 * @returns
+	 * Get the {@link Entity} class with the given id.
+	 * @param id The id of the entity to get.
+	 * @returns The entity if it exists.
 	 */
 	public getEntityById(id: EntityId): Entity | undefined {
 		return this.entitiesById.get(id);
 	}
 
 	/**
-	 *
-	 * @returns
+	 * @returns The newly created entity.
 	 */
 	public createEntity(): Entity {
 		const entity = this.entityPool.aquire();
@@ -149,7 +143,7 @@ export class EntityManager {
 	}
 
 	/**
-	 *
+	 * Removes the given entity.
 	 * @param entity
 	 */
 	public removeEntity(entity: Entity): void {
@@ -161,7 +155,7 @@ export class EntityManager {
 	}
 
 	/**
-	 * @returns
+	 * @returns The next available entity id.
 	 */
 	public getNextEntityId(): EntityId {
 		return this.nextEntityId++;
