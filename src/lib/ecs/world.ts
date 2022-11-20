@@ -1,11 +1,17 @@
 import { Entity, EntityId } from "./entity";
+import { EntityManager } from "./entity-manager";
 
 export interface WorldOptions {
+	/**
+	 * The name of the world. This can be used for debugging purposes
+	 * (potentially useful if you have multiple worlds). Defaults to "World".
+	 */
+	name?: string;
 	/**
 	 * Define the initial entity pool size for entities. This is the number of
 	 * expected entites in the world. More can be created as needed.
 	 */
-	entityPoolSize?: number;
+	entityPoolSize: number;
 }
 
 /**
@@ -16,14 +22,16 @@ export interface WorldOptions {
  * of worlds an application can create.
  */
 export class World {
-	private numberOfEntities: number;
-	private nextId: number;
-	private entityStorage: Map<EntityId, Entity>;
+	public name: string;
+	public readonly options: WorldOptions;
 
-	constructor(options: WorldOptions = {}) {
-		this.numberOfEntities = 0;
-		this.nextId = 1;
-		this.entityStorage = new Map<EntityId, Entity>();
+	private entityManager: EntityManager;
+
+	constructor(options: WorldOptions) {
+		this.options = options;
+		this.name = options.name !== undefined ? options.name : "World";
+
+		this.entityManager = new EntityManager(this);
 	}
 
 	/**
@@ -40,11 +48,7 @@ export class World {
 	 * Creates a new entity in the world.
 	 */
 	public add(): Entity {
-		return this.createEntity(this.nextId);
-	}
-
-	public addAt(entityId: EntityId): Entity {
-		return this.createEntity(entityId);
+		return this.entityManager.createEntity();
 	}
 
 	/**
@@ -55,13 +59,18 @@ export class World {
 	 *
 	 * @param entityId The id of the entity to remove.
 	 */
-	public remove(entityId: EntityId) {}
+	public remove(entityId: EntityId) {
+		const entity = this.entityManager.getEntityById(entityId);
+		if (entity) {
+			this.entityManager.removeEntity(entity);
+		}
+	}
 
 	/**
 	 * @returns The number of entities currently in the world.
 	 */
 	public size(): number {
-		return this.numberOfEntities;
+		return this.entityManager.getNumberOfEntitiesInUse();
 	}
 
 	/**
@@ -84,25 +93,12 @@ export class World {
 	 */
 	public pause(): void {}
 
-	public has(entityId: EntityId): boolean {
-		return this.entityStorage.has(entityId);
-	}
-
 	/**
-	 * Initialises a new entity and adds it to the world.
+	 * Checks if a given entity is currently in the world.
+	 * @param entityId
 	 * @returns
 	 */
-	private createEntity(id: EntityId): Entity {
-		if (this.has(id)) {
-			throw error(`Entity with id ${id} already exists.`);
-		}
-
-		this.numberOfEntities++;
-
-		if (id >= this.nextId) {
-			this.nextId = id + 1;
-		}
-
-		return new Entity(id);
+	public has(entityId: EntityId): boolean {
+		return this.entityManager.getEntityById(entityId) !== undefined;
 	}
 }
