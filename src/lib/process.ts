@@ -39,7 +39,7 @@ export class Process extends EventListener<[]> {
 			return;
 		}
 
-		this.suspensionTime = math.floor(+seconds * this.ticker.TPS);
+		this.suspensionTime = math.floor(seconds * this.ticker.TPS);
 		this.isSuspended = true;
 	}
 }
