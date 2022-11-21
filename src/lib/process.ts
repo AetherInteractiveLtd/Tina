@@ -30,12 +30,12 @@ export class Process extends EventListener<[]> {
 
 	public resume() {
 		this.isSuspended = false;
-		this.ticker.resume(this);
+		this.ticker.addProcess(this);
 	}
 
 	public suspend(seconds?: number) {
 		if (seconds === undefined) {
-			this.ticker.remove(this);
+			this.ticker.removeProcess(this);
 			return;
 		}
 
@@ -86,7 +86,7 @@ export class ProcessScheduler {
 		}
 	}
 
-	public remove(process: Process) {
+	public removeProcess(process: Process) {
 		this.processes.delete(process.name);
 
 		// Check if there are still processes to run
@@ -95,7 +95,7 @@ export class ProcessScheduler {
 		}
 	}
 
-	public resume(process: Process) {
+	public addProcess(process: Process) {
 		if (!this.processes.has(process.name)) {
 			this.processes.set(process.name, process);
 			this.start();
