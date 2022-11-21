@@ -2,35 +2,56 @@ import { EventListener } from "./events";
 
 const RunService = game.GetService("RunService");
 
+export default function processHandler() {
+	const TPS = 20; // TPS to be replaced with value from tina.yaml
+	const processes = new Map<string, Process>();
+	const scheduler = new ProcessScheduler(TPS);
+
+	return (name: string) => {
+		if (processes.has(name)) {
+			return processes.get(name)!;
+		}
+		return new Process(name, scheduler);
+	};
+}
+
 /**
  *
  */
-class Process extends EventListener<[]> {
-	constructor(public name: string, private ticker: ProcessScheduler) {
+export class Process extends EventListener<[]> {
+	public isSuspended = false;
+	public suspensionTime = -1;
+	public name: string;
+
+	constructor(name: string, private ticker: ProcessScheduler) {
 		super();
+		this.name = name;
 	}
 
 	public resume() {
-		// Send message to Tina to connect this
+		this.isSuspended = false;
 		this.ticker.resume(this);
 	}
 
 	public suspend(seconds?: number) {
-		// Send message to Tina to reconnect this after x seconds
-		this.ticker.suspend(this, seconds);
+		if (seconds === undefined) {
+			this.ticker.remove(this);
+			return;
+		}
+
+		this.suspensionTime = math.floor(+seconds * this.ticker.TPS);
+		this.isSuspended = true;
 	}
 }
 
 /**
  *
  */
-class ProcessScheduler {
+export class ProcessScheduler {
+	public TPS: number;
 	private timeElapsed = 0;
 	private timeBetweenTicks: number;
-	private TPS: number;
-
-	private activeProcesses = new Map<string, Process>();
-	private suspendedProcesses = new Map<Process, number>();
+	private processes = new Map<string, Process>();
 
 	private isStarted = false;
 	private connection?: RBXScriptConnection;
@@ -38,13 +59,6 @@ class ProcessScheduler {
 	constructor(TPS: number) {
 		this.TPS = TPS;
 		this.timeBetweenTicks = 1 / TPS;
-	}
-
-	public stop(): void {
-		if (this.isStarted) {
-			this.isStarted = false;
-			this.connection?.Disconnect();
-		}
 	}
 
 	private onHeartbeat(dt: number): void {
@@ -56,49 +70,49 @@ class ProcessScheduler {
 	}
 
 	private update(): void {
-		// Update suspended processes
-		for (const [process, remainingTime] of pairs(this.suspendedProcesses)) {
-			const nextTime = remainingTime - 1;
-			if (nextTime < 0) {
-				this.suspendedProcesses.delete(process);
-				this.activeProcesses.set(process.name, process);
-			} else {
-				this.suspendedProcesses.set(process, nextTime);
+		for (const [_, process] of pairs(this.processes)) {
+			// Update suspended processes
+			if (process.isSuspended) {
+				process.suspensionTime -= 1;
+				if (process.suspensionTime < 0) {
+					process.isSuspended = false;
+				}
 			}
-		}
 
-		// Run active processes
-		for (const [_, process] of pairs(this.activeProcesses)) {
-			process.call();
+			// Run active processes
+			if (!process.isSuspended) {
+				process.call();
+			}
 		}
 	}
 
-	public suspend(process: Process, seconds?: number) {
-		if (seconds === undefined) {
-			this.activeProcesses.delete(process.name);
+	public remove(process: Process) {
+		this.processes.delete(process.name);
 
-			// Check if there are still processes to run
-			if (this.activeProcesses.size() === 0 && this.suspendedProcesses.size() === 0) {
-				this.stop();
-			}
-
-			return;
+		// Check if there are still processes to run
+		if (this.processes.size() === 0) {
+			this.stop();
 		}
-
-		this.suspendedProcesses.set(process, math.floor(seconds * this.TPS));
 	}
 
 	public resume(process: Process) {
-		if (!this.activeProcesses.has(process.name)) {
-			this.activeProcesses.set(process.name, process);
+		if (!this.processes.has(process.name)) {
+			this.processes.set(process.name, process);
+			this.start();
 		}
-		this.startIfPossible();
 	}
 
-	private startIfPossible() {
+	private start() {
 		if (!this.isStarted) {
 			this.isStarted = true;
 			this.connection = RunService.Heartbeat.Connect((dt: number) => this.onHeartbeat(dt));
+		}
+	}
+
+	private stop(): void {
+		if (this.isStarted) {
+			this.isStarted = false;
+			this.connection?.Disconnect();
 		}
 	}
 }

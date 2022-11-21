@@ -1,6 +1,7 @@
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 import logger from "./lib/logger";
+import processHandler from "./lib/process";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -62,6 +63,8 @@ namespace Tina {
 		return new TinaCore();
 	}
 
+	export const process = processHandler();
+
 	/**
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.
 	 *
@@ -102,7 +105,6 @@ export default Tina;
 
 /** Export Conditions Library */
 export { X } from "./lib/conditions";
-
 /** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
 
