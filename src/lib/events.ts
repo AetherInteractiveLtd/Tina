@@ -85,7 +85,7 @@ export abstract class EventEmitter<Events extends {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
 	/**
-	 * Lets you listen to an specific event on your Events interface definition.
+	 * Lets you listen to a specific event from your Events interface definition.
 	 *
 	 * @param token as string, should be the event to connect to.
 	 * @returns an EventListener of type T which are the parameters passed to the function.
