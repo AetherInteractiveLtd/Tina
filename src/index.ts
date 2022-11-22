@@ -67,7 +67,7 @@ namespace Tina {
 		if (Scheduler.hasProcess(name)) {
 			return Scheduler.getProcess(name)!;
 		}
-		return Scheduler.addProcess(new Process(name, Scheduler));
+		return new Process(name, Scheduler);
 	}
 
 	/**

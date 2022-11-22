@@ -81,12 +81,11 @@ class ProcessScheduler {
 		}
 	}
 
-	public addProcess(process: Process): Process {
+	public addProcess(process: Process): void {
 		if (!this.processes.has(process.name)) {
 			this.processes.set(process.name, process);
 			this.start();
 		}
-		return process;
 	}
 
 	public hasProcess(name: string): boolean {
