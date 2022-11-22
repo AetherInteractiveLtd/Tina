@@ -1,11 +1,12 @@
-import { ConditionCallback } from "./conditions/types";
+import { X } from "./conditions";
+import { Condition } from "./conditions/types";
 
 declare enum EAction {
 	COND = "c",
 	DO = "d",
 }
 
-declare type CondFunc = [ConditionCallback, EAction.COND];
+declare type CondFunc = [Condition, EAction.COND];
 declare type StepFunc = [Callback, EAction.DO];
 
 export class EventListener<T extends unknown[]> {
@@ -31,7 +32,7 @@ export class EventListener<T extends unknown[]> {
 	 *
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
-	public condition(condition: ConditionCallback): EventListener<T> {
+	public condition(condition: Condition): EventListener<T> {
 		this.listeners.push([condition, EAction.COND]);
 
 		return this as unknown as EventListener<T>;
@@ -39,7 +40,6 @@ export class EventListener<T extends unknown[]> {
 
 	/**
 	 * Yields current thread until resumption (emit call).
-	 *
 	 */
 	public await(): LuaTuple<unknown[]> {
 		this.yieldThreads.push(coroutine.running());
@@ -63,13 +63,17 @@ export class EventListener<T extends unknown[]> {
 
 		switch (action) {
 			case EAction.COND:
-				this._call(iteration + 1, handlerOrCondition(), ...args);
+				this._call(iteration + 1, X.EVAL(handlerOrCondition), ...args);
 
 				break;
 
 			case EAction.DO:
 				if (conditionPassed) {
-					this._call(iteration + 1, conditionPassed, [...handlerOrCondition()]);
+					try {
+						this._call(iteration + 1, conditionPassed, [...handlerOrCondition()]);
+					} catch (e) {
+						warn(e);
+					}
 				}
 
 				break;
