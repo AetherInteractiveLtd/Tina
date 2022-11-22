@@ -1,4 +1,4 @@
-import { Condition } from "./types";
+import { Condition, ConditionCallback } from "./types";
 
 function isAFunction(func: Condition): func is Callback {
 	return typeOf(func) === "function";
@@ -55,5 +55,9 @@ export class X {
 		const secondEvaluation = isAFunction(second) ? second() : second;
 
 		return firstEvaluation === secondEvaluation;
+	}
+
+	public static create(func: ConditionCallback) {
+		return func;
 	}
 }
