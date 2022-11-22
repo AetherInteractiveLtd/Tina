@@ -20,9 +20,10 @@ export default function processHandler() {
  */
 export class Process extends EventListener<[]> {
 	public name: string;
-	public ticker: ProcessScheduler;
 	public isSuspended = false;
 	public suspensionTime = -1;
+
+	private ticker: ProcessScheduler;
 
 	constructor(name: string, ticker: ProcessScheduler) {
 		super();
@@ -35,13 +36,8 @@ export class Process extends EventListener<[]> {
 		this.ticker.addProcess(this);
 	}
 
-	public suspend(seconds?: number) {
-		if (seconds === undefined) {
-			this.ticker.removeProcess(this);
-			return;
-		}
-
-		this.suspensionTime = math.floor(seconds * this.ticker.TPS);
+	public suspend(ticks = 1) {
+		this.suspensionTime = ticks;
 		this.isSuspended = true;
 	}
 }
