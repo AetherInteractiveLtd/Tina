@@ -1,7 +1,7 @@
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 import logger from "./lib/logger";
-import processHandler from "./lib/process";
+import { Process, Scheduler } from "./lib/process";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -63,7 +63,12 @@ namespace Tina {
 		return new TinaCore();
 	}
 
-	export const process = processHandler();
+	export function process(name: string): Process {
+		if (Scheduler.hasProcess(name)) {
+			return Scheduler.getProcess(name)!;
+		}
+		return Scheduler.addProcess(new Process(name, Scheduler));
+	}
 
 	/**
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.

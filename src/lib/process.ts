@@ -2,19 +2,6 @@ import { EventListener } from "./events";
 
 const RunService = game.GetService("RunService");
 
-export default function processHandler() {
-	const TPS = 20; // TPS to be replaced with value from tina.yaml
-	const processes = new Map<string, Process>();
-	const scheduler = new ProcessScheduler(TPS);
-
-	return (name: string) => {
-		if (processes.has(name)) {
-			return processes.get(name)!;
-		}
-		return new Process(name, scheduler);
-	};
-}
-
 /**
  *
  */
@@ -45,14 +32,13 @@ export class Process extends EventListener<[]> {
 /**
  *
  */
-export class ProcessScheduler {
+class ProcessScheduler {
 	static TPS = 20; // Grab value from tina.yaml when able
 	private lastTick: number;
 	private timeBetweenTicks: number;
-	private processes = new Map<string, Process>();
-
 	private isStarted = false;
 	private connection?: RBXScriptConnection;
+	private processes = new Map<string, Process>();
 
 	constructor() {
 		this.timeBetweenTicks = 1 / ProcessScheduler.TPS;
@@ -125,3 +111,5 @@ export class ProcessScheduler {
 		}
 	}
 }
+
+export const Scheduler = new ProcessScheduler();
