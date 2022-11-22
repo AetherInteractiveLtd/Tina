@@ -46,23 +46,25 @@ export class Process extends EventListener<[]> {
  *
  */
 export class ProcessScheduler {
-	public TPS: number;
-	private timeElapsed = 0;
+	static TPS = 20; // Grab value from tina.yaml when able
+	private lastTick: number;
 	private timeBetweenTicks: number;
 	private processes = new Map<string, Process>();
 
 	private isStarted = false;
 	private connection?: RBXScriptConnection;
 
-	constructor(TPS: number) {
-		this.TPS = TPS;
-		this.timeBetweenTicks = 1 / TPS;
+	constructor() {
+		this.timeBetweenTicks = 1 / ProcessScheduler.TPS;
+		this.lastTick = os.time();
 	}
 
-	private onHeartbeat(dt: number): void {
-		this.timeElapsed += dt;
-		if (this.timeElapsed >= this.timeBetweenTicks) {
-			this.timeElapsed -= this.timeBetweenTicks;
+	private onHeartbeat(): void {
+		const currentTick = os.time();
+		const deltaTime = currentTick - this.lastTick;
+		if (deltaTime >= this.timeBetweenTicks) {
+			// Adjust lastTick to based on timeBetweenTicks to keep interval relatively stable
+			this.lastTick = currentTick - (deltaTime % this.timeBetweenTicks);
 			this.update();
 		}
 	}
@@ -103,7 +105,7 @@ export class ProcessScheduler {
 	private start() {
 		if (!this.isStarted) {
 			this.isStarted = true;
-			this.connection = RunService.Heartbeat.Connect((dt: number) => this.onHeartbeat(dt));
+			this.connection = RunService.Heartbeat.Connect(() => this.onHeartbeat());
 		}
 	}
 
