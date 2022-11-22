@@ -86,7 +86,7 @@ export class ProcessScheduler {
 		}
 	}
 
-	public removeProcess(process: Process) {
+	public removeProcess(process: Process): void {
 		this.processes.delete(process.name);
 
 		// Check if there are still processes to run
@@ -102,7 +102,7 @@ export class ProcessScheduler {
 		}
 	}
 
-	private start() {
+	private start(): void {
 		if (!this.isStarted) {
 			this.isStarted = true;
 			this.connection = RunService.Heartbeat.Connect(() => this.onHeartbeat());
