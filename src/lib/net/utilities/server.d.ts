@@ -19,7 +19,7 @@ export namespace ServerNet {
 	 * @param args, should be the actual parameters of type T.
 	 * @returns unknown[], returns some arguments of type unknown being an array.
 	 */
-	export function call<T extends unknown[]>(identifierName: string, ...args: T): unknown[];
+	export function call<T extends unknown[]>(to: Player[], identifierName: string, ...args: T): unknown[];
 
 	/**
 	 * waitFor yields the current thread, this is most likely a @deprecated method and should not be used.
@@ -28,7 +28,7 @@ export namespace ServerNet {
 	 */
 	export function waitFor(identifierName: string): unknown[];
 
-	/**
+	/**›
 	 * Should be called for creating identifiers for server remotes. (ffrost's code denotes that by checking if the id previously
 	 * created with this method is valid).
 	 *

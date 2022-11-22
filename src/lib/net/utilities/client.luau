@@ -39,56 +39,55 @@ local function runCallback(callback, ...)
 end
 
 function client._init()
-	local RemoteEvent: RemoteEvent = ReplicatedStorage:WaitForChild("tinaRemote")
+    local RemoteEvent: RemoteEvent = ReplicatedStorage:WaitForChild("tinaRemote")
 
-	RunService.PostSimulation:Connect(function()
-		local start = os.clock()
+    RunService.PostSimulation:Connect(function()
+        local start = os.clock()
 
-		local toSend = {}
-		for _, v: packet in queue do
-			table.insert(toSend, {
-				v.id,
-				table.unpack(v.contents),
-			})
-		end
+        local toSend = {}
+        for _, v: packet in queue do
+            table.insert(toSend, {
+                v.id,
+                v.contents,
+            })
+        end
 
-		RemoteEvent:FireServer(toSend)
-		table.clear(queue)
+        RemoteEvent:FireServer(toSend)
+        table.clear(queue)
 
-		local finish = os.clock()
+        local finish = os.clock()
 
-		if finish - start > 0.001 then
-			-- TODO warn
-		end
-	end)
+        if finish - start > 0.001 then
+            -- TODO warn
+        end
+    end)
 
-	RemoteEvent.OnClientEvent:Connect(function(data)
-		for identifier, value in data do
-			for _, v in identifierMap[identifier] do
-				runCallback(v, table.unpack(value))
-			end
-		end
-	end)
+    RemoteEvent.OnClientEvent:Connect(function(data)
+        for identifier, value in data do
+            for _, v in identifierMap[identifier] do
+                runCallback(v, value)
+            end
+        end
+    end)
 end
 
-function client.listen(identifier: string, callback: (...any) -> nil)
-	table.insert(identifierMap[identifier], callback)
+function client.listen(identifier: string, callback: (object: {}) -> nil)
+    table.insert(identifierMap[identifier], callback)
 end
 
-function client.call(identifier: string, ...)
-	local contents = { ... }
-	table.insert(queue, {
-		id = identifier,
-		contents = contents,
-	})
+function client.call(identifier: string, object: {})
+    table.insert(queue, {
+        id = identifier,
+        contents = object,
+    })
 end
 
 function client.waitfor(identifier: string)
-	if not waiting[identifier] then
-		waiting[identifier] = {}
-	end
-	table.insert(waiting[identifier], coroutine.running())
-	return coroutine.yield()
+    if not waiting[identifier] then
+        waiting[identifier] = {}
+    end
+    table.insert(waiting[identifier], coroutine.running())
+    return coroutine.yield()
 end
 
 return client

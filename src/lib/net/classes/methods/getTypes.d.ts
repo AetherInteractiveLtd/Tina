@@ -21,7 +21,7 @@ export interface GETClientObjectDeclaration<T extends unknown[]> {
 	 * @client can't be used on server.
 	 * @param func should describe the listener function to add as a callback for the doing, the return is chained.
 	 */
-	do<X extends T>(func: (...args: T) => X): GETClientObjectDeclaration<X>;
+	do<X>(func: (...args: [...T]) => X): GETClientObjectDeclaration<[X]>;
 }
 
 export declare type GETDeclaration<T extends Callback> = GETServerObjectDeclaration<T> &

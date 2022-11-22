@@ -1,10 +1,10 @@
-import { BaseEndpointObjectDeclaration, Endpoint } from "./remotes/types";
+import { BaseEndpointObjectDeclaration, Endpoint } from "./methods/baseEndpoint";
 
 /*
  * Declarations
  */
 export interface BaseEndpoints {}
-export interface BaseDirectory {}
+export interface BaseRepository {}
 
 export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<
 	string,
@@ -12,7 +12,7 @@ export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<
 	| RepositoryObjectDeclaration<T>
 >;
 
-export interface RepositoryDeclaration<T extends BaseDirectory>
+export interface RepositoryDeclaration<T extends BaseRepository>
 	extends Record<string, Endpoint<[T[Extract<keyof T, string | symbol>]]> | RepositoryObjectDeclaration<T>> {}
 
 /**
@@ -25,7 +25,7 @@ export interface RouterDeclaration<T extends BaseEndpoints> {
 /**
  * Directory class implementation for bootstrapping
  */
-export interface RepositoryObjectDeclaration<T extends BaseDirectory> {
+export interface RepositoryObjectDeclaration<T extends BaseRepository> {
 	path<X extends keyof T>(event: X): T[X];
 	developmentOnly(): RepositoryObjectDeclaration<T>;
 }

@@ -1,21 +1,46 @@
-class EventListener<T extends unknown[]> {
-	protected readonly listeners: Array<Callback> = new Array();
-	protected readonly yieldThreads: Array<thread> = new Array();
+import { ConditionCallback } from "./conditions/types";
+
+declare enum EAction {
+	COND = "c",
+	DO = "d",
+}
+
+declare type CondFunc = [ConditionCallback, EAction.COND];
+declare type StepFunc = [Callback, EAction.DO];
+
+export class EventListener<T extends unknown[]> {
+	protected readonly listeners: Array<CondFunc | StepFunc> = [];
+	protected readonly yieldThreads: Array<thread> = [];
 
 	/**
 	 * Respond to an emitted event.
 	 *
-	 * *NOTE: Carefully check that your parameter types are correct; for example if you have used `Tina.setUserClass`, any `player` is **purposefully** of type `any` so that you may replace it with your custom user class*
+	 * *NOTE: Carefully check that your parameter types are correct; for example if you have used `Tina.setUserClass`, any `player` is **purposefully** of type `never` so that you may replace it with your custom user class*
 	 *
 	 * @param func
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever this function returned.
 	 */
 	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
-		this.listeners.push(func);
+		this.listeners.push([func, EAction.DO]);
 
 		return this as unknown as EventListener<[X]>;
 	}
 
+	/**
+	 * Conditions the next do after it.
+	 *
+	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
+	 */
+	public condition(condition: ConditionCallback): EventListener<T> {
+		this.listeners.push([condition, EAction.COND]);
+
+		return this as unknown as EventListener<T>;
+	}
+
+	/**
+	 * Yields current thread until resumption (emit call).
+	 *
+	 */
 	public await(): LuaTuple<unknown[]> {
 		this.yieldThreads.push(coroutine.running());
 
@@ -24,14 +49,30 @@ class EventListener<T extends unknown[]> {
 
 	/** @hidden */
 	public async call<T extends unknown[]>(...args: T): Promise<void> {
-		let lastCallReturn: unknown[] | undefined;
-
-		for (const handler of this.listeners) {
-			lastCallReturn = [handler(...(lastCallReturn ?? args))];
-		}
+		this._call(0, true, ...args);
 
 		if (this.yieldThreads.size() > 0) {
 			for (const thread of this.yieldThreads) coroutine.resume(thread);
+		}
+	}
+
+	private _call<T extends unknown[]>(iteration: number, conditionPassed?: boolean, ...args: T) {
+		if (iteration >= this.listeners.size()) return;
+
+		const [handlerOrCondition, action] = this.listeners[iteration];
+
+		switch (action) {
+			case EAction.COND:
+				this._call(iteration + 1, handlerOrCondition(), ...args);
+
+				break;
+
+			case EAction.DO:
+				if (conditionPassed) {
+					this._call(iteration + 1, conditionPassed, [...handlerOrCondition()]);
+				}
+
+				break;
 		}
 	}
 }
@@ -39,12 +80,18 @@ class EventListener<T extends unknown[]> {
 export abstract class EventEmitter<Events extends {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
+	/**
+	 * Lets you listen to an specific event on your Events interface definition.
+	 *
+	 * @param token as string, should be the event to connect to.
+	 * @returns an EventListener of type T which are the parameters passed to the function.
+	 */
 	public when<T extends keyof Events, S extends Parameters<Events[T]>>(token: T): EventListener<S> {
 		const hasEvent = this.events.has(token);
 		const event = new EventListener<S>();
 
 		if (!hasEvent) {
-			const eventsArray: Array<EventListener<S>> = new Array();
+			const eventsArray: Array<EventListener<S>> = [];
 
 			eventsArray.push(event);
 			this.events.set(token, eventsArray);
@@ -53,6 +100,13 @@ export abstract class EventEmitter<Events extends {}> {
 		return event;
 	}
 
+	/**
+	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
+	 *
+	 * @param token event to emit.
+	 * @param args of type T which are the parameters passed to the function definition.
+	 * @returns a promise.
+	 */
 	protected async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;

@@ -1,5 +1,3 @@
-import { RunService } from "@rbxts/services";
-
 import { RouterClass } from "./classes/router";
 import { RepositoryClass } from "./classes/directory";
 
@@ -12,24 +10,27 @@ import {
 	RouterDeclaration,
 } from "./classes/types";
 
-import { GetEndpointClient, GetEndpointServer } from "./classes/remotes/get";
-import { GETDeclaration } from "./classes/remotes/getTypes";
+/* POST */
+import { PostEndpoint } from "./classes/methods/post";
+import { POSTDeclaration } from "./classes/methods/postTypes";
+
+/* UPDATE */
+
+/* GET */
 
 export namespace Network {
-	const isServer = RunService.IsServer();
-
 	/**
-	 * Network.Method lets you describe what type of Network object you will be working with.
+	 * Network.Method is a namespace containing all the available methods that Tina offers to work with the networking layer.
 	 */
 	export namespace Method {
-		export function GET<
-			T extends (...args: unknown[]) => defined = (...args: unknown[]) => defined,
-		>(): GETDeclaration<T> {
-			if (isServer) {
-				return new GetEndpointServer() as GETDeclaration<T>;
-			} else {
-				return new GetEndpointClient() as GETDeclaration<T>;
-			}
+		/**
+		 * POST is a network method which lets you send data to the server, this doesn't expect anything back. Shouldn't be used careless.
+		 *
+		 * @param identifier possible unique identifier, can be empty.
+		 * @returns a POST Endpoint.
+		 */
+		export function POST<T extends unknown[] = unknown[]>(identifier?: string): POSTDeclaration<T> {
+			return new PostEndpoint<T>();
 		}
 	}
 
@@ -57,16 +58,3 @@ export namespace Network {
 		return new RepositoryClass(repositoryDescription);
 	}
 }
-
-/**
- * Little testing place for typings
- */
-const Endpoints = Network.registerEndpoints({
-	dev: Network.repository({
-		tests: Network.repository({
-			event: Network.Method.GET<() => number>(),
-		}),
-	}).developmentOnly(),
-});
-
-Endpoints.get("dev").path("tests").path("event");

@@ -110,7 +110,7 @@ function server.createIdentifier(name: string)
 	return id
 end
 
-function server.call(plr: Player | { Player } | "all", id: string, ...: any)
+function server.call(plr: { Player }, id: string, ...: any)
 	if not validBridges[id] then
 		return warn("id isn't a valid bridge")
 	end

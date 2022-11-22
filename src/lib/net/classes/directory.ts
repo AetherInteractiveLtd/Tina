@@ -1,10 +1,10 @@
-import { BaseDirectory, BaseEndpoints, RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
+import { BaseEndpoints, RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
 
 export class RepositoryClass<T extends RepositoryDeclaration<BaseEndpoints>> implements RepositoryObjectDeclaration<T> {
 	protected readonly networkObjects: Map<keyof T, T[keyof T]> = new Map();
 
 	/**
-	 * Should construct a directory from everything inside of it.
+	 * A Repository is a Networking Object used to store other Networking Objects, such as Remotes and another repositories.
 	 *
 	 * @param repository as DirectoryDeclaration, should denote all the events made and registered.
 	 */

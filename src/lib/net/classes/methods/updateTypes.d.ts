@@ -1,6 +1,6 @@
-import { BaseEndpointObjectDeclaration } from "./types";
+import { BaseEndpointObjectDeclaration } from "./baseEndpointTypes";
 
-interface UPDATEServerObjectDeclaration<T extends unknown[]> extends BaseEndpointObjectDeclaration<T> {
+interface UPDATEServerObjectDeclaration<T extends unknown[]> {
 	/**
 	 * UPDATE is a one-way method, which lets client listen for changes request from the server, client can't send any data back or send any packet at all.
 	 *
@@ -12,7 +12,7 @@ interface UPDATEServerObjectDeclaration<T extends unknown[]> extends BaseEndpoin
 	 * @server
 	 * @param args should be the arguments described beforehand when creating the objects.
 	 */
-	send(...args: [...T]): void;
+	send(to: Player[], ...args: [...T]): void;
 }
 
 interface UPDATEClientObjectDeclaration<T extends unknown[]> extends BaseEndpointObjectDeclaration<T> {
