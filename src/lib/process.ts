@@ -19,11 +19,15 @@ export default function processHandler() {
  *
  */
 export class Process extends EventListener<[]> {
+	public name: string;
+	public ticker: ProcessScheduler;
 	public isSuspended = false;
 	public suspensionTime = -1;
 
-	constructor(public name: string, private ticker: ProcessScheduler) {
+	constructor(name: string, ticker: ProcessScheduler) {
 		super();
+		this.name = name;
+		this.ticker = ticker;
 	}
 
 	public resume() {
