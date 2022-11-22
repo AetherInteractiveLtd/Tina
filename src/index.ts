@@ -1,8 +1,8 @@
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 import logger from "./lib/logger";
-import { Process } from "./lib/process";
-import Scheduler from "./lib/scheduler";
+import { Process } from "./lib/process/process";
+import Scheduler from "./lib/process/scheduler";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
