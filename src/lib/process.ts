@@ -95,11 +95,20 @@ export class ProcessScheduler {
 		}
 	}
 
-	public addProcess(process: Process) {
+	public addProcess(process: Process): Process {
 		if (!this.processes.has(process.name)) {
 			this.processes.set(process.name, process);
 			this.start();
 		}
+		return process;
+	}
+
+	public hasProcess(name: string): boolean {
+		return this.processes.has(name);
+	}
+
+	public getProcess(name: string): Process | undefined {
+		return this.processes.get(name);
 	}
 
 	private start(): void {
