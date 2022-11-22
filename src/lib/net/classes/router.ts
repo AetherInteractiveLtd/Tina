@@ -1,18 +1,12 @@
 import { BaseEndpoints, EndpointsDeclaration, RouterDeclaration } from "./types";
 
-export class RouterClass<T extends EndpointsDeclaration<BaseEndpoints>> implements RouterDeclaration<T> {
-	protected readonly routes: T = {} as T;
-
+export class Router<T extends EndpointsDeclaration<BaseEndpoints>> implements RouterDeclaration<T> {
 	/**
 	 * Should insert all the endpoints created.
 	 *
 	 * @param endpoints as EndpointsDeclaration, should denote the directories, remotes, etc. declared/registered to be an endpoint in your network layer.
 	 */
-	constructor(endpoints: T) {
-		for (const [path, networkObject] of pairs(endpoints)) {
-			this.routes[path as keyof T] = networkObject as T[keyof T];
-		}
-	}
+	constructor(private readonly endpoints: T) {}
 
 	/**
 	 * dir should return a path/remote in the registered endpoints, it is RECOMMENDED that at top-level definitions, all should be Directories describing
@@ -22,6 +16,6 @@ export class RouterClass<T extends EndpointsDeclaration<BaseEndpoints>> implemen
 	 * @returns a directory or a Remote.
 	 */
 	public get<X extends keyof T>(path: X): T[X] {
-		return this.routes[path] as unknown as T[X];
+		return this.endpoints[path];
 	}
 }

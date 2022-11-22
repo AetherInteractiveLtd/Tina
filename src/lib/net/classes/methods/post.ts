@@ -11,7 +11,7 @@ import { POSTDeclaration } from "./postTypes";
 export class PostEndpoint<T extends unknown[]> implements POSTDeclaration<T> {
 	private identifier: string;
 
-	constructor() {
+	constructor(private id?: string) {
 		this.identifier = Endpoints.createIdentifier();
 	}
 

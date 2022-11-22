@@ -1,6 +1,3 @@
-import { RouterClass } from "./classes/router";
-import { RepositoryClass } from "./classes/directory";
-
 /* Types */
 import {
 	BaseEndpoints,
@@ -9,6 +6,12 @@ import {
 	EndpointsDeclaration,
 	RouterDeclaration,
 } from "./classes/types";
+
+/**
+ * Networking object holders
+ */
+import { Router } from "./classes/router";
+import { Repository } from "./classes/directory";
 
 /* POST */
 import { PostEndpoint } from "./classes/methods/post";
@@ -30,7 +33,7 @@ export namespace Network {
 		 * @returns a POST Endpoint.
 		 */
 		export function POST<T extends unknown[] = unknown[]>(identifier?: string): POSTDeclaration<T> {
-			return new PostEndpoint<T>();
+			return new PostEndpoint<T>(identifier);
 		}
 	}
 
@@ -43,18 +46,18 @@ export namespace Network {
 	export function registerEndpoints<T extends EndpointsDeclaration<BaseEndpoints>>(
 		endpoints: T,
 	): RouterDeclaration<T> {
-		return new RouterClass(endpoints);
+		return new Router(endpoints);
 	}
 
 	/**
 	 * Network.repository should create a new Repository object that can either contain other repositories, or well, the networking objects you require.
 	 *
-	 * @param repositoryDescription should describe an object with the possible values that can be within.
+	 * @param repositoryObject should describe an object with the possible values that can be within.
 	 * @returns a new Repository object.
 	 */
 	export function repository<T extends RepositoryDeclaration<BaseEndpoints>>(
-		repositoryDescription: T,
+		repositoryObject: T,
 	): RepositoryObjectDeclaration<T> {
-		return new RepositoryClass(repositoryDescription);
+		return new Repository(repositoryObject);
 	}
 }

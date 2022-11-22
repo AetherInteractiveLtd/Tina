@@ -1,4 +1,4 @@
-import { BaseEndpointObjectDeclaration, Endpoint } from "./methods/baseEndpoint";
+import { BaseEndpointObjectDeclaration, Endpoint } from "./methods/baseEndpointTypes";
 
 /*
  * Declarations

@@ -1,31 +1,25 @@
 import { BaseEndpoints, RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
 
-export class RepositoryClass<T extends RepositoryDeclaration<BaseEndpoints>> implements RepositoryObjectDeclaration<T> {
-	protected readonly networkObjects: Map<keyof T, T[keyof T]> = new Map();
-
+export class Repository<T extends RepositoryDeclaration<BaseEndpoints>> implements RepositoryObjectDeclaration<T> {
 	/**
 	 * A Repository is a Networking Object used to store other Networking Objects, such as Remotes and another repositories.
 	 *
 	 * @param repository as DirectoryDeclaration, should denote all the events made and registered.
 	 */
-	constructor(repository: T) {
-		for (const [path, networkObject] of pairs(repository)) {
-			this.networkObjects.set(path as keyof T, networkObject as T[keyof T]);
-		}
-	}
+	constructor(private readonly repository: T) {}
 
 	/**
-	 * path returns whatever is inside the directory, independant of what it is.
+	 * Navigates to the closest subdirectory with that name if it exists.
 	 *
 	 * @param pathTo as string, is the path to retrieve from the directory.
 	 * @returns it can be an Endpoint or another directory.
 	 */
 	public path<X extends keyof T>(pathTo: X): T[X] {
-		return this.networkObjects.get(pathTo) as T[X];
+		return this.repository[pathTo];
 	}
 
 	/**
-	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, tomorrow morning!
+	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, not sure when I'll need it for real.
 	 */
 	public developmentOnly(): RepositoryObjectDeclaration<T> {
 		return this as RepositoryObjectDeclaration<T>;

@@ -16,14 +16,14 @@ export namespace ServerNet {
 	 * call should pack and compress everything, schedule it to be sent and release such memory when no longer needed.
 	 *
 	 * @param identifierName as string, should denote the identifier name
+	 * @param to as Player[], should be the list of players to send the remote to.
 	 * @param args, should be the actual parameters of type T.
 	 * @returns unknown[], returns some arguments of type unknown being an array.
 	 */
 	export function call<T extends unknown[]>(to: Player[], identifierName: string, ...args: T): unknown[];
 
 	/**
-	 * waitFor yields the current thread, this is most likely a @deprecated method and should not be used.
-	 *
+	 * @deprecated
 	 * @param identifierName as string, should denote the identifier name
 	 */
 	export function waitFor(identifierName: string): unknown[];
