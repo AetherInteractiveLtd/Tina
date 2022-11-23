@@ -7,6 +7,8 @@ type ProcessScheduler = typeof Scheduler;
  *
  */
 export class Process extends EventListener<[]> {
+	public static processes = new Map<string, Process>();
+
 	public name: string;
 	public isSuspended = false;
 	public suspensionTime = -1;
@@ -17,6 +19,9 @@ export class Process extends EventListener<[]> {
 		super();
 		this.name = name;
 		this.ticker = ticker;
+
+		// Add to static list of all created Processes
+		Process.processes.set(name, this);
 	}
 
 	public resume() {

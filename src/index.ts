@@ -65,8 +65,8 @@ namespace Tina {
 	}
 
 	export function process(name: string): Process {
-		if (Scheduler.hasProcess(name)) {
-			return Scheduler.getProcess(name)!;
+		if (Process.processes.has(name)) {
+			return Process.processes.get(name)!;
 		}
 		return new Process(name, Scheduler);
 	}
