@@ -4,7 +4,7 @@ export namespace ServerNet {
 	 *
 	 * @example
 	 * ```
-	 * event.listen("internalIndentifier", (plr: Player, ...args: unknown[]) => {});
+	 * event.listen("internalIndentifier", (plr: Player, ...args: unknown[]) => { ... });
 	 * ```
 	 *
 	 * @param identifierName as string, should denote the identifier name
@@ -20,7 +20,7 @@ export namespace ServerNet {
 	 * @param args, should be the actual parameters of type T.
 	 * @returns unknown[], returns some arguments of type unknown being an array.
 	 */
-	export function call<T extends unknown[]>(to: Player[], identifierName: string, ...args: T): unknown[];
+	export function call<T extends unknown[]>(identifierName: string, to: Player[], ...args: T): unknown[];
 
 	/**
 	 * @deprecated

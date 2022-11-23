@@ -14,6 +14,10 @@ export namespace Endpoints {
 	 */
 	export function createIdentifier(identifier?: string) {
 		const id = identifier ?? "";
-		return RunService.IsServer() ? Identifiers.createIdentifier(id) : Identifiers.waitForIdentifier(id);
+		return RunService.IsServer()
+			? Identifiers.createIdentifier(id)
+			: RunService.IsClient()
+			? Identifiers.waitForIdentifier(id)
+			: "";
 	}
 }

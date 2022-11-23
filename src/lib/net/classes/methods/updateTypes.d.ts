@@ -1,5 +1,7 @@
 import { BaseEndpointObjectDeclaration } from "./baseEndpointTypes";
 
+import { EventListener } from "../../../events";
+
 interface UPDATEServerObjectDeclaration<T extends unknown[]> {
 	/**
 	 * UPDATE is a one-way method, which lets client listen for changes request from the server, client can't send any data back or send any packet at all.
@@ -17,15 +19,12 @@ interface UPDATEServerObjectDeclaration<T extends unknown[]> {
 
 interface UPDATEClientObjectDeclaration<T extends unknown[]> extends BaseEndpointObjectDeclaration<T> {
 	/**
-	 * @example
-	 * ```
-	 * NET.get("core").path("networkObject").when().do(callback).do(chainedCallback);
-	 * ```
+	 * when returns an event listener used to bind actions to be called.
 	 *
-	 * @client
-	 * @param func should describe the listener function to add to the callback.
+	 * @server
+	 * @returns an EventListener.
 	 */
-	do<X>(func: (...args: [...T]) => X): UPDATEClientObjectDeclaration<[X]>;
+	when(): EventListener<T>;
 }
 
 export declare type UPDATEDeclaration<T extends unknown[] = unknown[]> = UPDATEServerObjectDeclaration<T> &

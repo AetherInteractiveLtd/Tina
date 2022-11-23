@@ -1,5 +1,6 @@
-import { EventListener } from "../../../events";
 import { BaseEndpointObjectDeclaration, ServerEvent } from "./baseEndpointTypes";
+
+import { EventListener } from "../../../events";
 
 export interface POSTServerObjectDeclaration<T extends unknown[]> extends BaseEndpointObjectDeclaration<T> {
 	/**
