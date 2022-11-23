@@ -28,7 +28,7 @@ export class EventListener<T extends unknown[]> {
 	}
 
 	/**
-	 * Conditions the next do after it.
+	 * Conditions the next do after it, if a callback is passed to it, the callback may hold reference to the data being passed before the condition.
 	 *
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
@@ -63,7 +63,7 @@ export class EventListener<T extends unknown[]> {
 
 		switch (action) {
 			case EAction.COND:
-				this._call(iteration + 1, X.EVAL(handlerOrCondition), ...args);
+				this._call(iteration + 1, X.EVAL(handlerOrCondition, ...args), ...args);
 
 				break;
 

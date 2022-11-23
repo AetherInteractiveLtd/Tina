@@ -18,8 +18,12 @@ import { PostEndpoint } from "./classes/methods/post";
 import { POSTDeclaration } from "./classes/methods/postTypes";
 
 /* UPDATE */
+import { UpdateEndpoint } from "./classes/methods/update";
+import { UPDATEDeclaration } from "./classes/methods/updateTypes";
 
 /* GET */
+import { GetEndpoint } from "./classes/methods/get";
+import { GETDeclaration } from "./classes/methods/getTypes";
 
 export namespace Network {
 	/**
@@ -33,7 +37,32 @@ export namespace Network {
 		 * @returns a POST Endpoint.
 		 */
 		export function POST<T extends unknown[] = unknown[]>(identifier?: string): POSTDeclaration<T> {
-			return new PostEndpoint<T>(identifier);
+			return new PostEndpoint(identifier);
+		}
+
+		/**
+		 * UPDATE is a network method which lets you send data to the client, this doesn't expect anything back.
+		 *
+		 * @param identifier possible unique identifier, can be empty.
+		 * @returns an UPDATE Endpoint
+		 */
+		export function UPDATE<T extends unknown[] = unknown[]>(identifier?: string): UPDATEDeclaration<T> {
+			return new UpdateEndpoint(identifier);
+		}
+
+		/**
+		 * GET is a network method, lets you retrieve data, send data to the server and expect a response back from it. All the data being sent back
+		 * is handled by an EventListener via chaining (this opens the opportunity to handle the data being sent back with conditions, this makes this
+		 * method powerful).
+		 * ```
+		 *
+		 * @param identifier possible unique identifier, can be empty.
+		 * @returns a GET Endpoint.
+		 */
+		export function GET<T extends Callback = (...args: unknown[]) => defined>(
+			identifier?: string,
+		): GETDeclaration<T> {
+			return new GetEndpoint(identifier);
 		}
 	}
 

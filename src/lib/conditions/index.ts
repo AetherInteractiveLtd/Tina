@@ -3,8 +3,8 @@ import { Condition, ConditionCallback } from "./types";
 import { isFunction } from "../utilities/checkers";
 
 export class X {
-	public static EVAL(condition: Condition): boolean {
-		return isFunction(condition) ? condition() : condition;
+	public static EVAL(condition: Condition, ...args: unknown[]): boolean {
+		return isFunction(condition) ? condition(...args) : condition;
 	}
 
 	public static AND(first: Condition, second: Condition): Condition {
