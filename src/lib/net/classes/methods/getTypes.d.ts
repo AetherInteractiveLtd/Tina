@@ -53,7 +53,7 @@ export interface GETClientObjectDeclaration<P extends unknown[], R extends unkno
 	 * @server
 	 * @returns an EventListener.
 	 */
-	when(): EventListener<R>;
+	when(): EventListener<P>;
 }
 
 export declare type GETDeclaration<T extends Callback> = GETServerObjectDeclaration<Parameters<T>, ReturnType<T>> &

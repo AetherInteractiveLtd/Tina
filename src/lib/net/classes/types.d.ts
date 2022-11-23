@@ -12,8 +12,9 @@ export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<
 	| RepositoryObjectDeclaration<T>
 >;
 
-export interface RepositoryDeclaration<T extends BaseRepository>
-	extends Record<string, Endpoint<[T[Extract<keyof T, string | symbol>]]> | RepositoryObjectDeclaration<T>> {}
+export type RepositoryDeclaration<T extends BaseRepository> = {
+	[X in keyof T]: Endpoint<[T[X]]> | RepositoryObjectDeclaration<T>;
+};
 
 /**
  * Router class implementation for bootstrapping

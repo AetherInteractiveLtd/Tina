@@ -1,5 +1,6 @@
 import { GETDeclaration } from "./getTypes";
 import { POSTDeclaration } from "./postTypes";
+import { UPDATEDeclaration } from "./updateTypes";
 
 /**
  * Base endpoint declaration object, describing what it should be like.
@@ -16,4 +17,5 @@ export type ServerEvent<T extends unknown[]> = [user: never, ...args: T];
  */
 export declare type Endpoint<T> =
 	| GETDeclaration<T extends Callback ? Callback : never>
-	| POSTDeclaration<T extends unknown[] ? unknown[] : never>;
+	| POSTDeclaration<T extends unknown[] ? unknown[] : never>
+	| UPDATEDeclaration<T extends unknown[] ? unknown[] : never>;

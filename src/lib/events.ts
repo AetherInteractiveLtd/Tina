@@ -32,8 +32,8 @@ export class EventListener<T extends unknown[]> {
 	 *
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
-	public condition(condition: Condition): EventListener<T> {
-		this.listeners.push([condition, EAction.COND]);
+	public condition(condition: Condition<T>): EventListener<T> {
+		this.listeners.push([condition as Condition, EAction.COND]);
 
 		return this as unknown as EventListener<T>;
 	}
@@ -63,7 +63,7 @@ export class EventListener<T extends unknown[]> {
 
 		switch (action) {
 			case EAction.COND:
-				this._call(iteration + 1, X.EVAL(handlerOrCondition, ...args), ...args);
+				this._call(iteration + 1, X.EVAL<T>(handlerOrCondition, ...args), ...args);
 
 				break;
 
