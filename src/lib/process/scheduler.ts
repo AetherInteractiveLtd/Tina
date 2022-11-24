@@ -7,6 +7,7 @@ const RunService = game.GetService("RunService");
  */
 export class ProcessScheduler {
 	static TPS = 20; // Grab value from tina.yaml when able
+	public isStarted = false;
 	private lastTick: number;
 	private timeBetweenTicks: number;
 	private connection?: RBXScriptConnection;
