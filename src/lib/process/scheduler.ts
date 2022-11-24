@@ -59,10 +59,10 @@ export class ProcessScheduler {
 	}
 
 	public addProcess(process: Process): void {
-		if (!this.processes.includes(process)) {
-			this.processes.push(process);
-			this.start();
-		}
+		if (this.processes.includes(process)) return;
+
+		this.processes.push(process);
+		this.start();
 	}
 
 	public removeProcess(process: Process): void {
@@ -76,11 +76,11 @@ export class ProcessScheduler {
 
 	private _removeProcess(process: Process): void {
 		const index = this.processes.indexOf(process);
-		if (index >= 0) {
-			this.processes.remove(index);
-			if (this.processes.size() === 0) {
-				this.stop();
-			}
+		if (index < 0) return;
+
+		this.processes.remove(index);
+		if (this.processes.size() === 0) {
+			this.stop();
 		}
 	}
 
@@ -92,18 +92,18 @@ export class ProcessScheduler {
 		return this.processes.find((p) => p.name === name);
 	}
 
-	private start(): void {
-		if (!this.isStarted) {
-			this.isStarted = true;
-			this.connection = RunService.Heartbeat.Connect(() => this.onHeartbeat());
-		}
+	public start(): void {
+		if (this.isStarted) return; // TODO: log that they're doing something stupid.
+
+		this.isStarted = true;
+		this.connection = RunService.Heartbeat.Connect(() => this.onHeartbeat());
 	}
 
 	private stop(): void {
-		if (this.isStarted) {
-			this.isStarted = false;
-			this.connection?.Disconnect();
-		}
+		if (this.isStarted) return;
+
+		this.isStarted = false;
+		this.connection?.Disconnect();
 	}
 }
 
