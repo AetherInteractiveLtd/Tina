@@ -1,6 +1,6 @@
 {
 	"include": ["src"],
-	"exclude": ["tests"],
+	"exclude": ["tests", "transformer"],
 
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
@@ -26,8 +26,8 @@
 			{
 				"transform": "@rbxtina/yaml-converter",
 				"compilation": {
-					"from": "yaml/from",
-					"to": "yaml/to"
+					"from": "",
+					"to": "config"
 				}
 			}
 		],
