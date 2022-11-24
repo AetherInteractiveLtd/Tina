@@ -7,7 +7,6 @@ const RunService = game.GetService("RunService");
  */
 export class ProcessScheduler {
 	static TPS = 20; // Grab value from tina.yaml when able
-	public isStarted = false;
 	private lastTick: number;
 	private timeBetweenTicks: number;
 	private connection?: RBXScriptConnection;
@@ -32,6 +31,7 @@ export class ProcessScheduler {
 	}
 
 	private update(): void {
+		// Update has started
 		this.updating = true;
 
 		for (const process of this.processes) {
@@ -44,8 +44,11 @@ export class ProcessScheduler {
 			}
 
 			// Run active processes
-			if (!process.isSuspended) {
+			if (process.isSuspended) continue;
+			try {
 				process.call();
+			} catch (error) {
+				// TODO: log any errors properly.
 			}
 		}
 
@@ -55,6 +58,7 @@ export class ProcessScheduler {
 		}
 		this.processesToRemove = new Array();
 
+		// Update has finished
 		this.updating = false;
 	}
 
@@ -62,7 +66,6 @@ export class ProcessScheduler {
 		if (this.processes.includes(process)) return;
 
 		this.processes.push(process);
-		this.start();
 	}
 
 	public removeProcess(process: Process): void {
@@ -77,11 +80,7 @@ export class ProcessScheduler {
 	private _removeProcess(process: Process): void {
 		const index = this.processes.indexOf(process);
 		if (index < 0) return;
-
 		this.processes.remove(index);
-		if (this.processes.size() === 0) {
-			this.stop();
-		}
 	}
 
 	public hasProcess(name: string): boolean {
@@ -93,17 +92,18 @@ export class ProcessScheduler {
 	}
 
 	public start(): void {
-		if (this.isStarted) return; // TODO: log that they're doing something stupid.
-
-		this.isStarted = true;
+		if (this.connection) return; // TODO: log that they're doing something stupid.
 		this.connection = RunService.Heartbeat.Connect(() => this.onHeartbeat());
 	}
 
-	private stop(): void {
-		if (this.isStarted) return;
-
-		this.isStarted = false;
+	/**
+	 * @hidden
+	 * Remove all references and disconnect all connections
+	 */
+	public destroy(): void {
 		this.connection?.Disconnect();
+		this.processes = new Array();
+		this.processesToRemove = new Array();
 	}
 }
 
