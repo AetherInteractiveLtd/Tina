@@ -1,7 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { Process } from "@rbxts/tina/out/lib/process/process";
-import Scheduler from "@rbxts/tina/out/lib/process/scheduler";
+import Scheduler, { ProcessScheduler } from "@rbxts/tina/out/lib/process/scheduler";
 
 export = () => {
 	describe("Scheduler", () => {
@@ -10,53 +10,64 @@ export = () => {
 		});
 
 		it("should be able to add and remove processes from it", () => {
-			const process = new Process("james", Scheduler);
-			expect(Scheduler.hasProcess(process.name)).to.equal(false);
-			Scheduler.addProcess(process);
-			expect(Scheduler.hasProcess(process.name)).to.equal(true);
-			Scheduler.removeProcess(process);
-			expect(Scheduler.hasProcess(process.name)).to.equal(false);
+			const ticker = new ProcessScheduler();
+			const process = new Process("addAndRemove", ticker);
+			expect(ticker.hasProcess(process.name)).to.equal(false);
+			ticker.addProcess(process);
+			expect(ticker.hasProcess(process.name)).to.equal(true);
+			ticker.removeProcess(process);
+			expect(ticker.hasProcess(process.name)).to.equal(false);
 		});
 
 		it("should call unsuspended processes", () => {
-			const process = new Process("unsuspended", Scheduler);
-			Scheduler.addProcess(process);
+			const ticker = new ProcessScheduler();
+			ticker.start();
+			const process = new Process("unsuspended", ticker);
+			ticker.addProcess(process);
 
-			const [status] = new Promise<void>((resolve) => {
-				process.do(() => {
-					resolve();
-				});
-			})
-				.timeout(0.5, "Timed out")
-				.awaitStatus();
+			let called = false;
+			process.do(() => (called = true));
+			task.wait(0.5);
 
-			expect(status).to.equal(Promise.Status.Resolved);
-			Scheduler.removeProcess(process);
+			ticker.destroy();
+			expect(called).to.equal(true);
 		});
 
 		it("should not call suspended processes", () => {
-			const process = new Process("suspended", Scheduler);
-			Scheduler.addProcess(process);
+			const ticker = new ProcessScheduler();
+			const process = new Process("suspended", ticker);
+			ticker.start();
+			ticker.addProcess(process);
 			process.suspend(1000); // 20 ticks = 1 second at 20 TPS
 
-			const [status] = new Promise<string>((resolve) => {
-				process.do(() => {
-					resolve("Resolved");
-				});
-			})
-				.timeout(0.5, "Timed out")
-				.awaitStatus();
+			let called = false;
+			process.do(() => (called = true));
+			task.wait(0.5);
+
+			ticker.destroy();
 
 			// Should timeout
-			expect(status).to.equal(Promise.Status.Rejected);
-			Scheduler.removeProcess(process);
+			expect(called).to.equal(false);
 		});
 
-		// it("should start automatically when a process is added", () => {
-		// 	expect(Scheduler.isStarted).to.equal(false)
-		// });
+		it("should be able to remove process during a tick", () => {
+			const ticker = new ProcessScheduler();
+			const process1 = new Process("1", ticker);
+			const process2 = new Process("2", ticker);
+			ticker.start();
 
-		// it("should stop automatically when all processes are removed", () => {
-		// });
+			let called = false;
+			process1.do(() => ticker.removeProcess(process1));
+			process2.do(() => (called = true));
+			process1.resume();
+			process2.resume();
+			task.wait(0.5);
+
+			const hasProcess = ticker.hasProcess(process1.name);
+			ticker.destroy();
+
+			expect(hasProcess).to.equal(false);
+			expect(called).to.equal(true);
+		});
 	});
 };
