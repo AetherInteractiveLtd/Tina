@@ -18,11 +18,11 @@ export class ProcessScheduler {
 
 	constructor() {
 		this.timeBetweenTicks = 1 / ProcessScheduler.TPS;
-		this.lastTick = os.time();
+		this.lastTick = os.clock();
 	}
 
 	private onHeartbeat(): void {
-		const currentTick = os.time();
+		const currentTick = os.clock();
 		const deltaTime = currentTick - this.lastTick;
 		if (deltaTime >= this.timeBetweenTicks) {
 			// Adjust lastTick to based on timeBetweenTicks to keep interval relatively stable
