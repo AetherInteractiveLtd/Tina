@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@eslint/github-action": "^0.1.0",
+    "@rbxtina/yaml-converter": "^1.0.0",
     "@rbxts/services": "^1.5.1",
     "roblox-ts": "^2.0.4"
   }

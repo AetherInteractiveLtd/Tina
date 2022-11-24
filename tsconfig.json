@@ -20,6 +20,17 @@
 		"rootDir": "src",
 		"outDir": "out",
 		"incremental": false,
-		"declaration": true
+		"declaration": true,
+		
+		"plugins": [
+			{
+				"transform": "@rbxtina/yaml-converter",
+				"compilation": {
+					"from": "yaml/from",
+					"to": "yaml/to"
+				}
+			}
+		],
+
 	}
 }
