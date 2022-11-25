@@ -1,4 +1,4 @@
-import { Entity, EntityId } from "./entity";
+import { EntityId } from "../types/ecs";
 import { EntityManager } from "./entity-manager";
 
 export interface WorldOptions {
@@ -7,11 +7,6 @@ export interface WorldOptions {
 	 * (potentially useful if you have multiple worlds). Defaults to "World".
 	 */
 	name?: string;
-	/**
-	 * Define the initial entity pool size for entities. This is the number of
-	 * expected entites in the world. More can be created as needed.
-	 */
-	entityPoolSize: number;
 }
 
 /**
@@ -23,9 +18,8 @@ export interface WorldOptions {
  */
 export class World {
 	public name: string;
+	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
-
-	private entityManager: EntityManager;
 
 	constructor(options: WorldOptions) {
 		this.options = options;
@@ -46,24 +40,27 @@ export class World {
 
 	/**
 	 * Creates a new entity in the world.
+	 * @returns The id of the newly created entity.
 	 */
-	public add(): Entity {
+	public add(): number {
 		return this.entityManager.createEntity();
 	}
 
 	/**
 	 * Removes the given entity from the world, including all its components.
-	 *
-	 * @note If you wish to use the entity class to remove itself from the
-	 * world, then use the {@link Entity.delete} method on the entity class.
-	 *
 	 * @param entityId The id of the entity to remove.
 	 */
 	public remove(entityId: EntityId) {
-		const entity = this.entityManager.getEntityById(entityId);
-		if (entity) {
-			this.entityManager.removeEntity(entity);
-		}
+		this.entityManager.removeEntity(entityId);
+	}
+
+	/**
+	 * Checks if a given entity is currently in the world.
+	 * @param entityId
+	 * @returns
+	 */
+	public has(entityId: EntityId): boolean {
+		return this.entityManager.alive(entityId);
 	}
 
 	/**
@@ -71,6 +68,50 @@ export class World {
 	 */
 	public size(): number {
 		return this.entityManager.getNumberOfEntitiesInUse();
+	}
+
+	/**
+	 * Adds a given component to the entity. If the entity already has the
+	 * given component, then an error is thrown.
+	 * @param data An optional data object to initialise the component with.
+	 */
+	public addComponent<C>(entityId: EntityId, /**component: ComponentType<C>, */ data: Partial<C>): void {}
+
+	/**
+	 * Removes the component of the given type from the entity.
+	 */
+	public removeComponent(entityId: EntityId /**component: ComponentType<C> */): void {}
+
+	/**
+	 * Returns whether the entity has the given component.
+	 * @returns Whether the entity has the given component.
+	 */
+	public hasComponent<C>(entityId: EntityId /**component: ComponentType<C> */): boolean {
+		return false;
+	}
+
+	/**
+	 * Returns whether or not the entity has any of the given components.
+	 * @returns
+	 */
+	public hasSubsetOf(entityId: EntityId /** ...components: ComponentType<any>[] */): boolean {
+		return false;
+	}
+
+	/**
+	 * Returns whether or not the entity has all of the given components.
+	 * @returns
+	 */
+	public hasAllOf(entityId: EntityId /** ...components: ComponentType<any>[] */): boolean {
+		return false;
+	}
+
+	/**
+	 * Returns the component of on the entity of the given type.
+	 * @returns
+	 */
+	public getComponent<C>(entityId: EntityId /**component: ComponentType<C> */): C | undefined {
+		return undefined;
 	}
 
 	/**
@@ -92,13 +133,4 @@ export class World {
 	 * Pauses the execution of the world.
 	 */
 	public pause(): void {}
-
-	/**
-	 * Checks if a given entity is currently in the world.
-	 * @param entityId
-	 * @returns
-	 */
-	public has(entityId: EntityId): boolean {
-		return this.entityManager.getEntityById(entityId) !== undefined;
-	}
 }

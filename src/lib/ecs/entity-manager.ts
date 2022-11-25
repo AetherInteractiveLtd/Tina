@@ -1,163 +1,97 @@
-import { Entity, EntityId } from "./entity";
+import { EntityId } from "../types/ecs";
+import { Archetype } from "./collections/archetype";
+import { SparseSet } from "./collections/sparse-set";
 import { World } from "./world";
-
-/**
- * A pool of entities that can be reused, so that we do not need to create a
- * new entity every time we need one.
- *
- * The entity pool will be created when a world is initialized, and will
- * grow as required (although it is recommended to set the initial size to a
- * reasonable number as growth during a game could be potentially expensive).
- */
-class EntityPool {
-	private worldName: string;
-	private entities: Array<Entity>;
-	private entitiesInUse: number;
-	private firstAvailable: Entity;
-	private size: number;
-
-	constructor(private readonly entityManager: EntityManager, initialSize: number, worldName: string) {
-		this.worldName = worldName;
-		this.entitiesInUse = 0;
-		this.size = 0;
-
-		this.entities = new Array<Entity>(initialSize);
-		this.expand(initialSize);
-		this.firstAvailable = this.entities[0];
-	}
-
-	/**
-	 * Gets the next available entity from the pool.
-	 * @returns An available entity.
-	 */
-	public aquire(/** initialiser to pass to entity? */): Entity {
-		assert(this.firstAvailable !== undefined, "No more entities available");
-
-		const entity = this.firstAvailable;
-		const nextEntity = entity.next;
-		if (nextEntity === undefined) {
-			// The pool is empty, so expand it by roughly 10%.
-			// This could be a potentially expensive operation.
-			warn(
-				`Entity pool for ${this.worldName} is currently empty. Expanding by 10%. If this is a problem, ",
-				"consider increasing the initial size of the pool.`,
-			);
-			debug.profilebegin("EntityPool.expand");
-			this.expand(math.round(this.size * 0.1) + 1);
-			debug.profileend();
-		}
-
-		this.firstAvailable = entity.next!;
-		this.entitiesInUse++;
-
-		entity.initialise();
-		return entity;
-	}
-
-	/**
-	 * Adds the given entity back into the pool.
-	 * @param entity The entity to add back into the pool.
-	 */
-	public release(entity: Entity): void {
-		entity.next = this.firstAvailable;
-		this.firstAvailable = entity;
-		this.entitiesInUse--;
-	}
-
-	/**
-	 * @returns The number of entities that are currently in use by the pool.
-	 */
-	public getEntitiesInUse(): number {
-		return this.entitiesInUse;
-	}
-
-	/**
-	 * Expands the entity pool by the given number of entities.
-	 * @param newEntities The number of entities to add to the pool.
-	 */
-	private expand(newEntities: number) {
-		for (let i = 0; i < newEntities; i++) {
-			const entity = new Entity(this.entityManager);
-			this.entities.push(entity);
-		}
-		this.setupEntityStorage(this.size);
-		this.size += newEntities;
-	}
-
-	/**
-	 * Setup the entity storage for the given range of entities.
-	 * @param initialSize The current size of the entity pool.
-	 */
-	private setupEntityStorage(initialSize: number /** entitiesToSetup: number*/) {
-		// Rather than using a separate list in the entity pool, we can just
-		// set up a linked list of entities which chains together every unused
-		// entity in the pool.
-		for (let i = initialSize; i < this.size - 1; i++) {
-			this.entities[i].next = this.entities[i + 1];
-		}
-		this.entities[this.size - 1].next = undefined;
-	}
-}
 
 /**
  * A class for managing entities within the world.
  */
 export class EntityManager {
-	private entitiesById: Map<EntityId, Entity>;
-	private readonly entityPool: EntityPool;
-	private world: World;
+	private archetypes: Map<string, Archetype>;
+	private empty: Archetype;
+	private entities: Archetype[];
+	private entitiesToDestroy: SparseSet;
+	private nextEntityId: EntityId;
+	private updateTo: Archetype[];
+	private readonly rm: SparseSet;
+	private readonly world: World;
 
-	public nextEntityId: EntityId;
+	private componentId = 0;
+	private entityId = 0;
+	private size = 0;
 
 	constructor(world: World) {
-		this.entitiesById = new Map();
+		this.archetypes = new Map();
 		this.nextEntityId = 0;
 		this.world = world;
 
-		this.entityPool = new EntityPool(this, world.options.entityPoolSize, world.name);
+		this.rm = new SparseSet();
+		this.entitiesToDestroy = new SparseSet();
+		this.entities = [];
+		this.updateTo = [];
+		this.empty = new Archetype([]);
 	}
 
 	/**
-	 * @returns The number of entities that are currently in use by the pool.
+	 * @returns True if the entity id is currently in the world.
+	 */
+	public alive(entityId: EntityId): boolean {
+		return this.entities[entityId] !== undefined;
+	}
+
+	/**
+	 * @returns The number of entities that are currently alive in the world.
 	 */
 	public getNumberOfEntitiesInUse(): number {
-		return this.entityPool.getEntitiesInUse();
+		return this.size;
 	}
 
 	/**
-	 * Get the {@link Entity} class with the given id.
-	 * @param id The id of the entity to get.
-	 * @returns The entity if it exists.
+	 * @returns The id of the next available entity.
 	 */
-	public getEntityById(id: EntityId): Entity | undefined {
-		return this.entitiesById.get(id);
+	public createEntity(): number {
+		if (this.rm.packed.size() > 0) {
+			const entityId = this.rm.packed.pop()!;
+			this.createEntityInternal(entityId);
+			return entityId;
+		}
+
+		if (this.entityId === 0) {
+			this.empty.mask = table.create(math.ceil(this.componentId / 32));
+			this.archetypes.set(tostring(this.empty.mask), this.empty);
+		}
+
+		this.createEntityInternal(this.entityId);
+		return this.entityId++;
 	}
 
 	/**
-	 * @returns The newly created entity.
+	 * Removes the given entity from the world, including all its components.
+	 * @param entityId The id of the entity to remove.
 	 */
-	public createEntity(): Entity {
-		const entity = this.entityPool.aquire();
-		this.entitiesById.set(entity.id, entity);
-		return entity;
+	public removeEntity(entityId: EntityId): void {
+		this.entitiesToDestroy.add(entityId);
 	}
 
 	/**
-	 * Removes the given entity.
-	 * @param entity
+	 *
+	 * @param entityId
 	 */
-	public removeEntity(entity: Entity): void {
-		// remove all components
-		// reset entity state? (is this necessary?, we could just reinitialise state on aquire)
-		// inform that entity has been changed and removed
-		this.entityPool.release(entity);
-		this.entitiesById.delete(entity.id);
+	private createEntityInternal(entityId: EntityId): void {
+		this.entities[entityId] = this.updateTo[entityId] = this.empty;
+		this.empty.sparseSet.add(entityId);
+		this.size++;
 	}
 
 	/**
-	 * @returns The next available entity id.
+	 * Removes all the pending entities from the world.
+	 * @note This is called internally when a system has completed.
 	 */
-	public getNextEntityId(): EntityId {
-		return this.nextEntityId++;
+	private destroyPending(): void {
+		for (const entityId of this.entitiesToDestroy.packed) {
+			this.entities[entityId].sparseSet.remove(entityId);
+			this.rm.add(entityId);
+		}
+		this.entitiesToDestroy.packed.clear();
 	}
 }
