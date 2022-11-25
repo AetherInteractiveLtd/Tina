@@ -1,3 +1,4 @@
+import Tina from "../../../..";
 import { EventListener } from "../../../events";
 
 import { ClientNet } from "../../utilities/client";
@@ -18,7 +19,9 @@ export class PostEndpoint<T extends unknown[]> implements POSTDeclaration<T> {
 	when(): EventListener<ServerEvent<T>> {
 		let eventListener!: EventListener<ServerEvent<T>>;
 
-		ServerNet.listen(this.identifier, (player: Player, ...args: unknown[]) => eventListener.call(player, ...args));
+		ServerNet.listen(this.identifier, (player: Player, ...args: unknown[]) =>
+			eventListener.call(Tina.Mirror.User.get(player), ...args),
+		);
 
 		return eventListener;
 	}

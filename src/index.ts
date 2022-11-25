@@ -1,6 +1,11 @@
+import { Players } from "@rbxts/services";
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 import logger from "./lib/logger";
+
+/* Networking namespace */
+import { Network } from "./lib/net";
+import { DefaultUser } from "./types";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -8,8 +13,6 @@ export enum Protocol {
 	LCTRL = "LCTRL",
 	NET = "NET",
 }
-
-interface DefaultUserData {}
 
 namespace Tina {
 	/**
@@ -68,33 +71,29 @@ namespace Tina {
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
 	export namespace Mirror {
-		export abstract class User {
-			constructor(id: number) {}
+		export abstract class User implements DefaultUser {
+			constructor(private ref: Player | number) {}
 
-			static fromPlayer(plr: Player) {
-				return new TINA_USER_CLASS(plr.UserId);
+			/**
+			 * Returns a User defined class.
+			 */
+			public static get(from: Player | never | string | number): never {
+				return "" as never; /* This still makes no sense to me, what exactly is a "User" if it's of type never always */
 			}
 
-			load() {}
+			public player(): Player {
+				return (
+					typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player)
+				)!;
+			}
 
-			unload() {}
+			public load() {}
+
+			public unload() {}
 		}
 	}
 
-	export namespace Net {
-		// TODO: Move this and rework it @siriuslatte
-		class Endpoint {}
-
-		export class NetworkProtocol {}
-
-		export function protocol(protocol: Protocol, tree?: unknown): NetworkProtocol {
-			return new NetworkProtocol();
-		}
-
-		export function registerNetwork(tree: { [key: string]: NetworkProtocol }) {}
-
-		export function endpoint<T>() {}
-	}
+	export const Net = Network;
 }
 
 /** Export Tina itself */

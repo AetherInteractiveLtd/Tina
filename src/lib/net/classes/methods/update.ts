@@ -1,3 +1,5 @@
+import Tina from "../../../..";
+
 import { EventListener } from "../../../events";
 
 import { ClientNet } from "../../utilities/client";
@@ -23,10 +25,10 @@ export class UpdateEndpoint<T extends unknown[]> implements UPDATEDeclaration<T>
 	}
 
 	public send(user: never, ...args: T): void {
-		ServerNet.call(this.identifier, [(user as { player: Player }).player], ...args);
+		ServerNet.call(this.identifier, [(user as Tina.Mirror.User).player()], ...args);
 	}
 
 	public sendAll(...args: T) {
-		ServerNet.call(this.identifier, [], ...args); /* Left blank, the all Users needs discussion */
+		ServerNet.call(this.identifier, [], ...args); /* How one retrieve all the users available? */
 	}
 }

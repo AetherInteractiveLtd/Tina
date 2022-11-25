@@ -1,3 +1,5 @@
+import Tina from "../../../..";
+
 import { EventListener } from "../../../events";
 
 import { ClientNet } from "../../utilities/client";
@@ -15,22 +17,13 @@ export class GetEndpoint<T extends Callback> implements GETDeclaration<T> {
 	}
 
 	reply<P extends Parameters<T>, R extends ReturnType<T>>(func: (user: never, ...args: P) => R): void {
-		ServerNet.listen(
-			this.identifier,
-			(player: Player, ...args: unknown[]) =>
-				ServerNet.call(
-					this.identifier,
-					[player],
-					func("" as never, ...(args as P)),
-				) /* The string part is a user, still need to work that out. */,
+		ServerNet.listen(this.identifier, (player: Player, ...args: unknown[]) =>
+			ServerNet.call(this.identifier, [player], func(Tina.Mirror.User.get(player), ...(args as P))),
 		);
 	}
 
 	send<P extends Parameters<T>>(...args: P): void {
-		ClientNet.call(
-			this.identifier,
-			...(args as P),
-		); /* typescript dumb right here, delete the as P and you'll see an error */
+		ClientNet.call(this.identifier, ...(args as P));
 	}
 
 	get(): void {
