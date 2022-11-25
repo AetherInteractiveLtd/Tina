@@ -1,8 +1,8 @@
-import { BaseEndpointObjectDeclaration, ServerEvent } from "./baseEndpointTypes";
+import { ServerEvent } from "./baseEndpointTypes";
 
 import { EventListener } from "../../../events";
 
-export interface POSTServerObjectDeclaration<T extends unknown[]> extends BaseEndpointObjectDeclaration<T> {
+export interface POSTServerObjectDeclaration<T> {
 	/**
 	 * when returns an event listener used to bind actions to be called.
 	 *
@@ -12,15 +12,14 @@ export interface POSTServerObjectDeclaration<T extends unknown[]> extends BaseEn
 	when(): EventListener<ServerEvent<T>>;
 }
 
-export interface POSTClientObjectDeclaration<T extends unknown[]> {
+export interface POSTClientObjectDeclaration<T> {
 	/**
 	 * POST is a one-way method, which lets client send requests of change to the server, server won't be able to send any data back.
 	 *
 	 * @client
-	 * @param args should be the arguments described before hand when creating the objects.
+	 * @param toSend should be the arguments described before hand when creating the objects.
 	 */
-	send(...args: [...T]): void;
+	send(toSend: T): void;
 }
 
-export declare type POSTDeclaration<T extends unknown[] = unknown[]> = POSTServerObjectDeclaration<T> &
-	POSTClientObjectDeclaration<T>;
+export declare type POSTDeclaration<T> = POSTServerObjectDeclaration<T> & POSTClientObjectDeclaration<T>;

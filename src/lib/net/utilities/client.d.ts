@@ -10,7 +10,7 @@ export namespace ClientNet {
 	 * @param identifierName as string, should denote the identifier name
 	 * @param callback as a Callback (function), should denote the actual
 	 */
-	export function listen(identifierName: string, callback: (...args: unknown[]) => void): string;
+	export function listen(identifierName: string, callback: (value: never) => void): string;
 
 	/**
 	 * call should pack and compress everything, schedule it to be sent and release such memory when no longer needed.

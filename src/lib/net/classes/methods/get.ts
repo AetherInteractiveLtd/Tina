@@ -9,31 +9,31 @@ import { Endpoints } from "./baseEndpoint";
 
 import { GETDeclaration } from "./getTypes";
 
-export class GetEndpoint<T extends Callback> implements GETDeclaration<T> {
+export class GetEndpoint<S, R> implements GETDeclaration<S, R> {
 	private identifier: string;
 
 	constructor(id?: string) {
 		this.identifier = Endpoints.createIdentifier(id);
 	}
 
-	reply<P extends Parameters<T>, R extends ReturnType<T>>(func: (user: never, ...args: P) => R): void {
-		ServerNet.listen(this.identifier, (player: Player, ...args: unknown[]) =>
-			ServerNet.call(this.identifier, [player], func(Tina.Mirror.User.get(player), ...(args as P))),
+	reply(func: (user: Tina.Mirror.User & unknown, value: S) => R): void {
+		ServerNet.listen(this.identifier, (player: Player, value: never) =>
+			ServerNet.call(this.identifier, [player], func(Tina.Mirror.User.get(player), value)),
 		);
 	}
 
-	send<P extends Parameters<T>>(...args: P): void {
-		ClientNet.call(this.identifier, ...(args as P));
+	send(toSend: S): void {
+		ClientNet.call(this.identifier, toSend);
 	}
 
 	get(): void {
 		ClientNet.call(this.identifier);
 	}
 
-	when<X extends ReturnType<T>>(): EventListener<X> {
-		let eventListener!: EventListener<X>;
+	when(): EventListener<[R]> {
+		let eventListener!: EventListener<[R]>;
 
-		ClientNet.listen(this.identifier, (...args: unknown[]) => eventListener.call(...args));
+		ClientNet.listen(this.identifier, (value: never) => eventListener.call(value));
 
 		return eventListener;
 	}

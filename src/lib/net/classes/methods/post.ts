@@ -9,7 +9,7 @@ import { ServerEvent } from "./baseEndpointTypes";
 
 import { POSTDeclaration } from "./postTypes";
 
-export class PostEndpoint<T extends unknown[]> implements POSTDeclaration<T> {
+export class PostEndpoint<T> implements POSTDeclaration<T> {
 	private identifier: string;
 
 	constructor(id?: string) {
@@ -19,14 +19,14 @@ export class PostEndpoint<T extends unknown[]> implements POSTDeclaration<T> {
 	when(): EventListener<ServerEvent<T>> {
 		let eventListener!: EventListener<ServerEvent<T>>;
 
-		ServerNet.listen(this.identifier, (player: Player, ...args: unknown[]) =>
-			eventListener.call(Tina.Mirror.User.get(player), ...args),
+		ServerNet.listen(this.identifier, (player: Player, value: never) =>
+			eventListener.call(Tina.Mirror.User.get(player), value),
 		);
 
 		return eventListener;
 	}
 
-	public send(...args: T): void {
-		ClientNet.call(this.identifier, ...args);
+	send(toSend: T): void {
+		ClientNet.call(this.identifier, toSend);
 	}
 }

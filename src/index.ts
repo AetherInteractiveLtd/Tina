@@ -1,12 +1,14 @@
 import { Players } from "@rbxts/services";
+
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+
 import logger from "./lib/logger";
+
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 
 /* Networking namespace */
-import { Network } from "./lib/net";
 import { DefaultUser } from "./types";
 
 export enum Protocol {
@@ -101,8 +103,6 @@ namespace Tina {
 			public unload() {}
 		}
 	}
-
-	export const Net = Network;
 }
 
 /** Export Tina itself */
@@ -110,8 +110,12 @@ export default Tina;
 
 /** Export Conditions Library */
 export { X } from "./lib/conditions";
+
 /** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
+
+/** Export Network Library */
+export { Network } from "./lib/net";
 
 let TINA_USER_CLASS: new (id: number) => Tina.Mirror.User = Tina.Mirror.User as never as new (
 	id: number,

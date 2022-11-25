@@ -1,6 +1,7 @@
+import Tina from "../../../..";
 import { EventListener } from "../../../events";
 
-export interface GETServerObjectDeclaration<P extends unknown[], R extends unknown[]> {
+export interface GETServerObjectDeclaration<R, S> {
 	/**
 	 * Should be the callback defined on the declaration.
 	 *
@@ -12,22 +13,22 @@ export interface GETServerObjectDeclaration<P extends unknown[], R extends unkno
 	 * @server
 	 * @param func should describe the listener function to add as a callback for the reply, the return type is the expected type at the receiving end.
 	 */
-	reply(func: (user: never, ...args: P) => R): void;
+	reply(func: (user: Tina.Mirror.User & unknown, value: R) => S): void;
 }
 
-export interface GETClientObjectDeclaration<P extends unknown[], R extends unknown[]> {
+export interface GETClientObjectDeclaration<S, R> {
 	/**
 	 * You can send data for the server to manipulate it/use it, and send it back if needed with `.send()`. If you just want to retrieve data, use `.get()` instead.
 	 *
 	 * @example
 	 * ```
-	 * NET.get("core").path("networkObject").send(...args: P); // The events emit is done here.
+	 * NET.get("core").path("networkObject").send(value: S); // The events emit is done here.
 	 * ```
 	 *
 	 * @client
-	 * @param args should be the parameters described on the endpoint declaration.
+	 * @param toSend should be the value to send to the server.
 	 */
-	send(...args: P): void;
+	send(toSend: S): void;
 
 	/**
 	 * Used to retrieve data without caring about any data required to be sent.
@@ -47,14 +48,13 @@ export interface GETClientObjectDeclaration<P extends unknown[], R extends unkno
 	 *
 	 * @example
 	 * ```
-	 * NET.get("core").path("networkObject).when().do((...args: R) => { ... });
+	 * NET.get("core").path("networkObject).when().do((value: R) => { ... });
 	 * ```
 	 *
 	 * @server
 	 * @returns an EventListener.
 	 */
-	when(): EventListener<P>;
+	when(): EventListener<[value: R]>;
 }
 
-export declare type GETDeclaration<T extends Callback> = GETServerObjectDeclaration<Parameters<T>, ReturnType<T>> &
-	GETClientObjectDeclaration<Parameters<T>, ReturnType<T>>;
+export declare type GETDeclaration<S, R> = GETServerObjectDeclaration<S, R> & GETClientObjectDeclaration<S, R>;

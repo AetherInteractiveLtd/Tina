@@ -54,11 +54,8 @@ function server._init()
 
 		for _, v: packet in queue do
 			local toType = typeof(v.to)
-			if toType == "string" then
-				for _, plr in Players:GetPlayers() do
-					table.insert(sendStructure[plr][v.id], v.contents)
-				end
-			elseif toType == "table" then
+
+			if toType == "table" then
 				for _, plr in v.to :: { Player } do
 					table.insert(sendStructure[plr][v.id], v.contents)
 				end
@@ -66,9 +63,11 @@ function server._init()
 				table.insert(sendStructure[v.to :: Player][v.id], v.contents)
 			end
 		end
+
 		table.clear(queue)
 
 		local finishTime = os.clock() - startTime
+
 		if finishTime >= 0.001 then
 			-- TODO debug warn later
 		end
@@ -110,7 +109,7 @@ function server.createIdentifier(name: string)
 	return id
 end
 
-function server.call(plr: { Player }, id: string, ...: any)
+function server.call(id: string, plr: { Player },  object: {})
 	if not validBridges[id] then
 		return warn("id isn't a valid bridge")
 	end
@@ -118,7 +117,7 @@ function server.call(plr: { Player }, id: string, ...: any)
 	table.insert(queue, {
 		to = plr,
 		id = id,
-		contents = { ... },
+		contents = object,
 	})
 
 	return
@@ -132,7 +131,7 @@ function server.waitFor(identifier: string)
 	return coroutine.yield()
 end
 
-function server.listen(identifier: string, func: (...any) -> nil)
+function server.listen(identifier: string, func: (object: {}) -> nil)
 	if not validBridges[identifier] then
 		return warn("id isn't a valid bridge")
 	end

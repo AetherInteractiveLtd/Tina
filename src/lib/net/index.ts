@@ -11,7 +11,7 @@ import {
  * Networking object holders
  */
 import { Router } from "./classes/router";
-import { Repository } from "./classes/directory";
+import { Repository } from "./classes/repository";
 
 /* POST */
 import { PostEndpoint } from "./classes/methods/post";
@@ -36,7 +36,7 @@ export namespace Network {
 		 * @param identifier possible unique identifier, can be empty.
 		 * @returns a POST Endpoint.
 		 */
-		export function POST<T extends unknown[] = unknown[]>(identifier?: string): POSTDeclaration<T> {
+		export function POST<T>(identifier?: string): POSTDeclaration<T> {
 			return new PostEndpoint(identifier);
 		}
 
@@ -46,7 +46,7 @@ export namespace Network {
 		 * @param identifier possible unique identifier, can be empty.
 		 * @returns an UPDATE Endpoint
 		 */
-		export function UPDATE<T extends unknown[] = unknown[]>(identifier?: string): UPDATEDeclaration<T> {
+		export function UPDATE<T>(identifier?: string): UPDATEDeclaration<T> {
 			return new UpdateEndpoint(identifier);
 		}
 
@@ -59,9 +59,7 @@ export namespace Network {
 		 * @param identifier possible unique identifier, can be empty.
 		 * @returns a GET Endpoint.
 		 */
-		export function GET<T extends Callback = (...args: unknown[]) => defined>(
-			identifier?: string,
-		): GETDeclaration<T> {
+		export function GET<S, R>(identifier?: string): GETDeclaration<S, R> {
 			return new GetEndpoint(identifier);
 		}
 	}
