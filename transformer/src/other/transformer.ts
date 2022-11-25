@@ -91,6 +91,6 @@ export class Transform {
 	}
 
 	public transformYamlFile(path: string, from: string, to: string) {
-		buildYamlFile(this.project, path, { from: from, to: to }).catch((e) => this.logger.error(e));
+		buildYamlFile(this.project, path, { from, to }).catch((e) => this.logger.error(e));
 	}
 }
