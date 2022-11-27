@@ -1,7 +1,7 @@
 import { X } from "./conditions";
 import { Condition } from "./conditions/types";
 
-declare enum EAction {
+export enum EAction {
 	COND = "c",
 	DO = "d",
 }
