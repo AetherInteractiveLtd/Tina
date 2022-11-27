@@ -51,7 +51,7 @@ export interface GETClientObjectDeclaration<S, R> {
 	 * NET.get("core").path("networkObject).when().do((value: R) => { ... });
 	 * ```
 	 *
-	 * @server
+	 * @client
 	 * @returns an EventListener.
 	 */
 	when(): EventListener<[value: R]>;

@@ -29,7 +29,7 @@ interface UPDATEClientObjectDeclaration<T> {
 	/**
 	 * when returns an event listener used to bind actions to be called.
 	 *
-	 * @server
+	 * @client
 	 * @returns an EventListener.
 	 */
 	when(): EventListener<[value: T]>;
