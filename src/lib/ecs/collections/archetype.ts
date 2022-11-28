@@ -14,9 +14,14 @@ export class Archetype {
 		this.change = [];
 		this.mask = mask;
 		this.sparseSet = new SparseSet();
-		this.entities = this.sparseSet.packed;
+		this.entities = this.sparseSet.dense;
 	}
 
+	/**
+	 *
+	 * @param x
+	 * @returns
+	 */
 	public has(x: number) {
 		return this.sparseSet.has(x);
 	}

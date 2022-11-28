@@ -7,12 +7,12 @@ import { World } from "./world";
  * A class for managing entities within the world.
  */
 export class EntityManager {
-	private archetypes: Map<string, Archetype>;
+	public archetypes: Map<string, Archetype>;
 	private empty: Archetype;
 	private entities: Archetype[];
 	private entitiesToDestroy: SparseSet;
 	private nextEntityId: EntityId;
-	private updateTo: Archetype[];
+	public updateTo: Archetype[];
 	private readonly rm: SparseSet;
 	private readonly world: World;
 
@@ -30,6 +30,14 @@ export class EntityManager {
 		this.entities = [];
 		this.updateTo = [];
 		this.empty = new Archetype([]);
+	}
+
+	public getEntityId(): number {
+		return this.entityId;
+	}
+
+	public getNextComponentId(): number {
+		return this.componentId++;
 	}
 
 	/**
@@ -50,15 +58,15 @@ export class EntityManager {
 	 * @returns The id of the next available entity.
 	 */
 	public createEntity(): number {
-		if (this.rm.packed.size() > 0) {
-			const entityId = this.rm.packed.pop()!;
+		if (this.rm.dense.size() > 0) {
+			const entityId = this.rm.dense.pop()!;
 			this.createEntityInternal(entityId);
 			return entityId;
 		}
 
 		if (this.entityId === 0) {
-			this.empty.mask = table.create(math.ceil(this.componentId / 32));
-			this.archetypes.set(tostring(this.empty.mask), this.empty);
+			this.empty.mask = table.create(math.ceil(this.componentId / 32), 0);
+			this.archetypes.set(this.empty.mask.join(","), this.empty);
 		}
 
 		this.createEntityInternal(this.entityId);
@@ -83,15 +91,26 @@ export class EntityManager {
 		this.size++;
 	}
 
+	/** @hidden */
+	public updatePending(denseArray: number[]): void {
+		denseArray.forEach((entityId) => {
+			if (this.alive(entityId)) {
+				this.entities[entityId].sparseSet.remove(entityId);
+				this.entities[entityId] = this.updateTo[entityId];
+				this.entities[entityId].sparseSet.add(entityId);
+			}
+		});
+	}
+
 	/**
 	 * Removes all the pending entities from the world.
 	 * @note This is called internally when a system has completed.
 	 */
 	private destroyPending(): void {
-		for (const entityId of this.entitiesToDestroy.packed) {
+		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
 			this.rm.add(entityId);
 		}
-		this.entitiesToDestroy.packed.clear();
+		this.entitiesToDestroy.dense.clear();
 	}
 }

@@ -1,29 +1,46 @@
+/**
+ *
+ */
 export class SparseSet {
-	public packed: number[];
+	public dense: number[];
 	public sparse: number[];
 
 	constructor() {
-		this.packed = [];
+		this.dense = [];
 		this.sparse = [];
 	}
 
-	public has(x: number) {
-		return this.sparse[x] < this.packed.size() && this.packed[this.sparse[x]] === x;
+	/**
+	 *
+	 * @param x
+	 * @returns
+	 */
+	public has(x: number): boolean {
+		const sparse = this.sparse[x] !== undefined ? this.sparse[x] : math.huge;
+		return sparse < this.dense.size() && this.dense[sparse] === x;
 	}
 
-	public add(x: number) {
+	/**
+	 *
+	 * @param x
+	 */
+	public add(x: number): void {
 		if (!this.has(x)) {
-			this.sparse[x] = this.packed.size();
-			this.packed.push(x);
+			this.sparse[x] = this.dense.size();
+			this.dense.push(x);
 		}
 	}
 
-	public remove(x: number) {
+	/**
+	 *
+	 * @param x
+	 */
+	public remove(x: number): void {
 		if (this.has(x)) {
-			const last = this.packed.pop()!;
+			const last = this.dense.pop()!;
 			if (x !== last) {
 				this.sparse[last] = this.sparse[x];
-				this.packed[this.sparse[x]] = last;
+				this.dense[this.sparse[x]] = last;
 			}
 		}
 	}

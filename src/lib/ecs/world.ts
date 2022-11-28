@@ -1,10 +1,15 @@
+import Sift from "@rbxts/sift";
 import { EntityId } from "../types/ecs";
+import { slice } from "../util/array-utils";
+import { Archetype } from "./collections/archetype";
+import { SparseSet } from "./collections/sparse-set";
+import { ComponentArray, ComponentData, createComponentArray, Tree, Type, _componentData } from "./component";
 import { EntityManager } from "./entity-manager";
 
 export interface WorldOptions {
 	/**
 	 * The name of the world. This can be used for debugging purposes
-	 * (potentially useful if you have multiple worlds). Defaults to "World".
+	 * (potentially useful if you have multiple worlds). Defaults to `World`.
 	 */
 	name?: string;
 }
@@ -17,15 +22,19 @@ export interface WorldOptions {
  * of worlds an application can create.
  */
 export class World {
-	public name: string;
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
+	private toUpdate: SparseSet = new SparseSet();
+
 	constructor(options: WorldOptions) {
 		this.options = options;
-		this.name = options.name !== undefined ? options.name : "World";
-
 		this.entityManager = new EntityManager(this);
+	}
+
+	/** @returns The name of the world. */
+	public toString(): string {
+		return this.options.name !== undefined ? this.options.name : "World";
 	}
 
 	/**
@@ -47,7 +56,7 @@ export class World {
 	}
 
 	/**
-	 * Removes the given entity from the world, including all its components.
+	 * Removes the given entity from the world, including all of its components.
 	 * @param entityId The id of the entity to remove.
 	 */
 	public remove(entityId: EntityId) {
@@ -55,7 +64,7 @@ export class World {
 	}
 
 	/**
-	 * Checks if a given entity is currently in the world.
+	 * Checks if a given entity is currently in the world.	 *
 	 * @param entityId
 	 * @returns
 	 */
@@ -71,23 +80,68 @@ export class World {
 	}
 
 	/**
+	 *
+	 * @param def
+	 */
+	public defineComponent<T extends Tree<Type>>(def: T): ComponentArray<T>;
+	public defineComponent(): {};
+	public defineComponent(def: Tree<Type> = {}) {
+		if (this.entityManager.getEntityId() > 0) {
+			throw error("Cannot define components after entities have been created");
+		}
+		return this.registerComponent(createComponentArray(def, 1000));
+	}
+
+	/**
 	 * Adds a given component to the entity. If the entity already has the
 	 * given component, then an error is thrown.
-	 * @param data An optional data object to initialise the component with.
 	 */
-	public addComponent<C>(entityId: EntityId, /**component: ComponentType<C>, */ data: Partial<C>): void {}
+	public addComponent<C extends ComponentArray>(entityId: EntityId, component: C, data?: Partial<C>): World {
+		if (!this.has(entityId)) {
+			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
+		}
+
+		this.toUpdate.add(entityId);
+
+		const componentId = (component as unknown as ComponentData)[_componentData].id;
+		if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
+			this.entityManager.updateTo[entityId] = this.archetypeChange(
+				this.entityManager.updateTo[entityId],
+				componentId,
+			);
+		}
+
+		return this;
+	}
 
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent(entityId: EntityId /**component: ComponentType<C> */): void {}
+	public removeComponent<C extends ComponentData>(entityId: EntityId, component: ComponentArray): World {
+		if (!this.has(entityId)) {
+			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
+		}
+
+		this.toUpdate.add(entityId);
+
+		const componentId = (component as C)[_componentData].id;
+		if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
+			this.entityManager.updateTo[entityId] = this.archetypeChange(
+				this.entityManager.updateTo[entityId],
+				componentId,
+			);
+		}
+
+		return this;
+	}
 
 	/**
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent<C>(entityId: EntityId /**component: ComponentType<C> */): boolean {
-		return false;
+	public hasComponent<C extends ComponentData>(entityId: EntityId, component: ComponentArray): boolean {
+		const componentId = (component as C)[_componentData].id;
+		return this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId);
 	}
 
 	/**
@@ -133,4 +187,64 @@ export class World {
 	 * Pauses the execution of the world.
 	 */
 	public pause(): void {}
+
+	/**
+	 *
+	 */
+	public updatePending(): void {
+		this.entityManager.updatePending(this.toUpdate.dense);
+		this.toUpdate.dense = [];
+	}
+
+	/**
+	 *
+	 * @param arch
+	 * @param i
+	 * @returns
+	 */
+	private archetypeChange(arch: Archetype, i: number) {
+		if (!arch.change[i]) {
+			arch.mask[~~(i / 32)] ^= 1 << i % 32;
+			arch.change[i] = this.getArchetype(arch.mask);
+			arch.mask[~~(i / 32)] ^= 1 << i % 32;
+		}
+		return arch.change[i];
+	}
+
+	/**
+	 *
+	 * @param mask
+	 * @returns
+	 */
+	private getArchetype(mask: number[]) {
+		if (!this.entityManager.archetypes.has(mask.join(","))) {
+			const arch = new Archetype(slice(mask));
+			this.entityManager.archetypes.set(mask.join(","), arch);
+		}
+		return this.entityManager.archetypes.get(mask.join(","))!;
+	}
+
+	/**
+	 *
+	 * @param mask
+	 * @param componentId
+	 * @returns
+	 */
+	private hasComponentInternal(mask: number[], componentId: number): boolean {
+		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
+	}
+
+	/**
+	 *
+	 * @param component
+	 * @returns
+	 */
+	private registerComponent<T extends object>(component: T) {
+		return Sift.Dictionary.merge(component, {
+			[_componentData]: {
+				world: this,
+				id: this.entityManager.getNextComponentId(),
+			},
+		});
+	}
 }
