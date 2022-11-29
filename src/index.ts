@@ -3,6 +3,8 @@ import TinaGame from "./lib/core/game";
 import logger from "./lib/logger";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+import { ConsoleActionName } from "./lib/user-interface/console/console-actions";
+import { ClientStore } from "./lib/user-interface/store";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -69,6 +71,14 @@ namespace Tina {
 			return Process.processes.get(name)!;
 		}
 		return new Process(name, Scheduler);
+	}
+
+	export function flare(eventName: string) {
+		ClientStore.dispatch({ type: ConsoleActionName.AddFlare, eventName });
+	}
+
+	export function oops(eventName: string) {
+		ClientStore.dispatch({ type: ConsoleActionName.FireFlare, eventName });
 	}
 
 	/**
