@@ -11,7 +11,6 @@ export class EntityManager {
 	private empty: Archetype;
 	private entities: Array<Archetype>;
 	private entitiesToDestroy: SparseSet;
-	private nextEntityId: EntityId;
 	public updateTo: Array<Archetype>;
 	private readonly rm: SparseSet;
 	private readonly world: World;
@@ -22,7 +21,6 @@ export class EntityManager {
 
 	constructor(world: World) {
 		this.archetypes = new Map();
-		this.nextEntityId = 0;
 		this.world = world;
 
 		this.rm = new SparseSet();
@@ -44,7 +42,7 @@ export class EntityManager {
 	 * @returns True if the entity id is currently in the world.
 	 */
 	public alive(entityId: EntityId): boolean {
-		return this.entities[entityId] !== undefined;
+		return this.entities[entityId] !== undefined && this.entities[entityId].sparseSet.has(entityId);
 	}
 
 	/**
@@ -110,6 +108,7 @@ export class EntityManager {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
 			this.rm.add(entityId);
+			this.size--;
 		}
 		this.entitiesToDestroy.dense.clear();
 	}
