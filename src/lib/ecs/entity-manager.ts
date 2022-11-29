@@ -10,6 +10,7 @@ export class EntityManager {
 	public archetypes: Map<string, Archetype>;
 	private empty: Archetype;
 	private entities: Array<Archetype>;
+	private entitiesToCreate: SparseSet;
 	private entitiesToDestroy: SparseSet;
 	public updateTo: Array<Archetype>;
 	private readonly rm: SparseSet;
@@ -24,6 +25,7 @@ export class EntityManager {
 		this.world = world;
 
 		this.rm = new SparseSet();
+		this.entitiesToCreate = new SparseSet();
 		this.entitiesToDestroy = new SparseSet();
 		this.entities = [];
 		this.updateTo = [];
@@ -53,6 +55,8 @@ export class EntityManager {
 	}
 
 	/**
+	 * Creates a new entity in the world.
+	 *
 	 * @returns The id of the next available entity.
 	 */
 	public createEntity(): number {
@@ -101,8 +105,8 @@ export class EntityManager {
 	}
 
 	/**
-	 * Removes all the pending entities from the world.
-	 * @note This is called internally when a system has completed.
+	 * Removes any entities from the world that has been marked for removal.
+	 * @hidden
 	 */
 	public destroyPending(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {

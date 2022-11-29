@@ -12,24 +12,17 @@ export = (): void => {
 	describe("An entity should", () => {
 		it("be created", () => {
 			const entityId = world.add();
-			world.flush();
 			expect(entityId).to.be.ok();
 		});
 
 		it("be destroyed", () => {
 			const entityId = world.add();
-			world.flush();
 			world.remove(entityId);
 			world.flush();
 			expect(world.has(entityId)).to.equal(false);
 		});
-	});
 
-	describe("A world should", () => {
-		it("have a size of 0 after an entity has been created but the system has not completed", () => {
-			world.add();
-			expect(world.size()).to.equal(0);
-		});
+		// allocate and reuse ids
 	});
 
 	describe("A world with one entity should", () => {
@@ -44,6 +37,7 @@ export = (): void => {
 
 		it("have a size of 0 after an entity is destroyed", () => {
 			world.remove(0);
+			world.flush();
 			expect(world.size()).to.equal(0);
 		});
 	});
