@@ -3,7 +3,7 @@ import { EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { ComponentArray, ComponentData, Tree, Type, _componentData } from "./component";
+import { ComponentArray, ComponentData, createComponentArray, Tree, Type, _componentData } from "./component";
 import { EntityManager } from "./entity-manager";
 import { ALL, RawView, View } from "./view";
 
@@ -48,14 +48,20 @@ export class World {
 	 * @returns
 	 */
 	public createView(...raw: Array<RawView>): View {
-		const view = new View(this, ALL(...raw));
-		this.entityManager.archetypes.forEach((archetype) => {
-			if (View.match(archetype.mask, view.mask)) {
-				view.a.push(archetype);
-			}
-		});
+		let view: View;
 
-		this.views.push(view);
+		debug.profilebegin("World:createView");
+		{
+			view = new View(this, ALL(...raw));
+			this.entityManager.archetypes.forEach((archetype) => {
+				if (View.match(archetype.mask, view.mask)) {
+					view.a.push(archetype);
+				}
+			});
+			this.views.push(view);
+		}
+		debug.profileend();
+
 		return view;
 	}
 
@@ -109,10 +115,8 @@ export class World {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
-		return this.registerComponent(def as ComponentArray<T>);
+		return this.registerComponent(createComponentArray(def, 1000));
 	}
-
-	//
 
 	/**
 	 *
@@ -135,13 +139,17 @@ export class World {
 
 		this.toUpdate.add(entityId);
 
-		const componentId = (component as unknown as ComponentData)[_componentData].id;
-		if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
-			this.entityManager.updateTo[entityId] = this.archetypeChange(
-				this.entityManager.updateTo[entityId],
-				componentId,
-			);
+		debug.profilebegin("World:addComponent");
+		{
+			const componentId = (component as unknown as ComponentData)[_componentData].id;
+			if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
+				this.entityManager.updateTo[entityId] = this.archetypeChange(
+					this.entityManager.updateTo[entityId],
+					componentId,
+				);
+			}
 		}
+		debug.profileend();
 
 		return this;
 	}
@@ -156,13 +164,17 @@ export class World {
 
 		this.toUpdate.add(entityId);
 
-		const componentId = (component as C)[_componentData].id;
-		if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
-			this.entityManager.updateTo[entityId] = this.archetypeChange(
-				this.entityManager.updateTo[entityId],
-				componentId,
-			);
+		debug.profilebegin("World:removeComponent");
+		{
+			const componentId = (component as C)[_componentData].id;
+			if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
+				this.entityManager.updateTo[entityId] = this.archetypeChange(
+					this.entityManager.updateTo[entityId],
+					componentId,
+				);
+			}
 		}
+		debug.profileend();
 
 		return this;
 	}
@@ -222,8 +234,12 @@ export class World {
 
 	/** @hidden */
 	public flush(): void {
-		this.entityManager.destroyPending();
-		this.updatePending();
+		debug.profilebegin("World:flush");
+		{
+			this.entityManager.destroyPending();
+			this.updatePending();
+		}
+		debug.profileend();
 	}
 
 	/**
