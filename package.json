@@ -14,7 +14,8 @@
     "test:run": "set RUST_BACKTRACE=full & dir & run-in-roblox --place ./tests/test.rbxlx --script ./tests/out/testBootstrap.server.lua",
     "test": "npm run publish && npm run test:types && npm run build && npm run test:link && npm run test:compile && npm run test:rojo",
     "prePublish": "npm run build && npm run test:link",
-    "unit-test-local": "rbxtsc -w --type=game --rojo=./unit-tests.project.json && rojo serve ./unit-tests.project.json"
+    "unit-test:watch": "rbxtsc -w --type=game --rojo=./unit-tests.project.json",
+    "unit-test:serve": "rojo serve ./unit-tests.project.json"
   },
   "keywords": [],
   "author": "",
