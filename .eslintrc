@@ -23,6 +23,35 @@
 		"plugin:prettier/recommended"
 	],
 	"rules": {
-		"prettier/prettier": ["warn", { "endOfLine": "auto" }]
+		"prettier/prettier": [
+			"error",
+			{
+				"endOfLine": "auto"
+			}
+		],
+		"no-param-reassign": "error",
+		"prefer-const": [
+			"error",
+			{
+				"destructuring": "all"
+			}
+		],
+		"no-var": "error",
+		"@typescript-eslint/explicit-function-return-type": "warn",
+		"@typescript-eslint/array-type": [
+			"warn",
+			{
+				"default": "generic",
+				"readonly": "generic"
+			}
+		],
+		"@typescript-eslint/explicit-member-accessibility": [
+			"warn",
+			{
+				"overrides": {
+					"constructors": "no-public"
+				}
+			}
+		]
 	}
 }
