@@ -70,7 +70,7 @@ export class EventListener<T extends unknown[]> {
 			case EAction.DO:
 				if (conditionPassed) {
 					try {
-						this._call(iteration + 1, conditionPassed, [...handlerOrCondition()]);
+						this._call(iteration + 1, conditionPassed, handlerOrCondition(...args));
 					} catch (e) {
 						warn(e);
 					}

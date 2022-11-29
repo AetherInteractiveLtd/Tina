@@ -1,6 +1,6 @@
 import { RunService } from "@rbxts/services";
 
-import { Identifiers } from "../../utilities/identifiers";
+import Identifiers from "../../utilities/identifiers";
 
 /**
  * A namespace with utiliy functions for Endpoints.
@@ -14,6 +14,7 @@ export namespace Endpoints {
 	 */
 	export function createIdentifier(identifier?: string): string {
 		const id = identifier ?? "";
+
 		return RunService.IsServer()
 			? Identifiers.createIdentifier(id)
 			: RunService.IsClient()

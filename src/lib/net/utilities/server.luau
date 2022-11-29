@@ -1,148 +1,109 @@
---[[ Code source from BridgeNet RC, authorised for use by license holder. ]]
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local identifiers = require(script.Parent.identifiers)
+type Contents = { [string | number]: any } | { any }
 
-type packet = {
-	to: { Player } | Player | "all",
-	id: string,
-	contents: { any },
+type InitialPacket = {
+    id: string,
+	to: { Player },
+	contents: Contents,
 }
 
-local freeThread = nil
+type Packet = {
+    id: string,
+	contents: Contents,
+}
 
-local function runThreadCallback(callback, ...)
-	local thisThread = freeThread
-	freeThread = nil
-	callback(...)
-	freeThread = thisThread
+type Listener = (player: Player, contents: Contents) -> any
+
+local Server = {}
+
+local Queue: { InitialPacket }  = {}
+local Listeners: { Listener } = {}
+
+local function runListener(listener: Listener, ...: { Player | Contents })
+    task.spawn(listener, ...)
 end
 
-local function yieldAndRunThread()
-	while true do
-		runThreadCallback(coroutine.yield())
-	end
+function Server._init(): nil
+    local TinaRemote = Instance.new("RemoteEvent", ReplicatedStorage)
+    TinaRemote.Name = "TinaRemote"
+
+    RunService.PostSimulation:Connect(function()
+        for _, packet: InitialPacket in Queue do
+            for _, player in packet.to :: { Player } do
+                TinaRemote:FireClient(player, {
+                    contents = packet.contents,
+                    id = packet.id,
+                } :: Packet) -- Fires remote, nothing needs to be cached?
+            end
+        end
+
+        Queue = {} -- Frees everything
+    end)
+
+    TinaRemote.OnServerEvent:Connect(function(player: Player, packets: { Packet })
+        for _, packet: Packet in packets do
+            for _, listener: Listener in Listeners[packet.id] do
+                runListener(listener, player, packet.contents)
+            end
+        end
+    end)
 end
 
-local function runCallback(callback, ...)
-	if not freeThread then
-		local thread = coroutine.create(yieldAndRunThread)
-		coroutine.resume(thread, ...)
-	else
-		task.spawn(freeThread, callback, ...)
-	end
+function Server.send(id: string, player: { Player }, contents: Contents): nil
+    table.insert(Queue, {
+        id = id,
+        to = player,
+        contents = contents,
+    })
 end
 
-local server = {}
+function Server.sendAll(id: string, contents: Contents): nil
+    local to: { Player } = Players:GetPlayers()
 
-local listenerMap = {}
-local waiting = {}
-local validBridges = {}
-local queue: { packet } = {}
-
-function server._init()
-	local remote = Instance.new("RemoteEvent")
-	remote.Name = "tinaRemote"
-	remote.Parent = ReplicatedStorage
-
-	RunService.PostSimulation:Connect(function()
-		local startTime = os.clock()
-		local sendStructure: { [Player]: { [string]: { string | any } } } = {}
-
-		for _, v: packet in queue do
-			local toType = typeof(v.to)
-
-			if toType == "table" then
-				for _, plr in v.to :: { Player } do
-					table.insert(sendStructure[plr][v.id], v.contents)
-				end
-			else
-				table.insert(sendStructure[v.to :: Player][v.id], v.contents)
-			end
-		end
-
-		table.clear(queue)
-
-		local finishTime = os.clock() - startTime
-
-		if finishTime >= 0.001 then
-			-- TODO debug warn later
-		end
-	end)
-
-	remote.OnServerEvent:Connect(function(plr, ...)
-		local arr = { ... }
-
-		if typeof(arr[1]) ~= "table" or #arr > 1 then
-			return plr -- kick / ban player later
-		end
-
-		for _, v in arr[1] do
-			local id = v[1]
-			table.remove(v, 1)
-
-			if not listenerMap[id] then
-				continue
-			end
-
-			if #waiting[id] > 0 then
-				for _, thread in waiting do
-					coroutine.resume(thread, table.unpack(arr))
-				end
-			end
-
-			for _, callback in listenerMap[id] do
-				runCallback(callback, plr, table.unpack(arr))
-			end
-		end
-
-		return
-	end)
+    table.insert(Queue, {
+        id = id,
+        to = to,
+        contents = contents,
+    })
 end
 
-function server.createIdentifier(name: string)
-	local id = identifiers.createIdentifier(name)
-	validBridges[id] = true
-	return id
+function Server.sendAllExcept(id: string, blacklist: { Player }, contents: Contents): nil
+    local blacklistMap: { [Player]: boolean } = {}
+
+    for player in blacklist do
+        blacklistMap[player] = true
+    end
+
+    local to = Server._getWhitelisted(blacklistMap)
+
+    table.insert(Queue, {
+        id = id,
+        to = to,
+        contents = contents,
+    })
 end
 
-function server.call(id: string, plr: { Player },  object: {})
-	if not validBridges[id] then
-		return warn("id isn't a valid bridge")
-	end
-
-	table.insert(queue, {
-		to = plr,
-		id = id,
-		contents = object,
-	})
-
-	return
+function Server.listen(id: string, callback: Listener): nil
+    if not Listeners[id] then
+        Listeners[id] = { callback }
+    else
+        table.insert(Listeners[id], callback)
+    end
 end
 
-function server.waitFor(identifier: string)
-	if not waiting[identifier] then
-		waiting[identifier] = {}
-	end
-	table.insert(waiting[identifier], coroutine.running())
-	return coroutine.yield()
+function Server._getWhitelisted(list: { [Player]: boolean }): { Player }
+    local to: { Player } = {}
+
+    for _, player in Players:GetPlayers() do
+        if not list[player] then
+            table.insert(to, player)
+        end
+    end
+
+    return to
 end
 
-function server.listen(identifier: string, func: (object: {}) -> nil)
-	if not validBridges[identifier] then
-		return warn("id isn't a valid bridge")
-	end
-
-	if listenerMap[identifier] == nil then
-		listenerMap[identifier] = { func }
-	else
-		table.insert(listenerMap, func)
-	end
-
-	return
-end
-
-return server
+return Server

@@ -1,4 +1,4 @@
-import { DefaultUser } from "../../types";
+import { DefaultUser } from "../user/types";
 
 import { AudienceDeclaration } from "./types";
 

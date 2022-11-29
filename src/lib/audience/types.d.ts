@@ -1,4 +1,4 @@
-import Tina from "../..";
+import { User } from "../..";
 
 export interface AudienceDeclaration {
 	/**
@@ -7,7 +7,7 @@ export interface AudienceDeclaration {
 	 * @param users as never[] (users) or Player[] (players list), denotes the players to be on the audience.
 	 * @returns the same object.
 	 */
-	list(users: (Tina.Mirror.User & unknown)[] | Player[]): AudienceDeclaration;
+	list(users: (User & unknown)[] | Player[]): AudienceDeclaration;
 
 	/**
 	 * Returns the listed players in the audience.

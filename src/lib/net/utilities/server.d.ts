@@ -1,4 +1,4 @@
-export namespace ServerNet {
+interface ServerNet {
 	/**
 	 * listen should connect a listener to the server binder.
 	 *
@@ -7,32 +7,42 @@ export namespace ServerNet {
 	 * event.listen("internalIndentifier", (plr: Player, ...args: unknown[]) => { ... });
 	 * ```
 	 *
-	 * @param identifierName as string, should denote the identifier name
-	 * @param callback as a Callback (function), should denote the actual
+	 * @param id as string, should denote the identifier name.
+	 * @param callback as a Callback (function), should denote the actual.
 	 */
-	export function listen(identifierName: string, callback: (player: Player, value: never) => void): string;
+	listen: (id: string, callback: (player: Player, value: never) => void) => string;
 
 	/**
-	 * call should pack and compress everything, schedule it to be sent and release such memory when no longer needed.
+	 * send should pack and compress everything, schedule it to be sent and release such memory when no longer needed.
 	 *
-	 * @param identifierName as string, should denote the identifier name
+	 * @param id as string, should denote the identifier name.
 	 * @param to as Player[], should be the list of players to send the remote to.
-	 * @param args, should be the actual parameters of type T.
-	 * @returns unknown[], returns some arguments of type unknown being an array.
+	 * @param contents, of type T.
 	 */
-	export function call<T extends unknown[]>(identifierName: string, to: Player[], ...args: T): unknown[];
+	send: <T extends {}>(id: string, to: Player[], contents: T) => void;
 
 	/**
-	 * @deprecated
-	 * @param identifierName as string, should denote the identifier name
-	 */
-	export function waitFor(identifierName: string): unknown[];
-
-	/**›
-	 * Should be called for creating identifiers for server remotes. (ffrost's code denotes that by checking if the id previously
-	 * created with this method is valid).
+	 * sendAll should do the same, but individually by the Group
 	 *
-	 * @param identifierName as a string, should denote the identifier id which is going to be created.
+	 * @param id as string, should denote the identifier name.
+	 * @param contents of type T.
 	 */
-	export function createIdentifier<T extends string>(identifierName: T): T;
+	sendAll: <T>(id: string, contents: T) => void;
+
+	/**
+	 * Fires the remote for everyone with a blacklist.
+	 *
+	 * @param id as string, should denote the identifier name.
+	 * @param blacklist as Player[], should mark the places where you can't be.
+	 * @param contents of type T.
+	 */
+	sendAllExcept: <T>(id: string, blacklist: Player[], contents: T) => void;
+
+	/**
+	 * @hidden
+	 */
+	_init: () => void;
 }
+
+declare const ServerNet: ServerNet;
+export = ServerNet;

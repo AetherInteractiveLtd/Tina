@@ -1,93 +1,60 @@
---[[ Code source from BridgeNet RC, authorised for use by license holder. ]]
-
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local client = {}
+type Contents = { [string | number]: any } | { any }
 
-type packet = {
-	id: string,
-	contents: { any },
+type Packet = {
+    id: string,
+	contents: Contents,
 }
 
-local identifierMap = {}
-local waiting = {}
-local queue = {}
+type Listener = (contents: Contents) -> any
 
-local freeThread = nil
+local Client = {}
 
-local function runThreadCallback(callback, ...)
-	local thisThread = freeThread
-	freeThread = nil
-	callback(...)
-	freeThread = thisThread
+local Queue: { Packet }  = {}
+local Listeners: { Listener } = {}
+
+local function runListener(listener: Listener, ...: { Contents })
+    task.spawn(listener, ...)
 end
 
-local function yieldAndRunThread()
-	while true do
-		runThreadCallback(coroutine.yield())
-	end
-end
-
-local function runCallback(callback, ...)
-	if not freeThread then
-		local thread = coroutine.create(yieldAndRunThread)
-		coroutine.resume(thread, ...)
-	else
-		task.spawn(freeThread, callback, ...)
-	end
-end
-
-function client._init()
-    local RemoteEvent: RemoteEvent = ReplicatedStorage:WaitForChild("tinaRemote")
+function Client._init()
+    local TinaRemote: RemoteEvent = ReplicatedStorage:WaitForChild("TinaRemote") :: RemoteEvent
 
     RunService.PostSimulation:Connect(function()
-        local start = os.clock()
+        local packetToSend: { Packet } = {}
 
-        local toSend = {}
-        for _, v: packet in queue do
-            table.insert(toSend, {
-                v.id,
-                v.contents,
-            })
+        for _, packet: Packet in Queue do
+            table.insert(packetToSend, packet)
         end
 
-        RemoteEvent:FireServer(toSend)
-        table.clear(queue)
+        TinaRemote:FireServer(packetToSend)
 
-        local finish = os.clock()
-
-        if finish - start > 0.001 then
-            -- TODO warn
-        end
+        Queue = {}
     end)
 
-    RemoteEvent.OnClientEvent:Connect(function(data)
-        for identifier, value in data do
-            for _, v in identifierMap[identifier] do
-                runCallback(v, value)
-            end
+    TinaRemote.OnClientEvent:Connect(function(packet: Packet)
+        for _, listener: Listener in Listeners[packet.id] do
+            runListener(listener, packet.contents)
         end
     end)
 end
 
-function client.listen(identifier: string, callback: (object: {}) -> nil)
-    table.insert(identifierMap[identifier], callback)
-end
-
-function client.call(identifier: string, object: {})
-    table.insert(queue, {
-        id = identifier,
-        contents = object,
+function Client.send(id: string, contents: Contents): nil
+    table.insert(Queue, {
+        id = id,
+        contents = contents,
     })
 end
 
-function client.waitfor(identifier: string)
-    if not waiting[identifier] then
-        waiting[identifier] = {}
+function Client.listen(id: string, callback: Listener)
+    if not Listeners[id] then
+        Listeners[id] = { callback }
+    else
+        table.insert(Listeners[id], callback)
     end
-    table.insert(waiting[identifier], coroutine.running())
-    return coroutine.yield()
 end
 
-return client
+return Client

@@ -8,20 +8,22 @@ local receiveDict: { [string]: string? } = {}
 local sendDict: { [string]: string? } = {}
 local numOfSerials: number = 0
 
-local SerdesLayer = {}
+local Identifiers = {}
 
 local AutoSerde: Folder = nil
 local isServer = RunService:IsServer()
 
 type toSend = string
 
-function SerdesLayer._start()
+function Identifiers._init()
 	if RunService:IsClient() then
-		AutoSerde = ReplicatedStorage:WaitForChild("identifier") :: Folder
+		AutoSerde = ReplicatedStorage:WaitForChild("Identifier") :: Folder
+
 		for id, value in AutoSerde:GetAttributes() do
 			sendDict[id] = value
 			receiveDict[value] = id
 		end
+
 		AutoSerde.AttributeChanged:Connect(function(id: string)
 			local packed: string = AutoSerde:GetAttribute(id)
 			if packed then
@@ -35,21 +37,21 @@ function SerdesLayer._start()
 		end)
 	else
 		AutoSerde = Instance.new("Folder")
-		AutoSerde.Name = "identifier"
+		AutoSerde.Name = "Identifier"
 		AutoSerde.Parent = ReplicatedStorage
 	end
 end
 
-function SerdesLayer.createIdentifier(id: string): string
+function Identifiers.createIdentifier(id: string): string
 	assert(type(id) == "string", "ID must be a string")
 
 	if not sendDict[id] and not isServer then
-		return SerdesLayer.waitForIdentifier(id)
+		return Identifiers.waitForIdentifier(id)
 	elseif sendDict[id] and not isServer then
 		return sendDict[id] :: string
 	end
 
-	assert(numOfSerials >= 65536, "Over the identification cap: " .. id)
+	assert(numOfSerials <= 65536, "Over the identification cap: " .. id)
 	numOfSerials += 1
 
 	local packed: string = string.pack("H", numOfSerials)
@@ -61,7 +63,7 @@ function SerdesLayer.createIdentifier(id: string): string
 	return packed
 end
 
-function SerdesLayer.waitForIdentifier(id: string): string
+function Identifiers.waitForIdentifier(id: string): string
 	local waiting = true
 
 	task.delay(2, function()
@@ -70,20 +72,21 @@ function SerdesLayer.waitForIdentifier(id: string): string
 		end
 	end)
 
-	while sendDict[id] == nil do
+	repeat
 		task.wait()
-	end
+	until sendDict[id] ~= nil
+
 	waiting = false
 
 	return sendDict[id] :: string
 end
 
-function SerdesLayer.fromCompressed(compressed: string)
+function Identifiers.fromCompressed(compressed: string)
 	return receiveDict[compressed]
 end
 
-function SerdesLayer.fromIdentifier(identifier: string)
+function Identifiers.fromIdentifier(identifier: string)
 	return sendDict[identifier]
 end
 
-return SerdesLayer
+return Identifiers

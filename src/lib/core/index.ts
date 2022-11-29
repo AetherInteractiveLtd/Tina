@@ -1,4 +1,5 @@
-import Tina from "../..";
+import Tina, { User } from "../..";
+
 import { EventEmitter } from "../events";
 
 interface CoreEvents {
@@ -9,6 +10,6 @@ class TinaCore extends EventEmitter<CoreEvents> {}
 
 const c = new TinaCore();
 
-c.when("player:added").do((player: Tina.Mirror.User) => {});
+c.when("player:added").do((player: User) => {});
 
 export default TinaCore;

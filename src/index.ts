@@ -1,5 +1,3 @@
-import { Players } from "@rbxts/services";
-
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 
@@ -9,7 +7,14 @@ import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 
 /* Networking namespace */
-import { DefaultUser } from "./types";
+import Client from "./lib/net/utilities/client";
+import Server from "./lib/net/utilities/server";
+
+import Identifiers from "./lib/net/utilities/identifiers";
+
+/* User abstraction class */
+import { User } from "./lib/user/user";
+import { RunService } from "@rbxts/services";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -28,8 +33,26 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
+		{
+			/** Networking start up for  */
+			Server._init();
+			Identifiers._init();
+		}
+
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
+	}
+
+	/**
+	 * Starts up the client net, this is only to avoid infinite yields over identifiers.
+	 *
+	 * @client
+	 */
+	export function startNet(): void {
+		if (RunService.IsClient()) {
+			Client._init();
+			Identifiers._init();
+		}
 	}
 
 	/**
@@ -57,7 +80,7 @@ namespace Tina {
 	 *
 	 * @param char The new User class constructor
 	 */
-	export function setUserClass(char: new (userId: number) => Mirror.User): void {
+	export function setUserClass(char: new (userId: number) => User): void {
 		TINA_USER_CLASS = char;
 		logger.warn("The User Class has been changed to:", char);
 	}
@@ -73,6 +96,7 @@ namespace Tina {
 		if (Process.processes.has(name)) {
 			return Process.processes.get(name)!;
 		}
+
 		return new Process(name, Scheduler);
 	}
 
@@ -81,28 +105,7 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror {
-		export abstract class User implements DefaultUser {
-			constructor(private ref: Player | number) {}
-
-			/**
-			 * Returns a User defined class.
-			 */
-			public static get(from: Player | never | string | number): never {
-				return "" as never; /* This still makes no sense to me, what exactly is a "User" if it's of type never always */
-			}
-
-			public player(): Player {
-				return (
-					typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player)
-				)!;
-			}
-
-			public load() {}
-
-			public unload() {}
-		}
-	}
+	export namespace Mirror {}
 }
 
 /** Export Tina itself */
@@ -117,6 +120,7 @@ export { EventEmitter } from "./lib/events";
 /** Export Network Library */
 export { Network } from "./lib/net";
 
-let TINA_USER_CLASS: new (id: number) => Tina.Mirror.User = Tina.Mirror.User as never as new (
-	id: number,
-) => Tina.Mirror.User;
+/** User abstract class */
+export { User } from "./lib/user/user";
+
+let TINA_USER_CLASS: new (id: number) => User = User as never as new (id: number) => User;

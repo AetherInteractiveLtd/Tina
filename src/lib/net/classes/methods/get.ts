@@ -1,9 +1,8 @@
-import Tina from "../../../..";
-
 import { EventListener } from "../../../events";
+import { User } from "../../../user/user";
 
-import { ClientNet } from "../../utilities/client";
-import { ServerNet } from "../../utilities/server";
+import Client from "../../utilities/client";
+import Server from "../../utilities/server";
 
 import { Endpoints } from "./baseEndpoint";
 
@@ -16,25 +15,25 @@ export class GetEndpoint<S, R> implements GETDeclaration<S, R> {
 		this.identifier = Endpoints.createIdentifier(id);
 	}
 
-	reply(func: (user: Tina.Mirror.User & unknown, value: S) => R): void {
-		ServerNet.listen(this.identifier, (player: Player, value: never) =>
-			ServerNet.call(this.identifier, [player], func(Tina.Mirror.User.get(player), value)),
+	when(): EventListener<[R]> {
+		const eventListener: EventListener<[R]> = new EventListener();
+
+		Client.listen(this.identifier, (value: never) => eventListener.call(value));
+
+		return eventListener;
+	}
+
+	reply(func: (user: User & unknown, value: S) => R): void {
+		Server.listen(this.identifier, (player: Player, value: never) =>
+			Server.send(this.identifier, [player], func(User.get(player), value) as {}),
 		);
 	}
 
 	send(toSend: S): void {
-		ClientNet.call(this.identifier, toSend);
+		Client.send(this.identifier, toSend);
 	}
 
 	get(): void {
-		ClientNet.call(this.identifier);
-	}
-
-	when(): EventListener<[R]> {
-		let eventListener!: EventListener<[R]>;
-
-		ClientNet.listen(this.identifier, (value: never) => eventListener.call(value));
-
-		return eventListener;
+		Client.send(this.identifier, undefined);
 	}
 }

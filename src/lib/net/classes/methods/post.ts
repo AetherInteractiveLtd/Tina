@@ -1,8 +1,8 @@
-import Tina from "../../../..";
 import { EventListener } from "../../../events";
+import { User } from "../../../user/user";
 
-import { ClientNet } from "../../utilities/client";
-import { ServerNet } from "../../utilities/server";
+import Client from "../../utilities/client";
+import Server from "../../utilities/server";
 
 import { Endpoints } from "./baseEndpoint";
 import { ServerEvent } from "./baseEndpointTypes";
@@ -17,16 +17,14 @@ export class PostEndpoint<T> implements POSTDeclaration<T> {
 	}
 
 	when(): EventListener<ServerEvent<T>> {
-		let eventListener!: EventListener<ServerEvent<T>>;
+		const eventListener: EventListener<ServerEvent<T>> = new EventListener();
 
-		ServerNet.listen(this.identifier, (player: Player, value: never) =>
-			eventListener.call(Tina.Mirror.User.get(player), value),
-		);
+		Server.listen(this.identifier, (player: Player, value: never) => eventListener.call(User.get(player), value));
 
 		return eventListener;
 	}
 
 	send(toSend: T): void {
-		ClientNet.call(this.identifier, toSend);
+		Client.send(this.identifier, toSend);
 	}
 }
