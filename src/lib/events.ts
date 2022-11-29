@@ -1,4 +1,4 @@
-class EventListener<T extends unknown[]> {
+export class EventListener<T extends unknown[]> {
 	protected readonly listeners: Array<Callback> = new Array();
 	protected readonly yieldThreads: Array<thread> = new Array();
 

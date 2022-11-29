@@ -56,4 +56,8 @@ export class X {
 
 		return firstEvaluation === secondEvaluation;
 	}
+
+	public create(func: TCondition) {
+		return func;
+	}
 }
