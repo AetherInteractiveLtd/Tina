@@ -64,21 +64,21 @@ function Identifiers.createIdentifier(id: string): string
 end
 
 function Identifiers.waitForIdentifier(id: string): string
-	local waiting = true
+	local identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
 
-	task.delay(2, function()
-		if waiting then
-			warn("Infinite yield possible on ID: " .. id)
-		end
-	end)
+	if (identifier) then
+		return identifier
+	else
+		task.delay(2, function()
+			warn("Infinite yield. ID: ", id)
+		end)
 
-	repeat
-		task.wait()
-	until sendDict[id] ~= nil
+		repeat
+			identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
+		until identifier ~= nil
 
-	waiting = false
-
-	return sendDict[id] :: string
+		return identifier
+	end
 end
 
 function Identifiers.fromCompressed(compressed: string)
