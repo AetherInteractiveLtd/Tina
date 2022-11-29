@@ -5,12 +5,12 @@ import { SparseSet } from "./sparse-set";
  * memory. Archetypes are used to optimize entity iteration.
  */
 export class Archetype {
-	public change: Archetype[];
-	public mask: number[];
-	public readonly entities: number[];
+	public change: Array<Archetype>;
+	public mask: Array<number>;
+	public readonly entities: Array<number>;
 	public readonly sparseSet: SparseSet;
 
-	constructor(mask: number[]) {
+	constructor(mask: Array<number>) {
 		this.change = [];
 		this.mask = mask;
 		this.sparseSet = new SparseSet();
@@ -22,7 +22,7 @@ export class Archetype {
 	 * @param x
 	 * @returns
 	 */
-	public has(x: number) {
+	public has(x: number): boolean {
 		return this.sparseSet.has(x);
 	}
 }

@@ -2,8 +2,8 @@
  *
  */
 export class SparseSet {
-	public dense: number[];
-	public sparse: number[];
+	public dense: Array<number>;
+	public sparse: Array<number>;
 
 	constructor() {
 		this.dense = [];

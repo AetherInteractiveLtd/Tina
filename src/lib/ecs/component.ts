@@ -146,7 +146,7 @@ export function createComponentArray<T extends Tree<Type>>(def: T, max: number):
 		if ((def as Array<T>).size() > 0) {
 			return [...new Array<T>(max)].map(def[0 as never]) as never;
 		}
-		return new Array(max) as never;
+		return new Array<T>(max) as never;
 	}
 
 	const ret: ComponentArray = {};
@@ -168,15 +168,15 @@ export type ComponentData = {
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 type InitFunc = () => unknown;
-export type Type = ComponentTypes | ArrayConstructor | [InitFunc] | unknown[];
+export type Type = ComponentTypes | ArrayConstructor | [InitFunc] | Array<unknown>;
 
 export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends [InitFunc]
-	? ReturnType<T[0]>[]
-	: T extends unknown[]
+	? Array<ReturnType<T[0]>>
+	: T extends Array<unknown>
 	? T
 	: T extends ArrayConstructor
-	? unknown[]
-	: T extends Exclude<Type, unknown[]>
+	? Array<unknown>
+	: T extends Exclude<Type, Array<unknown>>
 	? InstanceType<T>
 	: T extends ComponentData
 	? ComponentData

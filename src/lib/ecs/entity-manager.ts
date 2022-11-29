@@ -9,10 +9,10 @@ import { World } from "./world";
 export class EntityManager {
 	public archetypes: Map<string, Archetype>;
 	private empty: Archetype;
-	private entities: Archetype[];
+	private entities: Array<Archetype>;
 	private entitiesToDestroy: SparseSet;
 	private nextEntityId: EntityId;
-	public updateTo: Archetype[];
+	public updateTo: Array<Archetype>;
 	private readonly rm: SparseSet;
 	private readonly world: World;
 
@@ -65,7 +65,7 @@ export class EntityManager {
 		}
 
 		if (this.entityId === 0) {
-			this.empty.mask = table.create(math.ceil(this.componentId / 32), 0);
+			this.empty.mask = new Array<number>(math.ceil(this.componentId / 32), 0);
 			this.archetypes.set(this.empty.mask.join(","), this.empty);
 		}
 
@@ -92,7 +92,7 @@ export class EntityManager {
 	}
 
 	/** @hidden */
-	public updatePending(denseArray: number[]): void {
+	public updatePending(denseArray: Array<number>): void {
 		denseArray.forEach((entityId) => {
 			if (this.alive(entityId)) {
 				this.entities[entityId].sparseSet.remove(entityId);
@@ -106,7 +106,7 @@ export class EntityManager {
 	 * Removes all the pending entities from the world.
 	 * @note This is called internally when a system has completed.
 	 */
-	private destroyPending(): void {
+	public destroyPending(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
 			this.rm.add(entityId);

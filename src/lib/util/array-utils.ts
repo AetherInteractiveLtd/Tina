@@ -4,7 +4,11 @@
  * @param start The start index.
  * @param endPos The end index.
  */
-export function slice<TValue extends defined>(array: ReadonlyArray<TValue>, start?: number, endPos?: number) {
+export function slice<TValue extends defined>(
+	array: ReadonlyArray<TValue>,
+	start?: number,
+	endPos?: number,
+): Array<TValue> {
 	let startIndex = start !== undefined ? start : 0;
 	let endPosition = endPos !== undefined ? endPos : array.size();
 

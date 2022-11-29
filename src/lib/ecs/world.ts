@@ -3,8 +3,9 @@ import { EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { ComponentArray, ComponentData, createComponentArray, Tree, Type, _componentData } from "./component";
+import { ComponentArray, ComponentData, Tree, Type, _componentData } from "./component";
 import { EntityManager } from "./entity-manager";
+import { ALL, RawView, View } from "./view";
 
 export interface WorldOptions {
 	/**
@@ -25,16 +26,37 @@ export class World {
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
-	private toUpdate: SparseSet = new SparseSet();
+	private toUpdate: SparseSet;
+	private views: Array<View>;
 
 	constructor(options: WorldOptions) {
 		this.options = options;
+		this.views = [];
+		this.toUpdate = new SparseSet();
+
 		this.entityManager = new EntityManager(this);
 	}
 
 	/** @returns The name of the world. */
 	public toString(): string {
 		return this.options.name !== undefined ? this.options.name : "World";
+	}
+
+	/**
+	 *
+	 * @param raw
+	 * @returns
+	 */
+	public createView(...raw: Array<RawView>): View {
+		const view = new View(this, ALL(...raw));
+		this.entityManager.archetypes.forEach((archetype) => {
+			if (View.match(archetype.mask, view.mask)) {
+				view.a.push(archetype);
+			}
+		});
+
+		this.views.push(view);
+		return view;
 	}
 
 	/**
@@ -59,12 +81,12 @@ export class World {
 	 * Removes the given entity from the world, including all of its components.
 	 * @param entityId The id of the entity to remove.
 	 */
-	public remove(entityId: EntityId) {
+	public remove(entityId: EntityId): void {
 		this.entityManager.removeEntity(entityId);
 	}
 
 	/**
-	 * Checks if a given entity is currently in the world.	 *
+	 * Checks if a given entity is currently in the world.
 	 * @param entityId
 	 * @returns
 	 */
@@ -83,13 +105,23 @@ export class World {
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): ComponentArray<T>;
-	public defineComponent(): {};
-	public defineComponent(def: Tree<Type> = {}) {
+	public defineComponent<T extends Tree<Type>>(def: T): ComponentArray<T> {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
-		return this.registerComponent(createComponentArray(def, 1000));
+		return this.registerComponent(def as ComponentArray<T>);
+	}
+
+	//
+
+	/**
+	 *
+	 */
+	public defineTag(): ComponentArray {
+		if (this.entityManager.getEntityId() > 0) {
+			throw error("Cannot define tags after entities have been created");
+		}
+		return this.registerComponent({});
 	}
 
 	/**
@@ -188,10 +220,16 @@ export class World {
 	 */
 	public pause(): void {}
 
+	/** @hidden */
+	public flush(): void {
+		this.entityManager.destroyPending();
+		this.updatePending();
+	}
+
 	/**
 	 *
 	 */
-	public updatePending(): void {
+	private updatePending(): void {
 		this.entityManager.updatePending(this.toUpdate.dense);
 		this.toUpdate.dense = [];
 	}
@@ -202,7 +240,7 @@ export class World {
 	 * @param i
 	 * @returns
 	 */
-	private archetypeChange(arch: Archetype, i: number) {
+	private archetypeChange(arch: Archetype, i: number): Archetype {
 		if (!arch.change[i]) {
 			arch.mask[~~(i / 32)] ^= 1 << i % 32;
 			arch.change[i] = this.getArchetype(arch.mask);
@@ -216,10 +254,15 @@ export class World {
 	 * @param mask
 	 * @returns
 	 */
-	private getArchetype(mask: number[]) {
+	private getArchetype(mask: Array<number>): Archetype {
 		if (!this.entityManager.archetypes.has(mask.join(","))) {
 			const arch = new Archetype(slice(mask));
 			this.entityManager.archetypes.set(mask.join(","), arch);
+			for (const view of this.views) {
+				if (View.match(mask, view.mask)) {
+					view.a.push(arch);
+				}
+			}
 		}
 		return this.entityManager.archetypes.get(mask.join(","))!;
 	}
@@ -230,7 +273,7 @@ export class World {
 	 * @param componentId
 	 * @returns
 	 */
-	private hasComponentInternal(mask: number[], componentId: number): boolean {
+	private hasComponentInternal(mask: Array<number>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
 
