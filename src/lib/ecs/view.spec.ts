@@ -2,7 +2,7 @@
 
 import { EntityId } from "../types/ecs";
 import { Component, ComponentArray } from "./component";
-import { ALL, ANY, View } from "./view";
+import { ALL, ANY, NOT, View } from "./view";
 import { World } from "./world";
 
 const components = new Array<Component>(32);
@@ -64,6 +64,33 @@ export = (): void => {
 				expect(View.match([15, 0], view)).to.equal(true);
 				expect(View.match([16, 0], view)).to.equal(false);
 			});
+
+			it("NOT", () => {
+				const view = new View(world, NOT(components[1])).mask;
+				expect(View.match([0], view)).to.equal(true);
+				expect(View.match([5], view)).to.equal(true);
+				expect(View.match([7], view)).to.equal(false);
+				expect(View.match([13, 4], view)).to.equal(true);
+				expect(View.match([15, 0], view)).to.equal(false);
+			});
+
+			it("ANY", () => {
+				const view = new View(world, ANY(components[0], components[2], components[5])).mask;
+				expect(View.match([0], view)).to.equal(false);
+				expect(View.match([10], view)).to.equal(false);
+				expect(View.match([13], view)).to.equal(true);
+				expect(View.match([15, 5], view)).to.equal(true);
+				expect(View.match([16, 0], view)).to.equal(false);
+			});
+
+			// it("more than 32 components", () => {
+			// 	const view = new View(world, ALL(components[0], components[32])).mask;
+			// 	// expect(View.match([1, 1], view)).to.equal(true);
+			// 	// expect(View.match([1, 2, 1], view)).to.equal(false);
+			// 	// expect(View.match([3, 3, 0], view)).to.equal(true);
+			// 	// expect(View.match([1], view)).to.equal(false);
+			// 	// expect(View.match([0, 1], view)).to.equal(false);
+			// });
 		});
 	});
 };
