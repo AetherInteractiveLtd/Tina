@@ -33,6 +33,14 @@ export = (): void => {
 			const entityId2 = world.add();
 			expect(entityId).to.equal(entityId2);
 		});
+
+		it("be able to check if it's alive", () => {
+			const entityId = world.add();
+			expect(world.has(entityId)).to.equal(true);
+			world.remove(entityId);
+			world.flush();
+			expect(world.has(entityId)).to.equal(false);
+		});
 	});
 
 	describe("A world with one entity should", () => {
