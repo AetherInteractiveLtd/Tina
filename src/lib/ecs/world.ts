@@ -1,18 +1,8 @@
-import Sift from "@rbxts/sift";
 import { EntityId } from "../types/ecs";
-import { ImmutableArray } from "../types/readonly";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import {
-	Component,
-	ComponentArray,
-	ComponentData,
-	createComponentArray,
-	Tree,
-	Type,
-	_componentData,
-} from "./component";
+import { Component, createComponentArray, Tag, Tree, Type } from "./component";
 import { EntityManager } from "./entity-manager";
 import { ALL, RawView, View } from "./view";
 
@@ -143,18 +133,22 @@ export class World {
 	/**
 	 *
 	 */
-	public defineTag(): ImmutableArray<ComponentArray> {
+	public defineTag(): Tag {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define tags after entities have been created");
 		}
-		return this.registerComponent({});
+
+		const tag = new Tag();
+		tag.initialiseTag(this, this.entityManager.getNextComponentId());
+
+		return tag;
 	}
 
 	/**
 	 * Adds a given component to the entity. If the entity already has the
 	 * given component, then an error is thrown.
 	 */
-	public addComponent<C extends Component>(entityId: EntityId, component: C, data?: Partial<C>): World {
+	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -163,7 +157,7 @@ export class World {
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = (component as unknown as ComponentData)[_componentData].id;
+			const componentId = component._componentData.id!;
 			if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
@@ -179,7 +173,7 @@ export class World {
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent<C extends ComponentData>(entityId: EntityId, component: ComponentArray): World {
+	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): World {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -188,7 +182,7 @@ export class World {
 
 		debug.profilebegin("World:removeComponent");
 		{
-			const componentId = (component as C)[_componentData].id;
+			const componentId = component._componentData.id!;
 			if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
@@ -205,7 +199,7 @@ export class World {
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent(entityId: EntityId, component: Component): boolean {
+	public hasComponent<C extends Component | Tag>(entityId: EntityId, component: C): boolean {
 		const componentId = component._componentData.id!;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
@@ -320,25 +314,25 @@ export class World {
 	 * @param component
 	 * @returns
 	 */
-	private registerComponent<T extends ComponentArray>(component: T) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const x = {
-			x: 1,
-		};
+	// private registerComponent<T extends ComponentArray>(component: T) {
+	// 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// 	const x = {
+	// 		x: 1,
+	// 	};
 
-		function update(entityId: EntityId, data: typeof x): void {
-			// for (const [key, value] of pairs(data)) {
-			// 	component[key as unknown][entityId] = value;
-			// }
-		}
+	// 	function update(entityId: EntityId, data: typeof x): void {
+	// 		// for (const [key, value] of pairs(data)) {
+	// 		// 	component[key as unknown][entityId] = value;
+	// 		// }
+	// 	}
 
-		return Sift.Dictionary.merge(component, {
-			[_componentData]: {
-				world: this,
-				id: this.entityManager.getNextComponentId(),
-			},
+	// 	return Sift.Dictionary.merge(component, {
+	// 		[_componentData]: {
+	// 			world: this,
+	// 			id: this.entityManager.getNextComponentId(),
+	// 		},
 
-			update,
-		});
-	}
+	// 		update,
+	// 	});
+	// }
 }

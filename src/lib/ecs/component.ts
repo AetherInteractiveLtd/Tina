@@ -141,6 +141,7 @@ const x = {
 };
 
 export class Component {
+	/** @hidden */
 	public _componentData = {
 		world: undefined as World | undefined,
 		id: undefined as number | undefined,
@@ -157,6 +158,19 @@ export class Component {
 	}
 
 	public update(entityId: EntityId, data: typeof x): void {}
+}
+
+export class Tag {
+	public _componentData = {
+		world: undefined as World | undefined,
+		id: undefined as number | undefined,
+	};
+
+	/** @hidden */
+	public initialiseTag(world: World, id: number): void {
+		this._componentData.world = world;
+		this._componentData.id = id;
+	}
 }
 
 /**
@@ -180,7 +194,7 @@ export function createComponentArray<T extends Tree<Type>>(def: T, max: number):
 	return ret as never;
 }
 
-export const _componentData = "_componentData";
+// export const _componentData = "_componentData";
 // export type _componentData = typeof _componentData;
 
 export type ComponentData = {
