@@ -1,11 +1,13 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { EntityId } from "../types/ecs";
-import { ComponentArray } from "./component";
+import { Component, ComponentArray } from "./component";
 import { ALL, ANY, View } from "./view";
 import { World } from "./world";
 
-const components = [];
+const components = new Array<Component>(32);
+
+const world = {} as World;
 
 class MockComponent {
 	/** @hidden */
@@ -31,8 +33,8 @@ export = (): void => {
 	beforeEach(() => {
 		for (let i = 0; i < 33; i++) {
 			const component = new MockComponent();
-			component.initialiseComponent({} as World, i, []);
-			components.push(component);
+			component.initialiseComponent(world, i, []);
+			components.push(component as unknown as Component);
 		}
 	});
 
@@ -47,11 +49,21 @@ export = (): void => {
 			}).to.throw();
 		});
 
-		it("should match empty", () => {
-			const view = new View({} as World).mask;
-			for (let i = 0; i < 20; i++) {
-				expect(View.match(new Array<number>(math.floor(math.random() * 1000)), view)).to.equal(true);
-			}
+		describe("match", () => {
+			it("empty", () => {
+				const view = new View({} as World).mask;
+				for (let i = 0; i < 20; i++) {
+					expect(View.match(new Array<number>(math.floor(math.random() * 1000)), view)).to.equal(true);
+				}
+			});
+
+			it("ALL", () => {
+				const view = new View(world, ALL(components[0], components[2], components[3])).mask;
+				expect(View.match([13], view)).to.equal(true);
+				expect(View.match([14], view)).to.equal(false);
+				expect(View.match([15, 0], view)).to.equal(true);
+				expect(View.match([16, 0], view)).to.equal(false);
+			});
 		});
 	});
 };
