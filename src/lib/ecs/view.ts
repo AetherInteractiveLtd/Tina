@@ -1,11 +1,9 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
-import { ComponentArray, ComponentData, _componentData } from "./component";
+import { Component } from "./component";
 import { World } from "./world";
 
-export type RawView =
-	| { op: typeof ALL; dt: Array<RawView | ComponentArray> }
-	| { op: typeof NOT; dt: RawView | ComponentArray };
+export type RawView = { op: typeof ALL; dt: Array<RawView | Component> } | { op: typeof NOT; dt: RawView | Component };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<ViewMask>] };
@@ -35,7 +33,11 @@ type ViewMask = Group | Not | MLeaf;
  * @param components
  * @returns
  */
-export function ALL<V extends RawView | ComponentArray>(...components: Array<V>): RawView {
+export function ALL<V extends RawView | Component>(...components: Array<V>): RawView {
+	if (components.size() === 0) {
+		throw error("ALL must have at least one component");
+	}
+
 	return { op: ALL, dt: components };
 }
 
@@ -44,7 +46,7 @@ export function ALL<V extends RawView | ComponentArray>(...components: Array<V>)
  * @param components
  * @returns
  */
-export function NOT<V extends RawView | ComponentArray>(components: V): RawView {
+export function NOT<V extends RawView | Component>(components: V): RawView {
 	return { op: NOT, dt: ALL(components) };
 }
 
@@ -53,7 +55,11 @@ export function NOT<V extends RawView | ComponentArray>(components: V): RawView 
  * @param components
  * @returns
  */
-export function ANY<V extends RawView | ComponentArray>(...components: Array<V>): RawView {
+export function ANY<V extends RawView | Component>(...components: Array<V>): RawView {
+	if (components.size() === 0) {
+		throw error("ANY must have at least one component");
+	}
+
 	return { op: ANY, dt: components };
 }
 
@@ -80,14 +86,14 @@ export class View {
 			const numbers: Array<number> = [];
 			const ret: [MLeaf, ...Array<ViewMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
 			for (const i of raw.dt as Array<RawView>) {
-				if (_componentData in i) {
-					if ((i as ComponentData)[_componentData].world === world) {
-						numbers.push((i as ComponentData)[_componentData].id);
+				if ("_componentData" in i) {
+					if ((i as unknown as Component)._componentData.world === world) {
+						numbers.push((i as unknown as Component)._componentData.id!);
 					} else {
 						throw error(
-							`Component ${(i as ComponentData)._componentData.id} does not belong to world ${tostring(
-								world,
-							)}`,
+							`Component ${
+								(i as unknown as Component)._componentData.id
+							} does not belong to world ${tostring(world)}`,
 						);
 					}
 				} else {
