@@ -3,7 +3,11 @@ import { Condition, ConditionCallback } from "./types";
 import { isFunction } from "../utilities/checkers";
 
 export class X {
-	public static EVAL<T extends unknown[]>(condition: Condition<T>, ...args: T): boolean {
+	public static create(func: ConditionCallback) {
+		return func;
+	}
+
+	public static eval<T extends unknown[]>(condition: Condition<T>, ...args: T): boolean {
 		return isFunction(condition) ? condition(...args) : condition;
 	}
 
@@ -53,9 +57,5 @@ export class X {
 		const secondEvaluation = isFunction(second) ? second() : second;
 
 		return firstEvaluation === secondEvaluation;
-	}
-
-	public static create(func: ConditionCallback) {
-		return func;
 	}
 }
