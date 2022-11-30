@@ -1,4 +1,4 @@
-import { X } from "./conditions";
+import { COND } from "./conditions";
 import { Condition } from "./conditions/types";
 
 export enum EAction {
@@ -63,7 +63,7 @@ export class EventListener<T extends unknown[]> {
 
 		switch (action) {
 			case EAction.COND:
-				this._call(iteration + 1, X.EVAL<T>(handlerOrCondition, ...args), ...args);
+				this._call(iteration + 1, COND.eval<T>(handlerOrCondition, ...args), ...args);
 
 				break;
 

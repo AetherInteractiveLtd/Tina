@@ -112,7 +112,7 @@ namespace Tina {
 export default Tina;
 
 /** Export Conditions Library */
-export { X } from "./lib/conditions";
+export { COND } from "./lib/conditions";
 
 /** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
