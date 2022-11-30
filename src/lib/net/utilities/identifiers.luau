@@ -77,6 +77,8 @@ function Identifiers.waitForIdentifier(id: string): string
 			identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
 		until identifier ~= nil
 
+		sendDict[id] = identifier
+
 		return identifier
 	end
 end
