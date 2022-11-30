@@ -24,7 +24,9 @@
   "types": "out/index.d.ts",
   "files": [
     "out",
-    "!**/*.tsbuildinfo"
+    "!**/*.tsbuildinfo",
+		"!out/services.d.ts",
+		"!**/testBootstrap.*"
   ],
   "publishConfig": {
     "access": "public"

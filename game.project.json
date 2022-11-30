@@ -21,6 +21,9 @@
 			"$className": "ServerScriptService",
 			"Package": {
 				"$path": "out"
+			},
+			"testBootstrap": {
+				"$path": "out/testBootstrap.server.lua"
 			}
 		}
 	}
