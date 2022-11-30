@@ -1,5 +1,6 @@
 import Sift from "@rbxts/sift";
 import { EntityId } from "../types/ecs";
+import { ImmutableArray } from "../types/readonly";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
@@ -21,6 +22,15 @@ export interface WorldOptions {
  *
  * Typically there is only a single world, but there is no limit on the number
  * of worlds an application can create.
+ *
+ * #### Usage Example:
+ *
+ * To create a new world, simply call the constructor:
+ *
+ * ```ts
+ * import { World } from "@rbxts/tina";
+ * const world = new World(...);
+ * ```
  */
 export class World {
 	public readonly entityManager: EntityManager;
@@ -111,7 +121,7 @@ export class World {
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): ComponentArray<T> {
+	public defineComponent<T extends Tree<Type>>(def: T): ImmutableArray<ComponentArray<T>> {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
@@ -121,7 +131,7 @@ export class World {
 	/**
 	 *
 	 */
-	public defineTag(): ComponentArray {
+	public defineTag(): ImmutableArray<ComponentArray> {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define tags after entities have been created");
 		}
