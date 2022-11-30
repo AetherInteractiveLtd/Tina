@@ -2,7 +2,7 @@
 
 import { EntityId } from "../types/ecs";
 import { ComponentArray } from "./component";
-import { ALL, ANY } from "./view";
+import { ALL, ANY, View } from "./view";
 import { World } from "./world";
 
 const components = [];
@@ -45,6 +45,13 @@ export = (): void => {
 			expect(() => {
 				ANY();
 			}).to.throw();
+		});
+
+		it("should match empty", () => {
+			const view = new View({} as World).mask;
+			for (let i = 0; i < 20; i++) {
+				expect(View.match(new Array<number>(math.floor(math.random() * 1000)), view)).to.equal(true);
+			}
 		});
 	});
 };
