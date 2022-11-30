@@ -23,6 +23,16 @@ export = (): void => {
 		});
 
 		// allocate and reuse ids
+		it("reuse ids", () => {
+			const entityId = world.add(); // 0
+			world.add(); // 1
+			world.add(); // 2
+			world.flush();
+			world.remove(entityId);
+			world.flush();
+			const entityId2 = world.add();
+			expect(entityId).to.equal(entityId2);
+		});
 	});
 
 	describe("A world with one entity should", () => {
