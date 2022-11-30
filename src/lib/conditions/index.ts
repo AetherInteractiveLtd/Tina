@@ -2,9 +2,9 @@ import { Condition, ConditionCallback } from "./types";
 
 import { isFunction } from "../utilities/checkers";
 
-export class X {
-	public static create(func: ConditionCallback) {
-		return func;
+export class COND {
+	public static create(callback: ConditionCallback) {
+		return callback;
 	}
 
 	public static eval<T extends unknown[]>(condition: Condition<T>, ...args: T): boolean {
