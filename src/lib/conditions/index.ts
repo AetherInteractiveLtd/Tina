@@ -55,7 +55,7 @@ export class X {
 		return firstEvaluation === secondEvaluation;
 	}
 
-	public static create(func: ConditionCallback<unknown[]>) {
+	public static create(func: ConditionCallback) {
 		return func;
 	}
 }
