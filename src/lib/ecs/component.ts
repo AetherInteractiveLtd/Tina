@@ -1,5 +1,6 @@
 // // type Props = Partial<Omit<Component, keyof Component>>;
 
+import { EntityId } from "../types/ecs";
 import { World } from "./world";
 
 // // Component data needs to be easily serializable
@@ -135,6 +136,29 @@ export const enum ComponentTypes {
 
 // const x = comp.updateData({ inter: 2 }); // this needs to fail
 
+const x = {
+	x: ComponentTypes.Number,
+};
+
+export class Component {
+	public _componentData = {
+		world: undefined as World | undefined,
+		id: undefined as number | undefined,
+	};
+
+	/** @hidden */
+	public componentArray: ComponentArray = [];
+
+	/** @hidden */
+	public initialiseComponent(world: World, id: number, componentArray: ComponentArray): void {
+		this._componentData.world = world;
+		this._componentData.id = id;
+		this.componentArray = componentArray;
+	}
+
+	public update(entityId: EntityId, data: typeof x): void {}
+}
+
 /**
  *
  * @param def
@@ -175,8 +199,8 @@ export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends [InitF
 	: T extends Array<unknown>
 	? T
 	: T extends ArrayConstructor
-	? Array<unknown>
-	: T extends Exclude<Type, Array<unknown>>
+	? Array<ComponentTypes>
+	: T extends Exclude<Type, Array<ComponentTypes>>
 	? InstanceType<T>
 	: T extends ComponentData
 	? ComponentData

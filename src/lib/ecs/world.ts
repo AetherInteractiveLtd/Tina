@@ -4,7 +4,15 @@ import { ImmutableArray } from "../types/readonly";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { ComponentArray, ComponentData, createComponentArray, Tree, Type, _componentData } from "./component";
+import {
+	Component,
+	ComponentArray,
+	ComponentData,
+	createComponentArray,
+	Tree,
+	Type,
+	_componentData,
+} from "./component";
 import { EntityManager } from "./entity-manager";
 import { ALL, RawView, View } from "./view";
 
@@ -121,11 +129,15 @@ export class World {
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): ImmutableArray<ComponentArray<T>> {
+	public defineComponent<T extends Tree<Type>>(def: T): Component {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
-		return this.registerComponent(createComponentArray(def, 1000));
+
+		const component = new Component();
+		component.initialiseComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
+
+		return component;
 	}
 
 	/**
@@ -142,7 +154,7 @@ export class World {
 	 * Adds a given component to the entity. If the entity already has the
 	 * given component, then an error is thrown.
 	 */
-	public addComponent<C extends ComponentArray>(entityId: EntityId, component: C, data?: Partial<C>): World {
+	public addComponent<C extends Component>(entityId: EntityId, component: C, data?: Partial<C>): World {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -193,9 +205,9 @@ export class World {
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent<C extends ComponentData>(entityId: EntityId, component: ComponentArray): boolean {
-		const componentId = (component as C)[_componentData].id;
-		return this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId);
+	public hasComponent(entityId: EntityId, component: Component): boolean {
+		const componentId = component._componentData.id!;
+		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
 	/**
@@ -308,12 +320,25 @@ export class World {
 	 * @param component
 	 * @returns
 	 */
-	private registerComponent<T extends object>(component: T) {
+	private registerComponent<T extends ComponentArray>(component: T) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const x = {
+			x: 1,
+		};
+
+		function update(entityId: EntityId, data: typeof x): void {
+			// for (const [key, value] of pairs(data)) {
+			// 	component[key as unknown][entityId] = value;
+			// }
+		}
+
 		return Sift.Dictionary.merge(component, {
 			[_componentData]: {
 				world: this,
 				id: this.entityManager.getNextComponentId(),
 			},
+
+			update,
 		});
 	}
 }

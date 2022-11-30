@@ -9,7 +9,7 @@ import { World } from "./world";
 export class EntityManager {
 	public archetypes: Map<string, Archetype>;
 	private empty: Archetype;
-	private entities: Array<Archetype>;
+	public entities: Array<Archetype>;
 	private entitiesToCreate: SparseSet;
 	private entitiesToDestroy: SparseSet;
 	public updateTo: Array<Archetype>;
