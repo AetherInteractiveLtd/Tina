@@ -168,6 +168,9 @@ export class Query {
 	 * });
 	 * ```
 	 *
+	 * Once the iteration is complete, any deferred changes made during the
+	 * query (such as {@link Entity.removeComponent}) will be applied.
+	 *
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityId) => boolean): void {
@@ -175,10 +178,12 @@ export class Query {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
 				if (!callback(entities[j - 1])) {
-					return;
+					break;
 				}
 			}
 		}
+
+		this.world.flush();
 	}
 
 	/**
