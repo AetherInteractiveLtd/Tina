@@ -5,27 +5,28 @@ import { World } from "./world";
 
 /**
  * A class for managing entities within the world.
+ *
+ * This class is created internally by the {@link World} class, and should not
+ * be accessed directly.
+ *
+ * //TODO: Remove the weird coupling between this and the world class.
  */
 export class EntityManager {
 	public archetypes: Map<string, Archetype>;
 	private empty: Archetype;
 	public entities: Array<Archetype>;
-	private entitiesToCreate: SparseSet;
 	private entitiesToDestroy: SparseSet;
 	public updateTo: Array<Archetype>;
 	private readonly rm: SparseSet;
-	private readonly world: World;
 
 	private componentId = 0;
 	private entityId = 0;
 	private size = 0;
 
-	constructor(world: World) {
+	constructor() {
 		this.archetypes = new Map();
-		this.world = world;
 
 		this.rm = new SparseSet();
-		this.entitiesToCreate = new SparseSet();
 		this.entitiesToDestroy = new SparseSet();
 		this.entities = [];
 		this.updateTo = [];
