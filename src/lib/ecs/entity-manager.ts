@@ -109,7 +109,7 @@ export class EntityManager {
 	 * Removes any entities from the world that has been marked for removal.
 	 * @hidden
 	 */
-	public destroyPending(): void {
+	public destroyPendingEntities(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
 			this.rm.add(entityId);
