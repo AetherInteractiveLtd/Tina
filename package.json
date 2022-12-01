@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "@eslint/github-action": "^0.1.0",
-    "@rbxts/sift": "^0.0.3",
     "roblox-ts": "^2.0.4"
   }
 }
