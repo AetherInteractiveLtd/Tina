@@ -1,7 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { Process } from "@rbxts/tina/out/lib/process/process";
-import Scheduler, { ProcessScheduler } from "@rbxts/tina/out/lib/process/scheduler";
+import { Process } from "./process";
+import Scheduler, { ProcessScheduler } from "./scheduler";
 
 export = () => {
 	describe("Scheduler", () => {
