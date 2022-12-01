@@ -175,7 +175,7 @@ export class World {
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
 	 *     been defined previously with {@link defineComponent}.
-	 * @param _data The optional data to initialise the component with.
+	 * @param data The optional data to initialise the component with.
 	 */
 	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
 		if (!this.has(entityId)) {
@@ -277,18 +277,25 @@ export class World {
 	 */
 	public pause(): void {}
 
-	/** @hidden */
+	/**
+	 * Flushes any current changes in the world. This is called automatically
+	 * whenever a query or a system has finished executing, and should not
+	 * typically be called manually.
+	 */
 	public flush(): void {
 		debug.profilebegin("World:flush");
 		{
-			this.entityManager.destroyPending();
+			this.entityManager.destroyPendingEntities();
 			this.updatePendingComponents();
 		}
 		debug.profileend();
 	}
 
 	/**
-	 * TODO: Is this named correctly?
+	 * Clears all pending component updates in the world (either add or remove).
+	 *
+	 * This is called automatically by {@link flush}.
+	 * @hidden
 	 */
 	private updatePendingComponents(): void {
 		this.entityManager.updatePending(this.componentsToUpdate.dense);
@@ -296,9 +303,11 @@ export class World {
 	}
 
 	/**
+	 * Called when a component is added to an entity, as the entity's archetype
+	 * will need to be changed.
 	 *
 	 * @param arch
-	 * @param componentId
+	 * @param componentId The id of the component to add.
 	 * @returns
 	 */
 	private archetypeChange(arch: Archetype, componentId: number): Archetype {
@@ -311,9 +320,13 @@ export class World {
 	}
 
 	/**
+	 * Gets the archetype with the given mask.
 	 *
-	 * @param mask
-	 * @returns
+	 * If the archetype does not exist, it is created, and then cached for
+	 * querying later.
+	 *
+	 * @param mask The mask of the archetype to get.
+	 * @returns The archetype with the given mask.
 	 */
 	private getArchetype(mask: Array<number>): Archetype {
 		if (!this.entityManager.archetypes.has(mask.join(","))) {
@@ -328,40 +341,7 @@ export class World {
 		return this.entityManager.archetypes.get(mask.join(","))!;
 	}
 
-	/**
-	 *
-	 * @param mask
-	 * @param componentId
-	 * @returns
-	 */
 	private hasComponentInternal(mask: Array<number>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
-
-	/**
-	 *
-	 * @param component
-	 * @returns
-	 */
-	// private registerComponent<T extends ComponentArray>(component: T) {
-	// 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	// 	const x = {
-	// 		x: 1,
-	// 	};
-
-	// 	function update(entityId: EntityId, data: typeof x): void {
-	// 		// for (const [key, value] of pairs(data)) {
-	// 		// 	component[key as unknown][entityId] = value;
-	// 		// }
-	// 	}
-
-	// 	return Sift.Dictionary.merge(component, {
-	// 		[_componentData]: {
-	// 			world: this,
-	// 			id: this.entityManager.getNextComponentId(),
-	// 		},
-
-	// 		update,
-	// 	});
-	// }
 }

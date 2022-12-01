@@ -1,8 +1,15 @@
 /**
+ * A sparse set is a specialized data structure for representing a set of
+ * integers. It can be useful in some very narrow and specific cases, namely
+ * when the universe of possible values is very large but used very sparingly
+ * and the set is iterated often or cleared often.
  *
+ * The sparse set will grow as needed to accomodate values added.
  */
 export class SparseSet {
+	/** The elements stored in the sparse set. */
 	public dense: Array<number>;
+	/** An array that maps the set's items to their indicies in the dense. */
 	public sparse: Array<number>;
 
 	constructor() {
@@ -11,9 +18,9 @@ export class SparseSet {
 	}
 
 	/**
-	 *
-	 * @param x
-	 * @returns
+	 * Checks if the given element is in the set.
+	 * @param x The element to check.
+	 * @returns `true` if the element is in the set
 	 */
 	public has(x: number): boolean {
 		const sparse = this.sparse[x] !== undefined ? this.sparse[x] : math.huge;
@@ -21,8 +28,8 @@ export class SparseSet {
 	}
 
 	/**
-	 *
-	 * @param x
+	 * Adds the given element to the set.
+	 * @param x The element to add.
 	 */
 	public add(x: number): void {
 		if (!this.has(x)) {
@@ -32,8 +39,8 @@ export class SparseSet {
 	}
 
 	/**
-	 *
-	 * @param x
+	 * Removes the given element from the set.
+	 * @param x The element to remove.
 	 */
 	public remove(x: number): void {
 		if (this.has(x)) {
