@@ -3,37 +3,21 @@ import { Archetype } from "./collections/archetype";
 import { Component } from "./component";
 import { World } from "./world";
 
-export type RawView = { op: typeof ALL; dt: Array<RawView | Component> } | { op: typeof NOT; dt: RawView | Component };
+export type RawView =
+	| { op: typeof ALL | typeof ANY; dt: Array<RawView | Component> }
+	| { op: typeof NOT; dt: RawView | Component };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<ViewMask>] };
 type Not = { op: typeof NOT; dt: ViewMask };
 type ViewMask = Group | Not | MLeaf;
 
-// type Constructor<T, Args extends any[] = any> = {
-// 	new (...args: Args): T;
-// };
-
-// export type ViewCallback<T extends Constructor<Component>[]> = (
-// 	entity: Entity,
-// 	...components: InstanceTypeTuple<T>
-// ) => false | void;
-
-// export interface View<T extends Constructor<Component>[]> {
-// 	/**
-// 	 * Iterates over all the entities in the `View`.
-// 	 *
-// 	 * If you return `false` from the callback, the iteration will halt.
-// 	 */
-// 	each(callback: ViewCallback<T>): void;
-// }
-
 /**
  * Aaa
  * @param components
  * @returns
  */
-export function ALL<V extends RawView | Component>(...components: Array<V>): RawView {
+export function ALL(...components: Array<RawView | Component>): RawView {
 	if (components.size() === 0) {
 		throw error("ALL must have at least one component");
 	}
@@ -46,8 +30,8 @@ export function ALL<V extends RawView | Component>(...components: Array<V>): Raw
  * @param components
  * @returns
  */
-export function NOT<V extends RawView | Component>(components: V): RawView {
-	return { op: NOT, dt: ALL(components) };
+export function NOT(components: RawView | Component): RawView {
+	return { op: NOT, dt: typeOf((components as RawView).op) === "function" ? components : ALL(components) };
 }
 
 /**
@@ -55,7 +39,7 @@ export function NOT<V extends RawView | Component>(components: V): RawView {
  * @param components
  * @returns
  */
-export function ANY<V extends RawView | Component>(...components: Array<V>): RawView {
+export function ANY(...components: Array<RawView | Component>): RawView {
 	if (components.size() === 0) {
 		throw error("ANY must have at least one component");
 	}
@@ -136,14 +120,6 @@ export class View {
 	 * @returns
 	 */
 	public static match(target: Array<number>, mask: ViewMask): boolean {
-		// if ("BYTES_PER_ELEMENT" in mask.dt) {
-		// 	return Query.partial(target, mask as MLeaf);
-		// }
-		// if (target.size() === 1) {
-		// 	return View.partial(target, mask as MLeaf);
-		// }
-
-		// if mask.dt is an array of numbers then
 		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
 			return View.partial(target, mask as MLeaf);
 		}
