@@ -111,6 +111,7 @@ export class Query {
 	public a: Array<Archetype>;
 	public archetypes: Array<Archetype>;
 	public mask: QueryMask;
+	/** The world that the query belongs to. */
 	public world: World;
 
 	constructor(world: World, query?: RawQuery) {

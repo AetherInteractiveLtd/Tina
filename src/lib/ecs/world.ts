@@ -4,6 +4,7 @@ import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { Component, createComponentArray, Tag, Tree, Type } from "./component";
 import { EntityManager } from "./entity-manager";
+import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
 
 export interface WorldOptions {
@@ -27,22 +28,23 @@ export interface WorldOptions {
  *
  * ```ts
  * import { World } from "@rbxts/tina";
- * const world = new World(...);
+ * const world = new World({...});
  * ```
  */
 export class World {
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
-	private toUpdate: SparseSet;
+	/** Components that are waiting to be added or removed from an entity. */
+	private componentsToUpdate: SparseSet;
 	private queries: Array<Query>;
 
 	constructor(options: WorldOptions) {
 		this.options = options;
 		this.queries = [];
-		this.toUpdate = new SparseSet();
+		this.componentsToUpdate = new SparseSet();
 
-		this.entityManager = new EntityManager(this);
+		this.entityManager = new EntityManager();
 	}
 
 	/** @returns The name of the world. */
@@ -51,9 +53,20 @@ export class World {
 	}
 
 	/**
+	 * Creates a new query to filter entities based on the given components.
 	 *
-	 * @param raw
-	 * @returns
+	 * #### Usage Example:
+	 * ```ts
+	 * import { ALL, ANY, NOT } from "@rbxts/tina";
+	 * import { Position, Velocity, Acceleration } from "./components";
+	 *
+	 * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
+	 * ```
+	 *
+	 * @param raw A query using components, and optionally the provided helper
+	 * functions {@link ALL}, {@link ANY}, and {@link NOT}.
+	 *
+	 * @returns A new {@link Query}.
 	 */
 	public createQuery(...raw: Array<RawQuery>): Query {
 		let query: Query;
@@ -85,14 +98,22 @@ export class World {
 
 	/**
 	 * Creates a new entity in the world.
+	 *
+	 * When an entity is added to the world, the id will be assigned
+	 * immediately, but as all other operations are deferred, the entity will
+	 * not be added to any queries until the system has finished executing.
+	 *
 	 * @returns The id of the newly created entity.
 	 */
-	public add(): number {
+	public add(): EntityId {
 		return this.entityManager.createEntity();
 	}
 
 	/**
 	 * Removes the given entity from the world, including all of its components.
+	 *
+	 * The entity will be removed from the world upon the next deferred update.
+	 *
 	 * @param entityId The id of the entity to remove.
 	 */
 	public remove(entityId: EntityId): void {
@@ -101,7 +122,8 @@ export class World {
 
 	/**
 	 * Checks if a given entity is currently in the world.
-	 * @param entityId
+	 *
+	 * @param entityId The id of the entity to check.
 	 * @returns
 	 */
 	public has(entityId: EntityId): boolean {
@@ -116,6 +138,7 @@ export class World {
 	}
 
 	/**
+	 * Initialises a new component with the world.
 	 *
 	 * @param def
 	 */
@@ -125,6 +148,7 @@ export class World {
 		}
 
 		const component = new Component();
+		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
 		component.initialiseComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
 
 		return component;
@@ -147,13 +171,18 @@ export class World {
 	/**
 	 * Adds a given component to the entity. If the entity already has the
 	 * given component, then an error is thrown.
+	 *
+	 * @param entityId The id of the entity to add the component to.
+	 * @param component The component to add to the entity, which must have
+	 *     been defined previously with {@link defineComponent}.
+	 * @param _data The optional data to initialise the component with.
 	 */
 	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
 
-		this.toUpdate.add(entityId);
+		this.componentsToUpdate.add(entityId);
 
 		debug.profilebegin("World:addComponent");
 		{
@@ -178,7 +207,7 @@ export class World {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
 
-		this.toUpdate.add(entityId);
+		this.componentsToUpdate.add(entityId);
 
 		debug.profilebegin("World:removeComponent");
 		{
@@ -253,32 +282,32 @@ export class World {
 		debug.profilebegin("World:flush");
 		{
 			this.entityManager.destroyPending();
-			this.updatePending();
+			this.updatePendingComponents();
 		}
 		debug.profileend();
 	}
 
 	/**
-	 *
+	 * TODO: Is this named correctly?
 	 */
-	private updatePending(): void {
-		this.entityManager.updatePending(this.toUpdate.dense);
-		this.toUpdate.dense = [];
+	private updatePendingComponents(): void {
+		this.entityManager.updatePending(this.componentsToUpdate.dense);
+		this.componentsToUpdate.dense = [];
 	}
 
 	/**
 	 *
 	 * @param arch
-	 * @param i
+	 * @param componentId
 	 * @returns
 	 */
-	private archetypeChange(arch: Archetype, i: number): Archetype {
-		if (!arch.change[i]) {
-			arch.mask[~~(i / 32)] ^= 1 << i % 32;
-			arch.change[i] = this.getArchetype(arch.mask);
-			arch.mask[~~(i / 32)] ^= 1 << i % 32;
+	private archetypeChange(arch: Archetype, componentId: number): Archetype {
+		if (!arch.change[componentId]) {
+			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
+			arch.change[componentId] = this.getArchetype(arch.mask);
+			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
 		}
-		return arch.change[i];
+		return arch.change[componentId];
 	}
 
 	/**
