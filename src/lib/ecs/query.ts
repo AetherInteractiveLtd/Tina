@@ -96,10 +96,10 @@ export function NOT(components: RawQuery | Component): RawQuery {
  * #### Usage Example:
  * ```ts
  * import { World, ALL, ANY, NOT } from "@rbxts/tina";
- * import { Position, Velocity } from "./components";
+ * import { Position, Velocity, Acceleration } from "./components";
  *
  * const world = new World();
- * const query = world.createQuery(Position, ANY(Velocity, NOT(Position)));
+ * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
  * query.forEach((entityId) => {
  * 	// ...
  * });
