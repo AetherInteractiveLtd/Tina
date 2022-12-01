@@ -44,7 +44,13 @@ namespace Tina {
 	}
 
 	/**
-	 * Starts up the client net, this is only to avoid infinite yields over identifiers.
+	 * Starts up the client networking, meaning event connections. This should be used **ONCE** on the client, recommended to be under an intialiser file for the client.
+	 *
+	 * Usage example:
+	 * ```ts
+	 * import Tina from "@rbxts/tina"
+	 * Tina.startNet();
+	 * ```
 	 *
 	 * @client
 	 */
@@ -120,6 +126,9 @@ export { EventEmitter } from "./lib/events";
 
 /** Export Network Library */
 export { Network } from "./lib/net";
+
+/** Audience Utility */
+export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
 export { User } from "./lib/user/user";
