@@ -13,9 +13,21 @@ type Not = { op: typeof NOT; dt: QueryMask };
 type QueryMask = Group | Not | MLeaf;
 
 /**
- * Aaa
- * @param components
- * @returns
+ * A helper function that matches to all provided components.
+ *
+ * This function should not be used outside of the {@link World.createQuery}
+ * constructor.
+ *
+ * #### Usage Example:
+ * ```ts
+ * // An entity must have components A, B and C.
+ * ALL(ComponentA, ComponentB, ComponentC)
+ *
+ * // An entity must have component A, and either component B or C.
+ * ALL(ComponentA, ANY(ComponentB, ComponentC))
+ * ```
+ *
+ * @param components The components or query to match to.
  */
 export function ALL(...components: Array<RawQuery | Component>): RawQuery {
 	if (components.size() === 0) {
@@ -26,18 +38,21 @@ export function ALL(...components: Array<RawQuery | Component>): RawQuery {
 }
 
 /**
+ * A helper function that matches to any of the provided components.
  *
- * @param components
- * @returns
- */
-export function NOT(components: RawQuery | Component): RawQuery {
-	return { op: NOT, dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components) };
-}
-
-/**
+ * This function should not be used outside of the {@link World.createQuery}
+ * constructor.
  *
- * @param components
- * @returns
+ * #### Usage Example:
+ * ```ts
+ * // An entity must have either components A, B or C.
+ * ANY(ComponentA, ComponentB, ComponentC)
+ *
+ * // An entity must have component A, or either both components B and C.
+ * ANY(ComponentA, ALL(ComponentB, ComponentC))
+ * ```
+ *
+ * @param components The components or query to match to.
  */
 export function ANY(...components: Array<RawQuery | Component>): RawQuery {
 	if (components.size() === 0) {
@@ -48,7 +63,49 @@ export function ANY(...components: Array<RawQuery | Component>): RawQuery {
 }
 
 /**
+ * A helper function that matches if the provided component is not present.
  *
+ * This function should not be used outside of the {@link World.createQuery}
+ * constructor.
+ *
+ * #### Usage Example:
+ * ```ts
+ * // An entity must not have component A.
+ * NOT(ComponentA)
+ *
+ * // An entity must have component A, and must not have component B.
+ * ALL(ComponentA, NOT(ComponentB))
+ * ```
+ *
+ * @param components The components or query to match to.
+ */
+export function NOT(components: RawQuery | Component): RawQuery {
+	return { op: NOT, dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components) };
+}
+
+/**
+ * A query is used to filter entities based on their components.
+ *
+ * To create a query, use the {@link World.createQuery} method, which takes a
+ * list of components, and will return a query that matches all the entities in
+ * the given world that have the given components.
+ *
+ * Queries can be created using the helper functions {@link ALL}, {@link ANY},
+ * and {@link NOT}, which can be used to create complex queries.
+ *
+ * #### Usage Example:
+ * ```ts
+ * import { World, ALL, ANY, NOT } from "@rbxts/tina";
+ * import { Position, Velocity } from "./components";
+ *
+ * const world = new World();
+ * const query = world.createQuery(Position, ANY(Velocity, NOT(Position)));
+ * query.forEach((entityId) => {
+ * 	// ...
+ * });
+ * ```
+ *
+ * @note Order of iteration is not guaranteed.
  */
 export class Query {
 	public a: Array<Archetype>;
@@ -58,9 +115,8 @@ export class Query {
 
 	constructor(world: World, query?: RawQuery) {
 		/**
-		 *
-		 * @param raw
-		 * @returns
+		 * Creates a decision tree from a given query.
+		 * @param raw The raw data to create the decision tree from.
 		 */
 		const createQuery = (raw: RawQuery): QueryMask => {
 			if (raw.op === NOT) {
@@ -100,24 +156,41 @@ export class Query {
 	}
 
 	/**
+	 * Runs a callback for each entitiy that matches the given query.
 	 *
-	 * @param callback
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over.
+	 *
+	 * #### Usage Example:
+	 * ```ts
+	 * query.forEach((entityId) => {
+	 * 	// ...
+	 * });
+	 * ```
+	 *
+	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityId, world: World) => void): void {
+	public forEach(callback: (entityId: EntityId) => boolean): void {
 		for (let i = 0; i < this.a.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
-				callback(entities[j - 1], this.world);
+				if (!callback(entities[j - 1])) {
+					return;
+				}
 			}
 		}
-		this.world.flush();
 	}
 
 	/**
+	 * Traverses the query mask, and returns true if the archhetype mask
+	 * matches the given query.
 	 *
-	 * @param target
-	 * @param mask
-	 * @returns
+	 * This function should not be used directly, and instead is used
+	 * internally by {@link World.createQuery}.
+	 *
+	 * @param target The archetype mask to match to.
+	 * @param mask The query mask to match with.
+	 * @returns True if the archetype mask matches the query mask.
 	 */
 	public static match(target: Array<number>, mask: QueryMask): boolean {
 		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
@@ -147,10 +220,11 @@ export class Query {
 	}
 
 	/**
+	 * Called when a leaf node is reached in the query mask.
 	 *
-	 * @param target
-	 * @param mask
-	 * @returns
+	 * @param target The current remaining mask.
+	 * @param mask The leaf node to match with.
+	 * @returns True if the mask matches the query mask.
 	 */
 	private static partial(target: Array<number>, mask: MLeaf): boolean {
 		if (mask.op === ALL) {
