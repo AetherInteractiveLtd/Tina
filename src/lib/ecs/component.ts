@@ -197,13 +197,6 @@ export function createComponentArray<T extends Tree<Type>>(def: T, max: number):
 // export const _componentData = "_componentData";
 // export type _componentData = typeof _componentData;
 
-export type ComponentData = {
-	_componentData: {
-		world: World;
-		id: number;
-	};
-};
-
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 type InitFunc = () => unknown;
 export type Type = ComponentTypes | ArrayConstructor | [InitFunc] | Array<unknown>;
@@ -216,8 +209,6 @@ export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends [InitF
 	? Array<ComponentTypes>
 	: T extends Exclude<Type, Array<ComponentTypes>>
 	? InstanceType<T>
-	: T extends ComponentData
-	? ComponentData
 	: {
 			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
 	  };

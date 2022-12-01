@@ -4,7 +4,7 @@ import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { Component, createComponentArray, Tag, Tree, Type } from "./component";
 import { EntityManager } from "./entity-manager";
-import { ALL, RawView, View } from "./view";
+import { ALL, Query, RawQuery } from "./query";
 
 export interface WorldOptions {
 	/**
@@ -35,11 +35,11 @@ export class World {
 	public readonly options: WorldOptions;
 
 	private toUpdate: SparseSet;
-	private views: Array<View>;
+	private queries: Array<Query>;
 
 	constructor(options: WorldOptions) {
 		this.options = options;
-		this.views = [];
+		this.queries = [];
 		this.toUpdate = new SparseSet();
 
 		this.entityManager = new EntityManager(this);
@@ -55,22 +55,22 @@ export class World {
 	 * @param raw
 	 * @returns
 	 */
-	public createView(...raw: Array<RawView>): View {
-		let view: View;
+	public createQuery(...raw: Array<RawQuery>): Query {
+		let query: Query;
 
-		debug.profilebegin("World:createView");
+		debug.profilebegin("World:createQuery");
 		{
-			view = new View(this, ALL(...raw));
+			query = new Query(this, ALL(...raw));
 			this.entityManager.archetypes.forEach((archetype) => {
-				if (View.match(archetype.mask, view.mask)) {
-					view.a.push(archetype);
+				if (Query.match(archetype.mask, query.mask)) {
+					query.a.push(archetype);
 				}
 			});
-			this.views.push(view);
+			this.queries.push(query);
 		}
 		debug.profileend();
 
-		return view;
+		return query;
 	}
 
 	/**
@@ -290,9 +290,9 @@ export class World {
 		if (!this.entityManager.archetypes.has(mask.join(","))) {
 			const arch = new Archetype(slice(mask));
 			this.entityManager.archetypes.set(mask.join(","), arch);
-			for (const view of this.views) {
-				if (View.match(mask, view.mask)) {
-					view.a.push(arch);
+			for (const query of this.queries) {
+				if (Query.match(mask, query.mask)) {
+					query.a.push(arch);
 				}
 			}
 		}

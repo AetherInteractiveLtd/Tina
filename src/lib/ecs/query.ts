@@ -3,21 +3,21 @@ import { Archetype } from "./collections/archetype";
 import { Component } from "./component";
 import { World } from "./world";
 
-export type RawView =
-	| { op: typeof ALL | typeof ANY; dt: Array<RawView | Component> }
-	| { op: typeof NOT; dt: RawView | Component };
+export type RawQuery =
+	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | Component> }
+	| { op: typeof NOT; dt: RawQuery | Component };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
-type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<ViewMask>] };
-type Not = { op: typeof NOT; dt: ViewMask };
-type ViewMask = Group | Not | MLeaf;
+type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
+type Not = { op: typeof NOT; dt: QueryMask };
+type QueryMask = Group | Not | MLeaf;
 
 /**
  * Aaa
  * @param components
  * @returns
  */
-export function ALL(...components: Array<RawView | Component>): RawView {
+export function ALL(...components: Array<RawQuery | Component>): RawQuery {
 	if (components.size() === 0) {
 		throw error("ALL must have at least one component");
 	}
@@ -30,8 +30,8 @@ export function ALL(...components: Array<RawView | Component>): RawView {
  * @param components
  * @returns
  */
-export function NOT(components: RawView | Component): RawView {
-	return { op: NOT, dt: typeOf((components as RawView).op) === "function" ? components : ALL(components) };
+export function NOT(components: RawQuery | Component): RawQuery {
+	return { op: NOT, dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components) };
 }
 
 /**
@@ -39,7 +39,7 @@ export function NOT(components: RawView | Component): RawView {
  * @param components
  * @returns
  */
-export function ANY(...components: Array<RawView | Component>): RawView {
+export function ANY(...components: Array<RawQuery | Component>): RawQuery {
 	if (components.size() === 0) {
 		throw error("ANY must have at least one component");
 	}
@@ -50,26 +50,26 @@ export function ANY(...components: Array<RawView | Component>): RawView {
 /**
  *
  */
-export class View {
+export class Query {
 	public a: Array<Archetype>;
 	public archetypes: Array<Archetype>;
-	public mask: ViewMask;
+	public mask: QueryMask;
 	public world: World;
 
-	constructor(world: World, view?: RawView) {
+	constructor(world: World, query?: RawQuery) {
 		/**
 		 *
 		 * @param raw
 		 * @returns
 		 */
-		const createView = (raw: RawView): ViewMask => {
+		const createQuery = (raw: RawQuery): QueryMask => {
 			if (raw.op === NOT) {
-				return { op: raw.op, dt: createView(raw.dt as RawView) } as ViewMask;
+				return { op: raw.op, dt: createQuery(raw.dt as RawQuery) } as QueryMask;
 			}
 
 			const numbers: Array<number> = [];
-			const ret: [MLeaf, ...Array<ViewMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
-			for (const i of raw.dt as Array<RawView>) {
+			const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
+			for (const i of raw.dt as Array<RawQuery>) {
 				if ("_componentData" in i) {
 					if ((i as unknown as Component)._componentData.world === world) {
 						numbers.push((i as unknown as Component)._componentData.id!);
@@ -81,7 +81,7 @@ export class View {
 						);
 					}
 				} else {
-					ret.push(createView(i));
+					ret.push(createQuery(i));
 				}
 			}
 
@@ -90,12 +90,12 @@ export class View {
 				ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
 			}
 
-			return { op: raw.op, dt: ret } as ViewMask;
+			return { op: raw.op, dt: ret } as QueryMask;
 		};
 
 		this.archetypes = new Array<Archetype>();
 		this.a = this.archetypes;
-		this.mask = view ? createView(view) : { op: ALL, dt: new Array<number>() };
+		this.mask = query ? createQuery(query) : { op: ALL, dt: new Array<number>() };
 		this.world = world;
 	}
 
@@ -119,26 +119,26 @@ export class View {
 	 * @param mask
 	 * @returns
 	 */
-	public static match(target: Array<number>, mask: ViewMask): boolean {
+	public static match(target: Array<number>, mask: QueryMask): boolean {
 		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
-			return View.partial(target, mask as MLeaf);
+			return Query.partial(target, mask as MLeaf);
 		}
 
 		if (mask.op === NOT) {
-			return !View.match(target, mask.dt as ViewMask);
+			return !Query.match(target, mask.dt as QueryMask);
 		}
 
 		if (mask.op === ALL) {
-			for (const view of (mask as Group).dt) {
-				if (!View.match(target, view)) {
+			for (const query of (mask as Group).dt) {
+				if (!Query.match(target, query)) {
 					return false;
 				}
 			}
 			return true;
 		}
 
-		for (const view of (mask as Group).dt) {
-			if (View.match(target, view)) {
+		for (const query of (mask as Group).dt) {
+			if (Query.match(target, query)) {
 				return true;
 			}
 		}

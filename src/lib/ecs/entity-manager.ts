@@ -59,7 +59,7 @@ export class EntityManager {
 	 *
 	 * @returns The id of the next available entity.
 	 */
-	public createEntity(): number {
+	public createEntity(): EntityId {
 		if (this.rm.dense.size() > 0) {
 			const entityId = this.rm.dense.pop()!;
 			this.createEntityInternal(entityId);
