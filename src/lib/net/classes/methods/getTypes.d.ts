@@ -1,5 +1,6 @@
 import { EventListener } from "../../../events";
-import { User } from "../../../user/user";
+
+import { DefaultUser } from "../../../user/types";
 
 export interface GETServerObjectDeclaration<R, S> {
 	/**
@@ -13,7 +14,7 @@ export interface GETServerObjectDeclaration<R, S> {
 	 * @server
 	 * @param func should describe the listener function to add as a callback for the reply, the return type is the expected type at the receiving end.
 	 */
-	reply(func: (user: User & unknown, value: R) => S): void;
+	reply(func: (user: DefaultUser & unknown, value: R) => S): void;
 }
 
 export interface GETClientObjectDeclaration<S, R> {

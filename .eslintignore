@@ -1,2 +1,1 @@
-transformer/src/*.ts
-transformer/*.ts
+transformer/*

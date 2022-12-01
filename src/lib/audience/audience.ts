@@ -5,19 +5,19 @@ import { AudienceDeclaration } from "./types";
 export class Audience implements AudienceDeclaration {
 	private listed: Player[] = [];
 
-	public list(users: never[] | Player[]): AudienceDeclaration {
-		for (const user of users) {
-			this.listed.push((user as unknown as DefaultUser).player?.() ?? user);
+	public list(audience: (DefaultUser & unknown)[] | Player[]): AudienceDeclaration {
+		for (const viewer of audience) {
+			this.listed.push(typeOf(viewer) === "Instance" ? (viewer as Player) : (viewer as DefaultUser).player);
 		}
 
 		return this;
 	}
 
-	public getListed(): Player[] {
+	public get(): Player[] {
 		return this.listed;
 	}
 
-	public cleanList(): AudienceDeclaration {
+	public clean(): AudienceDeclaration {
 		this.listed = [];
 
 		return this;

@@ -27,7 +27,7 @@ export class UpdateEndpoint<T> implements UPDATEDeclaration<T> {
 	public send(to: AudienceDeclaration | Player, toSend: T): void {
 		Server.send(
 			this.identifier,
-			typeOf(to) === "Instance" ? [to as Player] : (to as AudienceDeclaration).getListed(),
+			typeOf(to) === "Instance" ? [to as Player] : (to as AudienceDeclaration).get(),
 			toSend as {},
 		);
 	}
@@ -37,6 +37,6 @@ export class UpdateEndpoint<T> implements UPDATEDeclaration<T> {
 	}
 
 	public sendAllExcept(blacklist: AudienceDeclaration, value: T) {
-		Server.sendAllExcept(this.identifier, blacklist.getListed(), value);
+		Server.sendAllExcept(this.identifier, blacklist.get(), value);
 	}
 }

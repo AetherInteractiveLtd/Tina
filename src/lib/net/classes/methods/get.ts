@@ -1,4 +1,6 @@
 import { EventListener } from "../../../events";
+
+import { DefaultUser } from "../../../user/types";
 import { User } from "../../../user/user";
 
 import Client from "../../utilities/client";
@@ -23,7 +25,7 @@ export class GetEndpoint<S, R> implements GETDeclaration<S, R> {
 		return eventListener;
 	}
 
-	reply(func: (user: User & unknown, value: S) => R): void {
+	reply(func: (user: DefaultUser & unknown, value: S) => R): void {
 		Server.listen(this.identifier, (player: Player, value: never) =>
 			Server.send(this.identifier, [player], func(User.get(player), value) as {}),
 		);

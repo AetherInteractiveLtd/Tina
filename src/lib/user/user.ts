@@ -1,22 +1,26 @@
 import { Players } from "@rbxts/services";
-
 import { DefaultUser } from "./types";
 
 export abstract class User implements DefaultUser {
-	constructor(private ref: Player | number) {}
+	public player: Player;
 
-	/**
-	 * Returns a User defined class.
-	 */
-	public static get(from: Player | never | string | number): never {
-		return "" as never; /* This still makes no sense to me, what exactly is a "User" if it's of type never always */
+	constructor(private ref: Player | number) {
+		this.player = (
+			typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player)
+		)!;
 	}
 
-	public player(): Player {
-		return (typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player))!;
+	public static changeUserClass(userClass: new (ref: Player | number) => User): void {
+		TINA_USER_CLASS = userClass;
+	}
+
+	public static get(from: Player | number): DefaultUser & unknown {
+		return new TINA_USER_CLASS(from);
 	}
 
 	public load() {}
 
 	public unload() {}
 }
+
+let TINA_USER_CLASS = User as never as new (ref: Player | number) => DefaultUser & unknown;

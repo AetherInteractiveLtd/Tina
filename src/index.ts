@@ -63,11 +63,11 @@ namespace Tina {
 	 * #### Usage example:
 	 *
 	 * ```ts
-	 * import Tina from "@rbxts/tina";
+	 * import Tina, { User } from "@rbxts/tina";
 	 *
-	 * class User extends Tina.User {
-	 * 	 constructor(userId: number) {
-	 * 		super(userId);
+	 * class  extends User {
+	 * 	 constructor(ref: Player | number) {
+	 * 		super(ref);
 	 *   }
 	 * }
 	 *
@@ -78,11 +78,12 @@ namespace Tina {
 	 *
 	 * *NOTE: The Client and Server can use their own User classes, but they should remain compatible with each other.*
 	 *
-	 * @param char The new User class constructor
+	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(char: new (userId: number) => User): void {
-		TINA_USER_CLASS = char;
-		logger.warn("The User Class has been changed to:", char);
+	export function setUserClass(userClass: new (ref: Player | number) => User): void {
+		User.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+
+		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -122,5 +123,3 @@ export { Network } from "./lib/net";
 
 /** User abstract class */
 export { User } from "./lib/user/user";
-
-let TINA_USER_CLASS: new (id: number) => User = User as never as new (id: number) => User;
