@@ -6,9 +6,7 @@
   "scripts": {
     "build": "rbxtsc --verbose",
     "watch": "rbxtsc -w",
-
     "publish": "npm run build && mkdir build & npm pack --pack-destination=build",
-
     "test:build": "rbxtsc --verbose --type game --rojo studio.project.json",
     "test:watch": "rbxtsc -w --verbose --type game --rojo studio.project.json",
     "test:serve": "rojo serve ./studio.project.json",
@@ -44,6 +42,7 @@
   },
   "dependencies": {
     "@eslint/github-action": "^0.1.0",
+    "@rbxts/services": "^1.5.1",
     "roblox-ts": "^2.0.4"
   }
 }
