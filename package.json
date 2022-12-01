@@ -9,10 +9,10 @@
 
     "publish": "npm run build && mkdir build & npm pack --pack-destination=build",
 
-		"test:build": "rbxtsc --verbose --type game --rojo game.project.json",
-		"test:watch": "rbxtsc -w --verbose --type game --rojo game.project.json",
-		"test:serve": "rojo serve ./game.project.json",
-		"test:rojo": "mkdir build & npm run test:build && rojo build -o ./build/test.rbxlx game.project.json",
+		"test:build": "rbxtsc --verbose --type game --rojo studio.project.json",
+		"test:watch": "rbxtsc -w --verbose --type game --rojo studio.project.json",
+		"test:serve": "rojo serve ./studio.project.json",
+		"test:rojo": "mkdir build & npm run test:build && rojo build -o ./build/test.rbxlx studio.project.json",
     "test:run": "set RUST_BACKTRACE=full & dir & run-in-roblox --place ./build/test.rbxlx --script ./out/testBootstrap.server.lua",
     "test": "npm run publish && npm run test:build && npm run test:rojo"
   },
