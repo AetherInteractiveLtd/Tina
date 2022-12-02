@@ -4,6 +4,7 @@ import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { Component, createComponentArray, Tag, Tree, Type } from "./component";
 import { EntityManager } from "./entity-manager";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
 
@@ -74,7 +75,7 @@ export class World {
 		debug.profilebegin("World:createQuery");
 		{
 			query = new Query(this, ALL(...raw));
-			this.entityManager.archetypes.forEach((archetype) => {
+			this.entityManager.archetypes.forEach(archetype => {
 				if (Query.match(archetype.mask, query.mask)) {
 					query.a.push(archetype);
 				}

@@ -1,7 +1,8 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { World } from "./world";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { World } from "./world";
 
 /**
  * A class for managing entities within the world.
@@ -96,7 +97,7 @@ export class EntityManager {
 
 	/** @hidden */
 	public updatePending(denseArray: Array<number>): void {
-		denseArray.forEach((entityId) => {
+		denseArray.forEach(entityId => {
 			if (this.alive(entityId)) {
 				this.entities[entityId].sparseSet.remove(entityId);
 				this.entities[entityId] = this.updateTo[entityId];
