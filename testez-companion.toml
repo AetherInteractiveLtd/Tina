@@ -1,2 +1,2 @@
 # These are the locations of your .spec files (descendants are searched too)
-roots = ["ReplicatedStorage"]
+roots = ["ServerScriptService/Package"]

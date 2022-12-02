@@ -1,0 +1,8 @@
+/out
+/node_modules
+/tests
+
+*.tsbuildinfo
+
+# mac users
+.DS_Store

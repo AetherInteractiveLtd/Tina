@@ -1,0 +1,30 @@
+{
+	"name": "tina-as-game",
+	"globIgnorePaths": [
+		"**/package.json",
+		"**/tsconfig.json"
+	],
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"include": {
+				"$path": "include",
+				"node_modules": {
+					"$className": "Folder",
+					"@rbxts": {
+						"$path": "node_modules/@rbxts"
+					}
+				}
+			}
+		},
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"Package": {
+				"$path": "out"
+			},
+			"testBootstrap": {
+				"$path": "out/testBootstrap.server.lua"
+			}
+		}
+	}
+}

@@ -23,6 +23,13 @@
 		"plugin:prettier/recommended"
 	],
 	"rules": {
-		"prettier/prettier": ["warn", { "endOfLine": "auto" }]
+		"prettier/prettier": [
+			"warn",
+			{
+				"endOfLine": "auto"
+			}
+		],
+		"roblox-ts/lua-truthiness": "off",
+		"roblox-ts/no-array-pairs": "off"
 	}
 }
