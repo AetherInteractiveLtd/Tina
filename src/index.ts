@@ -13,7 +13,9 @@ import Server from "./lib/net/utilities/server";
 import Identifiers from "./lib/net/utilities/identifiers";
 
 /* User abstraction class */
-import { User } from "./lib/user/user";
+import { Users } from "./lib/user/user";
+import { DefaultUserDeclaration } from "./lib/user/types";
+
 import { RunService } from "@rbxts/services";
 
 export enum Protocol {
@@ -86,8 +88,8 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => User): void {
-		User.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration & unknown): void {
+		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}

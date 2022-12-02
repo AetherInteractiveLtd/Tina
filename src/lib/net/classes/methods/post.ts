@@ -1,5 +1,6 @@
 import { EventListener } from "../../../events";
-import { User } from "../../../user/user";
+
+import { Users } from "../../../user/user";
 
 import Client from "../../utilities/client";
 import Server from "../../utilities/server";
@@ -19,7 +20,7 @@ export class PostEndpoint<T> implements POSTDeclaration<T> {
 	when(): EventListener<ServerEvent<T>> {
 		const eventListener: EventListener<ServerEvent<T>> = new EventListener();
 
-		Server.listen(this.identifier, (player: Player, value: never) => eventListener.call(User.get(player), value));
+		Server.listen(this.identifier, (player: Player, value: never) => eventListener.call(Users.get(player), value));
 
 		return eventListener;
 	}

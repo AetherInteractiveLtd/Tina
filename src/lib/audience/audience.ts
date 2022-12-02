@@ -1,13 +1,13 @@
-import { DefaultUser } from "../user/types";
+import { DefaultUserDeclaration } from "../user/types";
 
 import { AudienceDeclaration } from "./types";
 
 export class Audience implements AudienceDeclaration {
 	private listed: Player[] = [];
 
-	public list(audience: (DefaultUser & unknown)[] | Player[]): AudienceDeclaration {
+	public list(audience: (DefaultUserDeclaration & unknown)[] | Player[]): AudienceDeclaration {
 		for (const viewer of audience) {
-			this.listed.push(typeOf(viewer) === "Instance" ? (viewer as Player) : (viewer as DefaultUser).player);
+			this.listed.push(typeOf(viewer) === "Instance" ? (viewer as Player) : (viewer as DefaultUserDeclaration).player);
 		}
 
 		return this;
