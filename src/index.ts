@@ -1,10 +1,22 @@
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+
 import logger from "./lib/logger";
+
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { ConsoleActionName } from "./lib/user-interface/console/console-actions";
 import { ClientStore } from "./lib/user-interface/store";
+
+/* Networking namespace */
+import Client from "./lib/net/utilities/client";
+import Server from "./lib/net/utilities/server";
+
+import Identifiers from "./lib/net/utilities/identifiers";
+
+/* User abstraction class */
+import { User } from "./lib/user/user";
+import { RunService } from "@rbxts/services";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -12,8 +24,6 @@ export enum Protocol {
 	LCTRL = "LCTRL",
 	NET = "NET",
 }
-
-interface DefaultUserData {}
 
 namespace Tina {
 	/**
@@ -25,8 +35,32 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
+		{
+			/** Networking start up for  */
+			Server._init();
+			Identifiers._init();
+		}
+
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
+	}
+
+	/**
+	 * Starts up the client networking, meaning event connections. This should be used **ONCE** on the client, recommended to be under an intialiser file for the client.
+	 *
+	 * Usage example:
+	 * ```ts
+	 * import Tina from "@rbxts/tina"
+	 * Tina.startNet();
+	 * ```
+	 *
+	 * @client
+	 */
+	export function startNet(): void {
+		if (RunService.IsClient()) {
+			Client._init();
+			Identifiers._init();
+		}
 	}
 
 	/**
@@ -37,11 +71,11 @@ namespace Tina {
 	 * #### Usage example:
 	 *
 	 * ```ts
-	 * import Tina from "@rbxts/tina";
+	 * import Tina, { User } from "@rbxts/tina";
 	 *
-	 * class User extends Tina.User {
-	 * 	 constructor(userId: number) {
-	 * 		super(userId);
+	 * class  extends User {
+	 * 	 constructor(ref: Player | number) {
+	 * 		super(ref);
 	 *   }
 	 * }
 	 *
@@ -52,11 +86,12 @@ namespace Tina {
 	 *
 	 * *NOTE: The Client and Server can use their own User classes, but they should remain compatible with each other.*
 	 *
-	 * @param char The new User class constructor
+	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(char: new (userId: number) => Mirror.User): void {
-		TINA_USER_CLASS = char;
-		logger.warn("The User Class has been changed to:", char);
+	export function setUserClass(userClass: new (ref: Player | number) => User): void {
+		User.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+
+		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -70,6 +105,7 @@ namespace Tina {
 		if (Process.processes.has(name)) {
 			return Process.processes.get(name)!;
 		}
+
 		return new Process(name, Scheduler);
 	}
 
@@ -86,44 +122,23 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror {
-		export abstract class User {
-			constructor(id: number) {}
-
-			static fromPlayer(plr: Player) {
-				return new TINA_USER_CLASS(plr.UserId);
-			}
-
-			load() {}
-
-			unload() {}
-		}
-	}
-
-	export namespace Net {
-		// TODO: Move this and rework it @siriuslatte
-		class Endpoint {}
-
-		export class NetworkProtocol {}
-
-		export function protocol(protocol: Protocol, tree?: unknown): NetworkProtocol {
-			return new NetworkProtocol();
-		}
-
-		export function registerNetwork(tree: { [key: string]: NetworkProtocol }) {}
-
-		export function endpoint<T>() {}
-	}
+	export namespace Mirror {}
 }
 
 /** Export Tina itself */
 export default Tina;
 
 /** Export Conditions Library */
-export { X } from "./lib/conditions";
+export { COND } from "./lib/conditions";
+
 /** Export EventEmitter Library */
 export { EventEmitter } from "./lib/events";
 
-let TINA_USER_CLASS: new (id: number) => Tina.Mirror.User = Tina.Mirror.User as never as new (
-	id: number,
-) => Tina.Mirror.User;
+/** Export Network Library */
+export { Network } from "./lib/net";
+
+/** Audience Utility */
+export { Audience } from "./lib/audience/audience";
+
+/** User abstract class */
+export { User } from "./lib/user/user";

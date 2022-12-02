@@ -24,6 +24,7 @@
 	],
 	"rules": {
 		"prettier/prettier": ["warn", { "endOfLine": "auto" }],
-		"roblox-ts/lua-thruthiness": "off"
+		"roblox-ts/lua-truthiness": "off",
+		"roblox-ts/no-array-pairs": "off"
 	}
 }
