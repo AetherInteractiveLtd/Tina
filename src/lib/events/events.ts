@@ -111,7 +111,7 @@ export class EventEmitter<Events extends {}> {
 	 * @param args of type T which are the parameters passed to the function definition.
 	 * @returns a promise.
 	 */
-	protected async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
+	async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 
