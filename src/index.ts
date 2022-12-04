@@ -3,20 +3,25 @@ import TinaGame from "./lib/core/game";
 
 import logger from "./lib/logger";
 
+/** Scheduler */
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 
-/* Networking namespace */
+/** Networking namespace */
 import Client from "./lib/net/utilities/client";
 import Server from "./lib/net/utilities/server";
 
 import Identifiers from "./lib/net/utilities/identifiers";
 
-/* User abstraction class */
+/** User abstraction class */
 import { Users } from "./lib/user/user";
-import { DefaultUserDeclaration } from "./lib/user/types";
+import { UserType } from "./lib/user/types";
 
 import { RunService } from "@rbxts/services";
+
+/** Events */
+import { TinaEvents, TinaInternalEvents } from "./lib/events/tinaEvents";
+import { EventListener } from "./lib/events/events";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -88,7 +93,7 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration & unknown): void {
+	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
 		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
@@ -101,12 +106,28 @@ namespace Tina {
 		return new TinaCore();
 	}
 
+	/**
+	 * Used to add new processes to the processor.
+	 *
+	 * @param name process name to add.
+	 * @returns a Process object.
+	 */
 	export function process(name: string): Process {
 		if (Process.processes.has(name)) {
 			return Process.processes.get(name)!;
 		}
 
 		return new Process(name, Scheduler);
+	}
+
+	/**
+	 * Used to connect to Tina's internal events, such as when a user is registed, etc.
+	 *
+	 * @param event event name (defined internally specially for Tina)
+	 * @returns an EventListener object.
+	 */
+	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[never]> {
+		return TinaEvents.addEventListener(event);
 	}
 
 	/**
@@ -124,7 +145,7 @@ export default Tina;
 export { COND } from "./lib/conditions";
 
 /** Export EventEmitter Library */
-export { EventEmitter } from "./lib/events";
+export { EventEmitter } from "./lib/events/events";
 
 /** Export Network Library */
 export { Network } from "./lib/net";

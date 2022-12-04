@@ -1,11 +1,9 @@
-import { EventListener } from "../events";
+import { EventListener } from "../events/events";
+
 import Scheduler from "./scheduler";
 
 type ProcessScheduler = typeof Scheduler;
 
-/**
- *
- */
 export class Process extends EventListener<[]> {
 	public static processes = new Map<string, Process>();
 
@@ -17,6 +15,7 @@ export class Process extends EventListener<[]> {
 
 	constructor(name: string, ticker: ProcessScheduler) {
 		super();
+
 		this.name = name;
 		this.ticker = ticker;
 

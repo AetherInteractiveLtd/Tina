@@ -1,6 +1,6 @@
 import { ServerEvent } from "./baseEndpointTypes";
 
-import { EventListener } from "../../../events";
+import { EventListener } from "../../../events/events";
 
 export interface POSTServerObjectDeclaration<T> {
 	/**

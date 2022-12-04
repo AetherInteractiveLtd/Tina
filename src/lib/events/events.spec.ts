@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { EventEmitter } from "..";
+import { EventEmitter } from "./events";
 
 export = () => {
 	interface Events {

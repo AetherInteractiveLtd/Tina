@@ -1,6 +1,6 @@
 import { AudienceDeclaration } from "../../../audience/types";
 
-import { EventListener } from "../../../events";
+import { EventListener } from "../../../events/events";
 
 import Client from "../../utilities/client";
 import Server from "../../utilities/server";

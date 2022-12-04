@@ -14,3 +14,8 @@ export interface DefaultUserDeclaration {
 export interface OfflineUserDeclaration {
 	release(): void;
 }
+
+/**
+ * The user type, for ease of writing
+ */
+export type UserType = DefaultUserDeclaration & unknown;

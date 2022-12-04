@@ -1,5 +1,5 @@
-import { COND } from "./conditions";
-import { Condition } from "./conditions/types";
+import { COND } from "../conditions";
+import { Condition } from "../conditions/types";
 
 export enum EAction {
 	COND = "c",
@@ -9,7 +9,7 @@ export enum EAction {
 declare type CondFunc = [Condition, EAction.COND];
 declare type StepFunc = [Callback, EAction.DO];
 
-export class EventListener<T extends unknown[]> {
+export class EventListener<T extends unknown[] = unknown[]> {
 	protected readonly listeners: Array<CondFunc | StepFunc> = [];
 	protected readonly yieldThreads: Array<thread> = [];
 

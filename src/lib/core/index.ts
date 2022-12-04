@@ -1,6 +1,6 @@
 import Tina, { User } from "../..";
 
-import { EventEmitter } from "../events";
+import { EventEmitter } from "../events/events";
 
 interface CoreEvents {
 	"player:added": (player: never) => void;
