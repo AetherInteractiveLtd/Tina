@@ -81,7 +81,7 @@ export class EventListener<T extends unknown[] = unknown[]> {
 	}
 }
 
-export abstract class EventEmitter<Events extends {}> {
+export class EventEmitter<Events extends {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
 	/**
