@@ -81,7 +81,7 @@ export class EventListener<T extends unknown[] = unknown[]> {
 	}
 }
 
-export class EventEmitter<Events extends {}> {
+export abstract class EventEmitter<Events extends {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
 	/**
@@ -111,7 +111,7 @@ export class EventEmitter<Events extends {}> {
 	 * @param args of type T which are the parameters passed to the function definition.
 	 * @returns a promise.
 	 */
-	async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
+	protected async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 
