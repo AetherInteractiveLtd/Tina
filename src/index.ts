@@ -155,3 +155,6 @@ export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
 export { User } from "./lib/user/user";
+
+/** Util exports */
+export { FunctionUtil } from "./lib/utilities/functions";

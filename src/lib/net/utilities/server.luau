@@ -22,8 +22,23 @@ local Server = {}
 local Queue: { InitialPacket }  = {}
 local Listeners: { Listener } = {}
 
-local function runListener(listener: Listener, ...: { Player | Contents })
-    task.spawn(listener, ...)
+local freeThread = nil
+
+local function acquireRunnerThreadAndCallEventHandler(fn, ...)
+	local acquired_runner_thread = freeThread
+	freeThread = nil
+
+	fn(...)
+
+	freeThread = acquired_runner_thread
+end
+
+local function runEventHandlerInFreeThread(...)
+	acquireRunnerThreadAndCallEventHandler(...)
+
+	while true do
+		acquireRunnerThreadAndCallEventHandler(coroutine.yield())
+	end
 end
 
 function Server._init(): nil
@@ -46,7 +61,11 @@ function Server._init(): nil
     TinaRemote.OnServerEvent:Connect(function(player: Player, packets: { Packet })
         for _, packet: Packet in packets do
             for _, listener: Listener in Listeners[packet.id] do
-                runListener(listener, player, packet.contents)
+                if not freeThread then
+                    freeThread = coroutine.create(runEventHandlerInFreeThread)
+                end
+
+                task.spawn(freeThread, listener, packet.contents)
             end
         end
     end)
