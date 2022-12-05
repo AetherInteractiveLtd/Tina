@@ -1,9 +1,11 @@
 import { Players, RunService } from "@rbxts/services";
 
 import { DefaultUserDeclaration, OfflineUserDeclaration, UserType } from "./types";
+import { FriendPage } from "./methodsTypes";
+
+import { TinaEvents } from "../events/tinaEvents";
 
 import logger from "../logger";
-import { TinaEvents } from "../events/tinaEvents";
 
 export abstract class User implements DefaultUserDeclaration {
 	public player: Player;
@@ -19,6 +21,61 @@ export abstract class User implements DefaultUserDeclaration {
 	}
 
 	async unload(): Promise<void> {}
+
+	public isFirstSession(): boolean {
+		/** Implementation done in the next commit */
+		return true;
+	}
+
+	public async friends(): Promise<Map<string, FriendPage>> {
+		const friends: Map<string, FriendPage> = new Map();
+
+		try {
+			const friendsPages = Players.GetFriendsAsync(this.player.UserId);
+
+			if (friendsPages !== undefined) {
+				do {
+					for (const page of friendsPages.GetCurrentPage()) {
+						friends.set(page.Username, page);
+					}
+
+					friendsPages.AdvanceToNextPageAsync();
+				} while (!friendsPages.IsFinished);
+			}
+		} catch (e) {
+			warn(
+				`There was an error while trying to retrieve ${this.player.DisplayName}'s friends. More information on why this happened: ${e}`,
+			);
+		}
+
+		return friends;
+	}
+
+	public async connectedFriends(): Promise<Map<string, FriendPage>> {
+		const friends: Map<string, FriendPage> = new Map();
+
+		try {
+			const friendsPages = Players.GetFriendsAsync(this.player.UserId);
+
+			if (friendsPages !== undefined) {
+				do {
+					for (const page of friendsPages.GetCurrentPage()) {
+						if (Players.FindFirstChild(page.Username) !== undefined) {
+							friends.set(page.Username, page);
+						}
+					}
+
+					friendsPages.AdvanceToNextPageAsync();
+				} while (!friendsPages.IsFinished);
+			}
+		} catch (e) {
+			warn(
+				`There was an error while trying to retrieve ${this.player.DisplayName}'s connected friends. More information on why this happened: ${e}`,
+			);
+		}
+
+		return friends;
+	}
 }
 
 class DefaultUser extends User implements DefaultUserDeclaration {
@@ -84,6 +141,11 @@ export namespace Users {
 		return usersMap.get(player);
 	}
 
+	/**
+	 * Used to change the User class from where all the Users are created.
+	 *
+	 * @param userClass the new user-defined User class.
+	 */
 	export function changeUserClass(userClass: new (ref: Player | number) => UserType): void {
 		TINA_USER_CLASS = userClass;
 	}
@@ -97,6 +159,9 @@ export namespace Users {
 	 * @returns a User object constructed from your defined User class.
 	 */
 	export function get<T extends Player | number>(from: T): UserType {
+		if (RunService.IsClient())
+			return "Can't retrieve users from the client." as never; /** Is this alright? Or JSDoc was enough? */
+
 		let user = typeOf(from) === "number" ? fromUserId(from as number) : fromPlayer(from as Player);
 		if (user === undefined) user = new TINA_USER_CLASS(from);
 
@@ -119,7 +184,7 @@ export namespace Users {
 		); /** Initialisation and others can be done within the constructor of the offline user */
 	}
 
-	/** Players set/remove from Users */
+	/** Players set/remove from Users, operations for creating and caching, or removing players */
 	if (RunService.IsServer()) {
 		for (const player of Players.GetPlayers()) add(player);
 
