@@ -174,7 +174,7 @@ export class Query {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityId) => boolean): void {
+	public forEach(callback: (entityId: EntityId) => boolean | void): void {
 		for (let i = 0; i < this.a.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {

@@ -7,6 +7,7 @@ import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
+import { System, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
@@ -40,12 +41,15 @@ export class World {
 	private componentsToUpdate: SparseSet;
 	private queries: Array<Query>;
 
+	private readonly systemManager: SystemManager;
+
 	constructor(options: WorldOptions) {
 		this.options = options;
 		this.queries = [];
 		this.componentsToUpdate = new SparseSet();
 
 		this.entityManager = new EntityManager();
+		this.systemManager = new SystemManager();
 	}
 
 	/** @returns The name of the world. */
@@ -90,7 +94,9 @@ export class World {
 	/**
 	 * Schedule a system to run on the next update.
 	 */
-	public scheduleSystem(/**system: System */): void {}
+	public scheduleSystem(system: System): void {
+		this.systemManager.scheduleSystem(system);
+	}
 
 	/**
 	 * Removes a scheduled system from the execution queue in the world.
