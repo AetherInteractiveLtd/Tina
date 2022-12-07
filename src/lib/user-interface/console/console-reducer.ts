@@ -1,5 +1,5 @@
 import { createReducer } from "@rbxts/rodux";
-import { updateAtIndex } from "../../utils/rodux-utils";
+import { updateAtIndex } from "../../utilities/rodux-utils";
 import { ConsoleActions } from "./console-actions";
 
 export interface ConsoleReducer {
@@ -20,7 +20,7 @@ export const consoleReducer = createReducer<ConsoleReducer, ConsoleActions>(init
 		const { flares } = state;
 
 		// Check for duplicate flares
-		const flareExists = flares.find((f) => f.eventName === eventName);
+		const flareExists = flares.find(f => f.eventName === eventName);
 		if (flareExists !== undefined) return state;
 
 		// Create new flare and add to state
@@ -32,12 +32,12 @@ export const consoleReducer = createReducer<ConsoleReducer, ConsoleActions>(init
 
 	FireFlare: (state, action) => {
 		// Get the index of the flare
-		const flareIndex = state.flares.findIndex((f) => f.eventName === action.eventName);
+		const flareIndex = state.flares.findIndex(f => f.eventName === action.eventName);
 
 		// Increment the amount of times the flare has been called
 		return {
 			...state,
-			flares: updateAtIndex(state.flares, flareIndex, (flare) => ({ ...flare, amount: flare.amount + 1 })),
+			flares: updateAtIndex(state.flares, flareIndex, flare => ({ ...flare, amount: flare.amount + 1 })),
 		};
 	},
 });
