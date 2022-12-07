@@ -1,28 +1,9 @@
 import Roact, { Children, Portal } from "@rbxts/roact";
 import { withHooks } from "@rbxts/roact-hooked";
 import { Players, RunService } from "@rbxts/services";
+import { hoarcekatFrame } from "../../../utilities/hoarcekat";
 
-/**
- * There isn't a reliable way to get Hoarcekat's preview window from a Roact component, so
- * instead we will get it from the PluginGuiService since the structure is always the same (for this version).
- * @returns Preview frame for Hoarcekat
- */
-function findHoarcekatFrame(): Frame | undefined {
-	const frame = game
-		.FindFirstChild("PluginGuiService")
-		?.FindFirstChild("Hoarcekat")
-		?.FindFirstChild("Hoarcekat")
-		?.FindFirstChild("Preview")
-		?.FindFirstChild("Preview")
-		?.FindFirstChild("Preview") as Frame;
-
-	if (!frame) warn("Unable to find Hoarcekat preview window");
-	return frame;
-}
-
-// Store these values for later rather than evaluating with every new modal
 const isGameRunning = RunService.IsRunning();
-const hoarcekatFrame = isGameRunning ? findHoarcekatFrame() : undefined;
 
 /**
  * Modal which can be used with .story scripts. Generally a modal will be added directly to the PlayerGui, but
@@ -32,9 +13,12 @@ const hoarcekatFrame = isGameRunning ? findHoarcekatFrame() : undefined;
  * This is not perfect as the AbsolutePosition of the preview window is about (154, 5) rather than (0, 0), so
  * the position may be skewed when positioning components absolutely. But it's better than the component erroring.
  */
-const HoarcekatModal = withHooks((props) => {
+const HoarcekatModal = withHooks(props => {
 	const parent = hoarcekatFrame;
-	if (!parent) return <frame />;
+	if (!parent) {
+		warn("Unable to find Hoarcekat preview window");
+		return <frame />;
+	}
 
 	return (
 		<Portal target={parent}>
@@ -48,7 +32,7 @@ const HoarcekatModal = withHooks((props) => {
 /**
  * Modal which parents itself to the PlayerGui and renders children in a separate ScreenGui
  */
-const GameRunningModal = withHooks((props) => {
+const GameRunningModal = withHooks(props => {
 	const playerGui = Players.LocalPlayer.FindFirstChildOfClass("PlayerGui")!;
 	return (
 		<Portal target={playerGui}>
@@ -57,7 +41,7 @@ const GameRunningModal = withHooks((props) => {
 	);
 });
 
-const Modal = withHooks((props) => {
+const Modal = withHooks(props => {
 	return isGameRunning ? (
 		<GameRunningModal>{props[Children]}</GameRunningModal>
 	) : (
