@@ -42,12 +42,12 @@ export class Component {
 
 export class Tag {
 	public _componentData = {
-		world: undefined as World | undefined,
+		world: undefined as UnimplementedWorld | undefined,
 		id: undefined as number | undefined,
 	};
 
 	/** @hidden */
-	public initialiseTag(world: World, id: number): void {
+	public initialiseTag(world: UnimplementedWorld, id: number): void {
 		this._componentData.world = world;
 		this._componentData.id = id;
 	}
