@@ -1,3 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
-export = (): void => {};
+export = (): void => {
+	describe("A World should", () => {
+		it("be creatable", () => {});
+	});
+};

@@ -2,7 +2,7 @@ import { EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { Component, createComponentArray, Tag, Tree, Type } from "./component";
+import { Component, createComponentArray, Tag, Tree, ValidComponentData } from "./component";
 import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
@@ -33,7 +33,7 @@ export interface WorldOptions {
  * const world = new World({...});
  * ```
  */
-export class World {
+export class World<WorldComponents extends Record<string, Tree<ValidComponentData>>> {
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
@@ -43,13 +43,17 @@ export class World {
 
 	private readonly systemManager: SystemManager;
 
-	constructor(options: WorldOptions) {
+	constructor(options: WorldOptions, components: WorldComponents) {
 		this.options = options;
 		this.queries = [];
 		this.componentsToUpdate = new SparseSet();
 
 		this.entityManager = new EntityManager();
 		this.systemManager = new SystemManager();
+
+		for (const [name, data] of pairs(components)) {
+			this.defineComponent(name as string, data as Tree<ValidComponentData>);
+		}
 	}
 
 	/** @returns The name of the world. */
@@ -149,7 +153,7 @@ export class World {
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): Component {
+	private defineComponent<T extends Tree<ValidComponentData>>(name: string, def: T): Component {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
@@ -352,3 +356,5 @@ export class World {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
 }
+
+export type UnimplementedWorld = World<{ [key: string]: never }>;

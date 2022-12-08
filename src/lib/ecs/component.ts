@@ -1,7 +1,7 @@
 // // type Props = Partial<Omit<Component, keyof Component>>;
 
 import { EntityId } from "../types/ecs";
-import { World } from "./world";
+import { UnimplementedWorld, World } from "./world";
 
 export const enum ComponentTypes {
 	Boolean,
@@ -17,16 +17,21 @@ const x = {
 
 export class Component {
 	/** @hidden */
-	public _componentData = {
-		world: undefined as World | undefined,
-		id: undefined as number | undefined,
+	public _componentData: { world?: UnimplementedWorld; id?: number } = {
+		world: undefined,
+		id: undefined,
 	};
 
 	/** @hidden */
 	public componentArray: ComponentArray = [];
 
 	/** @hidden */
-	public initialiseComponent(world: World, id: number, componentArray: ComponentArray): void {
+	public initialiseComponent(
+		world: UnimplementedWorld,
+		name: string,
+		id: number,
+		componentArray: ComponentArray,
+	): void {
 		this._componentData.world = world;
 		this._componentData.id = id;
 		this.componentArray = componentArray;
@@ -56,7 +61,7 @@ export class Tag {
  * @param max
  * @returns
  */
-export function createComponentArray<T extends Tree<Type>>(def: T, max: number): ComponentArray<T> {
+export function createComponentArray<T extends Tree<ValidComponentData>>(def: T, max: number): ComponentArray<T> {
 	if (type(def) === "table") {
 		if ((def as Array<T>).size() > 0) {
 			return [...new Array<T>(max)].map(def[0 as never]) as never;
@@ -73,16 +78,16 @@ export function createComponentArray<T extends Tree<Type>>(def: T, max: number):
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 type InitFunc = () => unknown;
-export type Type = ComponentTypes | ArrayConstructor | [InitFunc] | Array<unknown>;
+export type ValidComponentData = ComponentTypes | ArrayConstructor | [InitFunc] | Array<unknown>;
 
-export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends [InitFunc]
+export type ComponentArray<T extends Tree<ValidComponentData> = Tree<ValidComponentData>> = T extends [InitFunc]
 	? Array<ReturnType<T[0]>>
 	: T extends Array<unknown>
 	? T
 	: T extends ArrayConstructor
 	? Array<ComponentTypes>
-	: T extends Exclude<Type, Array<ComponentTypes>>
+	: T extends Exclude<ValidComponentData, Array<ComponentTypes>>
 	? InstanceType<T>
 	: {
-			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
+			[key in keyof T]: T[key] extends Tree<ValidComponentData> ? ComponentArray<T[key]> : never;
 	  };
