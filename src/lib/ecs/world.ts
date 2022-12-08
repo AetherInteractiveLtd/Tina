@@ -160,7 +160,12 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 
 		const component = new Component();
 		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
-		component.initialiseComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
+		component.initialiseComponent(
+			this,
+			name,
+			this.entityManager.getNextComponentId(),
+			createComponentArray(def, 1000),
+		);
 
 		return component;
 	}
@@ -185,10 +190,10 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	 *
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
-	 *     been defined previously with {@link defineComponent}.
+	 *     been defined previously with {link defineComponent}. // TODO: Fix this comment, it keeps erroring.
 	 * @param data The optional data to initialise the component with.
 	 */
-	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
+	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -213,7 +218,7 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): World {
+	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
