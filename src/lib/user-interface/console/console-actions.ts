@@ -16,6 +16,7 @@ export interface ActionAddFlare extends Action<ConsoleActionName.AddFlare> {
 
 export interface ActionFireFlare extends Action<ConsoleActionName.FireFlare> {
 	eventName: string;
+	message: string;
 }
 
 export type ConsoleActions = ActionSetConsoleVisible | ActionAddFlare | ActionFireFlare;

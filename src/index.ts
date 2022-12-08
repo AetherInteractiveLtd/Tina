@@ -7,6 +7,7 @@ import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { ConsoleActionName } from "./lib/user-interface/console/console-actions";
 import { ClientStore } from "./lib/user-interface/store";
+import { formatFlareTraceback } from "./lib/utilities/string-utils";
 
 /* Networking namespace */
 import Client from "./lib/net/utilities/client";
@@ -114,7 +115,8 @@ namespace Tina {
 	}
 
 	export function oops(eventName: string) {
-		ClientStore.dispatch({ type: ConsoleActionName.FireFlare, eventName });
+		const message = formatFlareTraceback(debug.traceback(undefined, 1));
+		ClientStore.dispatch({ type: ConsoleActionName.FireFlare, eventName, message });
 	}
 
 	/**

@@ -4,7 +4,7 @@ import { ConsoleActions } from "./console-actions";
 
 export interface ConsoleReducer {
 	visible: boolean;
-	flares: Array<{ eventName: string; amount: number }>;
+	flares: Array<{ eventName: string; amount: number; message?: string }>;
 }
 
 const initialState: ConsoleReducer = {
@@ -37,7 +37,11 @@ export const consoleReducer = createReducer<ConsoleReducer, ConsoleActions>(init
 		// Increment the amount of times the flare has been called
 		return {
 			...state,
-			flares: updateAtIndex(state.flares, flareIndex, flare => ({ ...flare, amount: flare.amount + 1 })),
+			flares: updateAtIndex(state.flares, flareIndex, flare => ({
+				...flare,
+				amount: flare.amount + 1,
+				message: action.message,
+			})),
 		};
 	},
 });
