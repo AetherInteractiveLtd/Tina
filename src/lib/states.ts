@@ -26,8 +26,8 @@ export class State<T extends Enum> {
 
 	public set(state: T): Promise<void> {
 		this._state = state;
-		return this._event.emit("change", state);
+		return this.emit("change", state);
 	}
 
-	private when = this._event.when;
+	public when = this._event.when;
 }
