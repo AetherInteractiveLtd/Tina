@@ -1,16 +1,12 @@
-import { EventEmitter, EventListener } from "./events";
+import { EventEmitter } from "./events";
 
 class StateEmitter<T extends Enum> extends EventEmitter<{ change: (arg0: T) => void }> {
 	constructor() {
 		super();
 	}
 
-	public emit(state: T) {
+	public emit(_: "change", state: T): Promise<void> {
 		return super.emit("change", state);
-	}
-
-	public when() {
-		return super.when("change");
 	}
 }
 
@@ -30,7 +26,7 @@ export class State<T extends Enum> {
 
 	public set(state: T): Promise<void> {
 		this._state = state;
-		return this._event.emit(state);
+		return this._event.emit("change", state);
 	}
 
 	private when = this._event.when;
