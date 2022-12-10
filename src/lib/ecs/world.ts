@@ -91,6 +91,10 @@ export class World {
 		return query;
 	}
 
+	public start(): void {
+		this.systemManager.start();
+	}
+
 	/**
 	 * Schedule a system to run on the next update.
 	 */
