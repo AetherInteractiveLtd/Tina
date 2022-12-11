@@ -1,7 +1,7 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { Component } from "./component";
-import { World } from "./world";
+import { UnimplementedWorld, World } from "./world";
 
 export type RawQuery =
 	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | Component> }
@@ -86,7 +86,7 @@ export function NOT(components: RawQuery | Component): RawQuery {
 /**
  * A query is used to filter entities based on their components.
  *
- * To create a query, use the {@link World.createQuery} method, which takes a
+ * To create a query, use the {@link World#createQuery} method, which takes a
  * list of components, and will return a query that matches all the entities in
  * the given world that have the given components.
  *
@@ -112,9 +112,9 @@ export class Query {
 	public archetypes: Array<Archetype>;
 	public mask: QueryMask;
 	/** The world that the query belongs to. */
-	public world: World;
+	public world: UnimplementedWorld;
 
-	constructor(world: World, query?: RawQuery) {
+	constructor(world: UnimplementedWorld, query?: RawQuery) {
 		/**
 		 * Creates a decision tree from a given query.
 		 * @param raw The raw data to create the decision tree from.

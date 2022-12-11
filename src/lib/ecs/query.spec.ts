@@ -3,11 +3,11 @@
 import { EntityId } from "../types/ecs";
 import { Component, ComponentArray } from "./component";
 import { ALL, ANY, NOT, Query } from "./query";
-import { World } from "./world";
+import { UnimplementedWorld } from "./world";
 
 const components = new Array<Component>(32);
 
-const world = {} as World;
+const world = {} as UnimplementedWorld;
 
 class MockComponent {
 	/** @hidden */
@@ -20,7 +20,7 @@ class MockComponent {
 	public componentArray: ComponentArray = [];
 
 	/** @hidden */
-	public initialiseComponent(world: World, id: number, componentArray: ComponentArray): void {
+	public initialiseComponent(world: UnimplementedWorld, id: number, componentArray: ComponentArray): void {
 		this._componentData.world = world;
 		this._componentData.id = id;
 		this.componentArray = componentArray;
@@ -51,7 +51,7 @@ export = (): void => {
 
 		describe("match", () => {
 			it("empty", () => {
-				const query = new Query({} as World).mask;
+				const query = new Query({} as UnimplementedWorld).mask;
 				for (let i = 0; i < 20; i++) {
 					expect(Query.match(new Array<number>(math.floor(math.random() * 1000)), query)).to.equal(true);
 				}

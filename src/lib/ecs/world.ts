@@ -43,6 +43,8 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 
 	private readonly systemManager: SystemManager;
 
+	private components: Record<keyof WorldComponents, Component | Tag>;
+
 	constructor(options: WorldOptions, components: WorldComponents) {
 		this.options = options;
 		this.queries = [];
@@ -51,8 +53,13 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 		this.entityManager = new EntityManager();
 		this.systemManager = new SystemManager();
 
+		this.components = {} as Record<keyof WorldComponents, Component>;
+
 		for (const [name, data] of pairs(components)) {
-			this.defineComponent(name as string, data as Tree<ValidComponentData>);
+			this.components[name as keyof WorldComponents] = this.defineComponent(
+				name as string,
+				data as Tree<ValidComponentData>,
+			);
 		}
 	}
 
@@ -148,6 +155,11 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 		return this.entityManager.getNumberOfEntitiesInUse();
 	}
 
+	// TODO: Fix naming, create docs.
+	public getComponentObject(k: keyof WorldComponents): Component | Tag {
+		return this.components[k];
+	}
+
 	/**
 	 * Initialises a new component with the world.
 	 *
@@ -190,13 +202,19 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	 *
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
-	 *     been defined previously with {link defineComponent}. // TODO: Fix this comment, it keeps erroring.
+	 *     been defined previously with {@link World#defineComponent}.
 	 * @param data The optional data to initialise the component with.
 	 */
-	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): this {
+	public addComponent<C extends keyof WorldComponents>(
+		entityId: EntityId,
+		componentName: C,
+		data?: Partial<WorldComponents[C]>,
+	): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
+
+		const component = this.getComponentObject(componentName);
 
 		this.componentsToUpdate.add(entityId);
 
@@ -204,10 +222,17 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 		{
 			const componentId = component._componentData.id!;
 			if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
-				this.entityManager.updateTo[entityId] = this.archetypeChange(
-					this.entityManager.updateTo[entityId],
-					componentId,
-				);
+				if (component instanceof Component) {
+					this.entityManager.updateTo[entityId] = this.archetypeChange(
+						this.entityManager.updateTo[entityId],
+						componentId,
+					);
+				} else if (component instanceof Tag) {
+					this.entityManager.updateTo[entityId] = this.archetypeChange(
+						this.entityManager.updateTo[entityId],
+						componentId,
+					);
+				}
 			}
 		}
 		debug.profileend();
@@ -218,7 +243,7 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): this {
+	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: keyof WorldComponents): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -244,7 +269,7 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent<C extends Component | Tag>(entityId: EntityId, component: C): boolean {
+	public hasComponent<C extends Component | Tag>(entityId: EntityId, component: keyof WorldComponents): boolean {
 		const componentId = component._componentData.id!;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
@@ -362,4 +387,4 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 	}
 }
 
-export type UnimplementedWorld = World<{ [key: string]: never }>;
+export type UnimplementedWorld = World<never>;
