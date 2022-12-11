@@ -108,7 +108,6 @@ export function NOT(components: RawQuery | Component): RawQuery {
  * @note Order of iteration is not guaranteed.
  */
 export class Query {
-	public a: Array<Archetype>;
 	public archetypes: Array<Archetype>;
 	public mask: QueryMask;
 	/** The world that the query belongs to. */
@@ -151,7 +150,6 @@ export class Query {
 		};
 
 		this.archetypes = new Array<Archetype>();
-		this.a = this.archetypes;
 		this.mask = query ? createQuery(query) : { op: ALL, dt: new Array<number>() };
 		this.world = world;
 	}
@@ -175,7 +173,7 @@ export class Query {
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		for (let i = 0; i < this.a.size(); i++) {
+		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
 				if (!callback(entities[j - 1])) {
