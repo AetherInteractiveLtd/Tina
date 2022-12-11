@@ -4,15 +4,35 @@ import { EntityId } from "../types/ecs";
 import { Query } from "./query";
 import { World } from "./world";
 
-// export type System = () => void;
+export type ExecutionGroup = RBXScriptSignal;
 
-// export type SystemReturn = {
-// 	system: System;
-// 	priority: number;
-// 	name: string;
-// 	after: Array<string>;
-// };
+export interface System {
+	/**
+	 *
+	 * @param world
+	 */
+	configureQueries(world: World): void;
 
+	/**
+	 * Automatically called when
+	 * @param entity
+	 */
+	onEntityAdded?(entity: EntityId): void;
+	onEntityRemoved?(entity: EntityId): void;
+}
+
+export abstract class System {
+	public after: Array<string> = [];
+	public executionGroup?: ExecutionGroup;
+	public name = "System";
+	public priority = 0;
+
+	public abstract onUpdate(world: World): void;
+}
+
+/**
+ *
+ */
 export class SystemManager {
 	private systems: Array<System> = [];
 
@@ -43,29 +63,6 @@ export class SystemManager {
 	public sortSystems(): void {}
 }
 
-// @System({
-// 	name: "ExampleSystem",
-// 	after: [],
-// 	step: RunService.Heartbeat,
-// })
-
-export type ExecutionGroup = RBXScriptSignal;
-
-export interface System {
-	configureQueries(world: World): void;
-	onEntityAdded?(entity: EntityId): void;
-	onEntityRemoved?(entity: EntityId): void;
-}
-
-export abstract class System {
-	public after: Array<string> = [];
-	public executionGroup?: ExecutionGroup;
-	public name = "System";
-	public priority = 0;
-
-	public abstract onUpdate(world: World): void;
-}
-
 export class ExampleSystem extends System {
 	private movementQuery!: Query;
 
@@ -84,19 +81,3 @@ export class ExampleSystem extends System {
 		});
 	}
 }
-
-// export default function exampleSystem(world: World): SystemReturn {
-// 	const position = world.defineTag();
-// 	const query = world.createQuery(ALL(position));
-
-// 	return {
-// 		system: update(query),
-// 		priority: 0,
-// 		name: "ExampleSystem",
-// 		after: [],
-// 	};
-// }
-
-// function update(query:): void {
-// 	print("Hi!");
-// }
