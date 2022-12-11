@@ -1,21 +1,32 @@
-import { ALL } from "./query";
+import { RunService } from "@rbxts/services";
+
+import { EntityId } from "../types/ecs";
+import { Query } from "./query";
 import { World } from "./world";
 
-export type System = () => void;
+// export type System = () => void;
 
-export type SystemReturn = {
-	system: System;
-	priority: number;
-	name: string;
-	after: Array<string>;
-};
+// export type SystemReturn = {
+// 	system: System;
+// 	priority: number;
+// 	name: string;
+// 	after: Array<string>;
+// };
 
 export class SystemManager {
 	private systems: Array<System> = [];
 
-	public start(): void {
+	// private connections: Map<RBXScriptSignal, Array<RBXScriptConnection>> = new Map();
+
+	public start(world: World): void {
+		const executionDefault = world.options.defaultExecutionGroup
+			? world.options.defaultExecutionGroup
+			: RunService.Heartbeat;
+
 		for (const system of this.systems) {
-			system();
+			executionDefault.Connect(() => {
+				system.onUpdate(world);
+			});
 		}
 	}
 
@@ -34,18 +45,54 @@ export class SystemManager {
 // 	step: RunService.Heartbeat,
 // })
 
-export default function exampleSystem(world: World): SystemReturn {
-	const position = world.defineTag();
-	const query = world.createQuery(ALL(position));
+export type ExecutionGroup = RBXScriptSignal;
 
-	return {
-		system: update(query),
-		priority: 0,
-		name: "ExampleSystem",
-		after: [],
-	};
+export interface System {
+	configueQueries(world: World): void;
+	onEntityAdded?(entity: EntityId): void;
+	onEntityRemoved?(entity: EntityId): void;
 }
 
-function update(query:): void {
-	print("Hi!");
+export abstract class System {
+	public after: Array<string> = [];
+	public executionGroup?: ExecutionGroup;
+	public name = "System";
+	public priority = 0;
+
+	public abstract onUpdate(world: World): void;
 }
+
+export class ExampleSystem extends System {
+	private movementQuery!: Query;
+
+	constructor() {
+		super();
+		this.executionGroup = RunService.RenderStepped;
+	}
+
+	public configueQueries(world: World): void {
+		// this.movementQuery = world.createQuery(Position, Velocity));
+	}
+
+	public onUpdate(world: World): void {
+		this.movementQuery.forEach((entityId: EntityId) => {
+			print(entityId);
+		});
+	}
+}
+
+// export default function exampleSystem(world: World): SystemReturn {
+// 	const position = world.defineTag();
+// 	const query = world.createQuery(ALL(position));
+
+// 	return {
+// 		system: update(query),
+// 		priority: 0,
+// 		name: "ExampleSystem",
+// 		after: [],
+// 	};
+// }
+
+// function update(query:): void {
+// 	print("Hi!");
+// }

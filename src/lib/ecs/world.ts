@@ -7,7 +7,7 @@ import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
-import { System, SystemManager } from "./system";
+import { ExecutionGroup, System, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
@@ -15,6 +15,11 @@ export interface WorldOptions {
 	 * (potentially useful if you have multiple worlds). Defaults to `World`.
 	 */
 	name?: string;
+
+	/**
+	 * The default execution group for systems. Defaults to `Heartbeat`.
+	 */
+	defaultExecutionGroup?: ExecutionGroup;
 }
 
 /**
@@ -41,7 +46,7 @@ export class World {
 	private componentsToUpdate: SparseSet;
 	private queries: Array<Query>;
 
-	private readonly systemManager: SystemManager;
+	public readonly systemManager: SystemManager;
 
 	constructor(options: WorldOptions) {
 		this.options = options;
@@ -92,7 +97,7 @@ export class World {
 	}
 
 	public start(): void {
-		this.systemManager.start();
+		this.systemManager.start(this);
 	}
 
 	/**
