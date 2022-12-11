@@ -24,6 +24,10 @@ export class SystemManager {
 			: RunService.Heartbeat;
 
 		for (const system of this.systems) {
+			if (system.configureQueries !== undefined) {
+				system.configureQueries(world);
+			}
+
 			executionDefault.Connect(() => {
 				system.onUpdate(world);
 			});
@@ -48,7 +52,7 @@ export class SystemManager {
 export type ExecutionGroup = RBXScriptSignal;
 
 export interface System {
-	configueQueries(world: World): void;
+	configureQueries(world: World): void;
 	onEntityAdded?(entity: EntityId): void;
 	onEntityRemoved?(entity: EntityId): void;
 }
@@ -70,7 +74,7 @@ export class ExampleSystem extends System {
 		this.executionGroup = RunService.RenderStepped;
 	}
 
-	public configueQueries(world: World): void {
+	public configureQueries(world: World): void {
 		// this.movementQuery = world.createQuery(Position, Velocity));
 	}
 

@@ -1,17 +1,20 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { System } from "./system";
-import { World } from "./world";
+import { Query } from "./query";
+import { System, SystemManager } from "./system";
+import { World, WorldOptions } from "./world";
 
 const bindableEvent = new Instance("BindableEvent");
 
-let world = {} as World;
+const world = {} as World;
+(world.options as WorldOptions) = {};
+world.options.defaultExecutionGroup = bindableEvent.Event;
+
+let manager = {} as SystemManager;
 
 export = (): void => {
 	beforeEach(() => {
-		world = new World({
-			defaultExecutionGroup: bindableEvent.Event,
-		});
+		manager = new SystemManager();
 	});
 
 	describe("A system should", () => {
@@ -23,17 +26,30 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			world.scheduleSystem(system);
-			world.start();
+			manager.scheduleSystem(system);
+			manager.start(world);
 
 			expect(callCount).to.equal(0);
 
 			bindableEvent.Fire();
 			expect(callCount).to.equal(1);
 		});
+
+		it("should be able to configure queries", () => {
+			const system = {} as System;
+			let query;
+			system.configureQueries = (world: World): void => {
+				query = new Query(world).mask;
+			};
+
+			manager.scheduleSystem(system);
+			manager.start(world);
+
+			expect(query).to.be.ok();
+		});
 	});
 
-	afterEach(() => {
+	afterAll(() => {
 		bindableEvent.Destroy();
 	});
 };
