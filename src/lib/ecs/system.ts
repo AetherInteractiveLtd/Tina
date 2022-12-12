@@ -1,31 +1,83 @@
-import { ALL } from "./query";
+import { RunService } from "@rbxts/services";
+
+import { EntityId } from "../types/ecs";
+import { Query } from "./query";
 import { World } from "./world";
 
-export type System = () => void;
+export type ExecutionGroup = RBXScriptSignal;
 
-export const defineSystem = (update: (world: World, args: Array<unknown>) => void) => (): void => {};
+export interface System {
+	/**
+	 *
+	 * @param world
+	 */
+	configureQueries(world: World): void;
 
+	/**
+	 * Automatically called when
+	 * @param entity
+	 */
+	onEntityAdded?(entity: EntityId): void;
+	onEntityRemoved?(entity: EntityId): void;
+}
+
+export abstract class System {
+	public after: Array<string> = [];
+	public executionGroup?: ExecutionGroup;
+	public name = "System";
+	public priority = 0;
+
+	public abstract onUpdate(world: World): void;
+}
+
+/**
+ *
+ */
 export class SystemManager {
 	private systems: Array<System> = [];
 
-	public start(): void {}
+	// private connections: Map<RBXScriptSignal, Array<RBXScriptConnection>> = new Map();
+
+	public start(world: World): void {
+		const executionDefault = world.options.defaultExecutionGroup
+			? world.options.defaultExecutionGroup
+			: RunService.Heartbeat;
+
+		for (const system of this.systems) {
+			if (system.configureQueries !== undefined) {
+				system.configureQueries(world);
+			}
+
+			executionDefault.Connect(() => {
+				system.onUpdate(world);
+			});
+		}
+	}
 
 	public scheduleSystem(system: System): void {
 		this.systems.push(system);
 	}
 
 	public endSystem(): void {}
+
+	public sortSystems(): void {}
 }
 
-const Position = {};
+export class ExampleSystem extends System {
+	private movementQuery!: Query;
 
-export default function createMovementSystem(world: World): () => void {
-	const position = world.defineComponent(Position);
-	const query = world.createQuery(ALL(position));
+	constructor() {
+		super();
+		this.executionGroup = RunService.RenderStepped;
+	}
 
-	return defineSystem(() => {
-		query.forEach(entityId => {
+	public configureQueries(world: World): void {
+		// this.movementQuery = world.createQuery(Position, Velocity));
+	}
+
+	public onUpdate(world: World): void {
+		this.movementQuery.forEach((entityId: EntityId) => {
 			print(entityId);
 		});
-	});
+	}
 }
