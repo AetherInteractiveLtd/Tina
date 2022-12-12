@@ -13,16 +13,81 @@
 	],
 	"plugins": [
 		"@typescript-eslint",
+		"@typescript-eslint/eslint-plugin",
+		"prettier",
 		"roblox-ts",
-		"prettier"
+		"simple-import-sort",
+		"no-autofix"
 	],
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended",
-		"plugin:roblox-ts/recommended",
-		"plugin:prettier/recommended"
+		"plugin:prettier/recommended",
+		"plugin:roblox-ts/recommended"
 	],
 	"rules": {
-		"prettier/prettier": ["warn", { "endOfLine": "auto" }]
+		"prettier/prettier": [
+			"warn",
+			{
+				"endOfLine": "auto"
+			}
+		],
+		"@typescript-eslint/array-type": [
+			"warn",
+			{
+				"default": "generic",
+				"readonly": "generic"
+			}
+		],
+		"@typescript-eslint/no-floating-promises": [
+			"error",
+			{
+				"ignoreVoid": true
+			}
+		],
+		"@typescript-eslint/no-unused-vars": "warn",
+		"@typescript-eslint/explicit-function-return-type": "warn",
+		"@typescript-eslint/interface-name-prefix": "off",
+		"@typescript-eslint/no-empty-function": "off",
+		"@typescript-eslint/no-empty-interface": "off",
+		"@typescript-eslint/no-namespace": "off",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"@typescript-eslint/no-use-before-define": "off",
+		"@typescript-eslint/explicit-module-boundary-types": "off",
+		"@typescript-eslint/no-require-imports": "error",
+		"@typescript-eslint/no-unused-expressions": "warn",
+		"@typescript-eslint/explicit-member-accessibility": [
+			"warn",
+			{
+				"overrides": {
+					"constructors": "no-public"
+				}
+			}
+		],
+		"curly": [
+			"warn",
+			"multi-line",
+			"consistent"
+		],
+		"no-param-reassign": "warn",
+		"no-autofix/prefer-const": "warn",
+		"no-constant-condition": [
+			"error",
+			{
+				"checkLoops": false
+			}
+		],
+		"no-debugger": "off",
+		"no-empty": [
+			"error",
+			{
+				"allowEmptyCatch": true
+			}
+		],
+		"no-extra-boolean-cast": "off",
+		"no-undef-init": "error",
+		"prefer-const": "off",
+		"simple-import-sort/exports": "warn",
+		"simple-import-sort/imports": "warn"
 	}
 }
