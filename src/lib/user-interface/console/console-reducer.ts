@@ -1,10 +1,11 @@
 import { createReducer } from "@rbxts/rodux";
+import { IFlare } from "../../types/common";
 import { updateAtIndex } from "../../utilities/rodux-utils";
 import { ConsoleActions } from "./console-actions";
 
 export interface ConsoleReducer {
 	visible: boolean;
-	flares: Array<{ eventName: string; amount: number; message?: string }>;
+	flares: Array<IFlare>;
 }
 
 const initialState: ConsoleReducer = {
