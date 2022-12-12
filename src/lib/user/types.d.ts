@@ -6,7 +6,7 @@ import { FriendPage } from "./methodsTypes";
 export interface DefaultUserDeclaration {
 	player: Player;
 
-	load(): Promise<unknown>;
+	load<T extends {}>(template: T, key: string): Promise<T>;
 	unload(): Promise<void>;
 
 	/**
@@ -28,7 +28,7 @@ export interface DefaultUserDeclaration {
 	 *
 	 * @returns a map holding every connected friend's page by username.
 	 */
-	connectedFriends(): Promise<Map<string, FriendPage>>;
+	friendsInServer(): Promise<Map<string, FriendPage>>;
 }
 
 /**

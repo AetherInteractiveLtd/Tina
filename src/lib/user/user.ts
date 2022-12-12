@@ -7,8 +7,13 @@ import { TinaEvents } from "../events/tinaEvents";
 
 import logger from "../logger";
 
+import { Trader } from "./utilities/trader";
+
 export abstract class User implements DefaultUserDeclaration {
 	public player: Player;
+	public data!: {};
+
+	private firstSession = false;
 
 	constructor(private ref: Player | number) {
 		this.player = (
@@ -16,14 +21,13 @@ export abstract class User implements DefaultUserDeclaration {
 		)!;
 	}
 
-	async load(): Promise<UserType> {
-		return "" as never; /** TODO */
+	async load<T extends {}>(template: T, key: string): Promise<T> {
+		return Trader.getShop("Hello!", template).subscribeCustomer(key).data as T;
 	}
 
 	async unload(): Promise<void> {}
 
 	public isFirstSession(): boolean {
-		/** Implementation done in the next commit */
 		return true;
 	}
 
@@ -51,7 +55,7 @@ export abstract class User implements DefaultUserDeclaration {
 		return friends;
 	}
 
-	public async connectedFriends(): Promise<Map<string, FriendPage>> {
+	public async friendsInServer(): Promise<Map<string, FriendPage>> {
 		const friends: Map<string, FriendPage> = new Map();
 
 		try {
@@ -99,11 +103,14 @@ export namespace Users {
 	async function add(player: Player) {
 		const user = new TINA_USER_CLASS(player);
 		await user
-			.load()
-			.then((user) => TinaEvents.fireEventListener("user:added", user))
-			.catch((e) =>
-				logger.warn(`[User]: Player's data couldn't be loaded correctly. More information: ${e}`),
-			); /** User load? */
+			.load(
+				{
+					helloWorld: "Hello!",
+				},
+				"Id[%s]".format(player.UserId),
+			)
+			.then((data) => print(data))
+			.catch((e) => logger.warn(`[User]: Player's data couldn't be loaded correctly. More information: ${e}`));
 
 		usersMap.set(player, user);
 	}

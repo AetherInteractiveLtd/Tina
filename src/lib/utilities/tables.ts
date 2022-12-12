@@ -21,8 +21,6 @@ export namespace TableUtil {
 
 	export function reconcile(t: { [x: string]: unknown }, template: { [x: string]: unknown }) {
 		for (const [key, value] of pairs(template)) {
-			if (type(key) === "string") continue;
-
 			if (t[key] === undefined) {
 				if (type(value) === "table") {
 					t[key] = deepCopy(value as {});
