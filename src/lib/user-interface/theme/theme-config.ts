@@ -1,7 +1,7 @@
-type EnumOrString<T extends EnumItem> = T | T["Name"];
+import { EnumOrName } from "../../types/common";
 
 export interface Theme {
-	Font: EnumOrString<Enum.Font>;
+	Font: EnumOrName<Enum.Font>;
 	FontSize: number;
 	PrimaryBackgroundColor3: Color3;
 	SecondaryBackgroundColor3: Color3;
