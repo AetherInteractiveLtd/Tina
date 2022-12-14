@@ -1,6 +1,6 @@
 import { EventEmitter } from "../events";
 
-export class State<T extends Enum> extends EventEmitter<{ _default: (t: T) => void }> {
+export class State<T> extends EventEmitter<{ _default: (t: T) => void }> {
 	private _state: T;
 
 	constructor(value: T) {
