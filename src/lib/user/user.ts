@@ -1,9 +1,9 @@
 import { Players, RunService } from "@rbxts/services";
 
 import { TinaEvents } from "../events/tina_events";
+import { FriendPage } from "./methods";
 
 import { DefaultUserDeclaration, OfflineUserDeclaration, UserType } from "./types";
-import { FriendPage } from "./methods.d.ts";
 
 export abstract class User implements DefaultUserDeclaration {
 	public player: Player;
