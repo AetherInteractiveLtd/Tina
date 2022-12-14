@@ -20,7 +20,7 @@ import { UserType } from "./lib/user/types";
 import { RunService } from "@rbxts/services";
 
 /** Events */
-import { TinaEvents, TinaInternalEvents } from "./lib/events/tinaEvents";
+import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import { EventListener } from "./lib/events/events";
 
 export enum Protocol {
@@ -135,7 +135,7 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror {}
+	export namespace Mirror { }
 }
 
 /** Export Tina itself */
@@ -154,7 +154,10 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
-export { User } from "./lib/user/user";
+export { User, Users } from "./lib/user/user";
+
+/** Container export */
+export { Container } from "./lib/user/container";
 
 /** Util exports */
 export { FunctionUtil } from "./lib/utilities/functions";

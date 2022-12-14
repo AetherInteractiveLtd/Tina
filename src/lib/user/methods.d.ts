@@ -1,4 +1,6 @@
-/** Types for the Friend's page */
+/**
+ * The FriendPage types
+ */
 export interface FriendPage {
 	AvatarFinal: boolean;
 	AvatarUri: string;

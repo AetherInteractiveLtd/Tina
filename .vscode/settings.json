@@ -2,8 +2,8 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"files.eol": "\n",
 	"[typescript]": {
-		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
-		"editor.formatOnSave": true
+		"editor.defaultFormatter": "vscode.typescript-language-features",
+		"editor.formatOnSave": true,
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
@@ -11,11 +11,4 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
-	"C_Cpp.errorSquiggles": "Disabled",
-	"robloxLsp.diagnostics.disable": [
-		"undefined-type"
-	],
-	"robloxLsp.diagnostics.globals": [
-		"standardQueueReadAsync"
-	]
 }

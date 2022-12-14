@@ -5,7 +5,7 @@ export namespace FunctionUtil {
 	let freeThread: unknown = undefined;
 
 	// eslint-disable-next-line no-inner-declarations
-	function acquireRunnerThreadAndCallEventHandler(func: Callback, ...args: unknown[]) {
+	function acquireRunnerThreadAndCallEventHandler(func: Callback, ...args: Array<unknown>) {
 		const acquiredThread = freeThread;
 		freeThread = undefined;
 
@@ -15,12 +15,12 @@ export namespace FunctionUtil {
 	}
 
 	// eslint-disable-next-line no-inner-declarations
-	function runOn(...args: [Callback, ...unknown[]]) {
+	function runOn(...args: [Callback, ...Array<unknown>]) {
 		acquireRunnerThreadAndCallEventHandler(...args);
 
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
-			acquireRunnerThreadAndCallEventHandler(...(coroutine.yield() as unknown as [Callback, unknown[]]));
+			acquireRunnerThreadAndCallEventHandler(...(coroutine.yield() as unknown as [Callback, Array<unknown>]));
 		}
 	}
 
@@ -40,7 +40,7 @@ export namespace FunctionUtil {
 	 * @param func a function to run.
 	 * @param args arguments passed to the function to run.
 	 */
-	export function runOnFreeThread(func: Callback, ...args: unknown[]): void {
+	export function runOnFreeThread(func: Callback, ...args: Array<unknown>): void {
 		runOn(func, ...args);
 	}
 }

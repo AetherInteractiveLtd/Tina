@@ -5,7 +5,7 @@
  * Some of the most usefuls are `.filter()` and `.deepCopy()`.
  */
 export namespace TableUtil {
-	export function deepCopy(t: { [x: string]: unknown }) {
+	export function deepCopy(t: { [x: string]: unknown }): { [x: string]: unknown } {
 		const copyOfT: { [x: string]: unknown } = {};
 
 		for (const [key, value] of pairs(t)) {

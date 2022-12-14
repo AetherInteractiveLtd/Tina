@@ -1,13 +1,10 @@
-import { FriendPage } from "./methodsTypes";
+import { FriendPage } from "./methods";
 
 /**
  * The default user for abstraction on the User abstract class.
  */
 export interface DefaultUserDeclaration {
 	player: Player;
-
-	load<T extends {}>(template: T, key: string): Promise<T>;
-	unload(): Promise<void>;
 
 	/**
 	 * Returns whether it's the first session of the player or not.
