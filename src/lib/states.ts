@@ -1,33 +1,19 @@
 import { EventEmitter } from "./events";
 
-class StateEmitter<T extends Enum> extends EventEmitter<{ change: (arg0: T) => void }> {
-	constructor() {
-		super();
-	}
-
-	public emit(_: "change", state: T): Promise<void> {
-		return super.emit("change", state);
-	}
-}
-
-export class State<T extends Enum> {
+export class State<T extends Enum> extends EventEmitter<{ _default: (t: T) => void }> {
 	private _state: T;
-	private readonly _event: StateEmitter<T> = new StateEmitter<T>();
 
-	constructor(initialState: T) {
-		this._state = initialState;
+	constructor(value: T) {
+		super();
+		this._state = value;
 	}
 
 	public get(): T {
 		return this._state;
 	}
 
-	private emit = this._event.emit;
-
-	public set(state: T): Promise<void> {
-		this._state = state;
-		return this.emit("change", state);
+	public set(newState: T): Promise<void> {
+		this._state = newState;
+		return this.emit("_default", newState);
 	}
-
-	public when = this._event.when;
 }
