@@ -1,4 +1,4 @@
-import { EventEmitter } from "../../../../events/events";
+import { EventEmitter } from "../../../../events";
 
 import { TableUtil } from "../../../../utilities/tables";
 import { saveAsync } from "../../utilities/datastore";

@@ -1,4 +1,4 @@
-import { EventListener } from "../events";
+import { EventListener } from "..";
 
 export interface TinaInternalEvents {
 	"user:added": () => void;

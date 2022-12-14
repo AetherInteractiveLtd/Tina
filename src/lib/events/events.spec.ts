@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { EventEmitter } from "./events";
+import { EventEmitter } from ".";
 
 export = () => {
 	interface Events {
@@ -12,8 +12,8 @@ export = () => {
 		testBinds() {
 			this.when("event")
 				.do(print) // Binding outputting functions is fine as well
-				.do(function () {})
-				.do(() => {}); // Both ways work the same, demonstration
+				.do(function () { })
+				.do(() => { }); // Both ways work the same, demonstration
 		}
 
 		testEmits() {

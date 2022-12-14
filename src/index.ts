@@ -3,25 +3,21 @@ import TinaGame from "./lib/core/game";
 
 import logger from "./lib/logger";
 
-/** Scheduler */
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 
-/** Networking namespace */
 import Client from "./lib/net/utilities/client";
 import Server from "./lib/net/utilities/server";
 
 import Identifiers from "./lib/net/utilities/identifiers";
 
-/** User abstraction class */
 import { Users } from "./lib/user/user";
 import { UserType } from "./lib/user/types";
 
 import { RunService } from "@rbxts/services";
 
-/** Events */
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
-import { EventListener } from "./lib/events/events";
+import { EventListener } from "./lib/events";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -145,7 +141,7 @@ export default Tina;
 export { COND } from "./lib/conditions";
 
 /** Export EventEmitter Library */
-export { EventEmitter } from "./lib/events/events";
+export { EventEmitter, EventListener } from "./lib/events";
 
 /** Export Network Library */
 export { Network } from "./lib/net";

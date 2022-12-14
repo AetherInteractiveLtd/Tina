@@ -1,4 +1,4 @@
-import { EventListener } from "../../../events/events";
+import { EventListener } from "../../../events";
 
 import { UserType } from "../../../user/types";
 
