@@ -4,8 +4,9 @@ import { EventEmitter } from "..";
 
 export = () => {
 	interface Events {
-		event: (message: string) => string;
-		testingBind: () => void;
+		event: [message: string];
+		testingBind: [];
+		_default: [];
 	}
 
 	class Class extends EventEmitter<Events> {
@@ -30,7 +31,7 @@ export = () => {
 			this.when(key).do(func);
 		}
 
-		testEmitting<T extends keyof Events>(key: keyof Events, ...args: Parameters<Events[T]>) {
+		testEmitting<T extends keyof Events>(key: keyof Events, ...args: Events[T]) {
 			this.emit(key, ...args);
 		}
 	}
@@ -70,6 +71,15 @@ export = () => {
 			expect(() => {
 				Events.testEmitting("testingBind", "Previous binding of this function passed. Emitting passed.");
 			}).never.to.throw();
+		});
+
+		it("should default to _default key if no key is specified", () => {
+			let called = 0;
+			Events.when().do(() => {
+				called++;
+			});
+			Events.emit("_default");
+			expect(called).to.equal(1);
 		});
 	});
 };
