@@ -78,7 +78,7 @@ export = () => {
 			Events.when().do(() => {
 				called++;
 			});
-			Events.emit("_default");
+			Events.emit("_default").catch(() => {});
 			expect(called).to.equal(1);
 		});
 	});

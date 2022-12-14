@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { COND } from "./conditions";
 import { Condition } from "./conditions/types";
 
@@ -112,7 +113,9 @@ export abstract class EventEmitter<Events extends Default | {}> {
 			const eventsArray: Array<EventListener<any>> = [];
 			eventsArray.push(event);
 			this.events.set(token, eventsArray);
-		} else this.events.get(token)!.push(event);
+		} else {
+			this.events.get(token)!.push(event);
+		}
 
 		return event;
 	}
