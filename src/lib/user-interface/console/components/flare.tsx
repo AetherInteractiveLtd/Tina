@@ -1,6 +1,7 @@
 import Roact, { Element } from "@rbxts/roact";
 import { useRef, withHooksPure } from "@rbxts/roact-hooked";
 import { TextService } from "@rbxts/services";
+
 import { IFlare } from "../../../types/common";
 import { getAbsolutePosition } from "../../../utilities/hoarcekat";
 import Padding from "../../common/padding";
@@ -23,7 +24,7 @@ const Flare = withHooksPure(({ Info, Selected, OnClick }: Props) => {
 	const textSize = TextService.GetTextSize(text, theme.FontSize, theme.Font, new Vector2(math.huge, math.huge));
 	const circleColour = amount > 0 ? Color3.fromRGB(255, 18, 18) : Color3.fromRGB(18, 18, 255);
 
-	let tooltip: Element | undefined = undefined;
+	let tooltip: Element | undefined;
 	if (Selected) {
 		const button = buttonRef.getValue()!;
 		const { X: positionX, Y: positionY } = getAbsolutePosition(button);

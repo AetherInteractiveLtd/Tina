@@ -1,5 +1,6 @@
 import Roact from "@rbxts/roact";
 import { withHooks } from "@rbxts/roact-hooked";
+
 import Header from "./header";
 
 const Console = withHooks(() => {

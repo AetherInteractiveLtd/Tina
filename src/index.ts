@@ -1,23 +1,19 @@
+import { RunService } from "@rbxts/services";
+
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-
 import logger from "./lib/logger";
-
+/* Networking namespace */
+import Client from "./lib/net/utilities/client";
+import Identifiers from "./lib/net/utilities/identifiers";
+import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+/* User abstraction class */
+import { User } from "./lib/user/user";
 import { ConsoleActionName } from "./lib/user-interface/console/console-actions";
 import { ClientStore } from "./lib/user-interface/store";
 import { formatFlareTraceback } from "./lib/utilities/string-utils";
-
-/* Networking namespace */
-import Client from "./lib/net/utilities/client";
-import Server from "./lib/net/utilities/server";
-
-import Identifiers from "./lib/net/utilities/identifiers";
-
-/* User abstraction class */
-import { User } from "./lib/user/user";
-import { RunService } from "@rbxts/services";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -110,11 +106,11 @@ namespace Tina {
 		return new Process(name, Scheduler);
 	}
 
-	export function flare(eventName: string) {
+	export function flare(eventName: string): void {
 		ClientStore.dispatch({ type: ConsoleActionName.AddFlare, eventName });
 	}
 
-	export function oops(eventName: string) {
+	export function oops(eventName: string): void {
 		const message = formatFlareTraceback(debug.traceback(undefined, 1));
 		ClientStore.dispatch({ type: ConsoleActionName.FireFlare, eventName, message });
 	}

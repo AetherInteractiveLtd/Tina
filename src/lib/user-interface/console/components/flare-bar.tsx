@@ -1,6 +1,7 @@
 import Roact, { JsxInstanceProperties } from "@rbxts/roact";
 import { useCallback, useState, withHooks } from "@rbxts/roact-hooked";
 import { useSelector } from "@rbxts/roact-rodux-hooked";
+
 import { IFlare } from "../../../types/common";
 import Padding from "../../common/padding";
 import { StoreState } from "../../store";
@@ -15,7 +16,7 @@ export const FlareBar = withHooks((props: FlareBarProps) => {
 
 	const handleClick = useCallback((flare: IFlare) => {
 		setSelected(selected => {
-			if (!flare.amount) return;
+			if (flare.amount === 0) return;
 			return flare === selected ? undefined : flare;
 		});
 	}, []);

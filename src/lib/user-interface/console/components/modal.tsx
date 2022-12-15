@@ -1,6 +1,7 @@
 import Roact, { Children, Portal } from "@rbxts/roact";
 import { withHooks } from "@rbxts/roact-hooked";
 import { Players, RunService } from "@rbxts/services";
+
 import { hoarcekatFrame } from "../../../utilities/hoarcekat";
 
 const isGameRunning = RunService.IsRunning();

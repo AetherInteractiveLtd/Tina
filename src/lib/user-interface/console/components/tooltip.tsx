@@ -1,5 +1,6 @@
 import Roact from "@rbxts/roact";
 import { useBinding, useEffect, useRef, withHooks } from "@rbxts/roact-hooked";
+
 import { UDim2ToAbsolute } from "../../../utilities/ui";
 import Padding from "../../common/padding";
 import { useTheme } from "../../theme/theme";
@@ -20,12 +21,12 @@ const Tooltip = withHooks(({ Message, Position = new UDim2() }: TooltipProps) =>
 		const label = labelRef.getValue()!;
 		const parent = label.Parent as GuiBase2d;
 
-		const constrainToWindow = () => {
+		const constrainToWindow = (): void => {
 			const maxSize = parent.AbsoluteSize;
 			const size = label.AbsoluteSize;
 			const targetPosition = UDim2ToAbsolute(Position, maxSize);
 
-			const constrainX = () => {
+			const constrainX = (): number => {
 				const max = maxSize.X;
 				const min = 0;
 				return math.clamp(targetPosition.X, min, math.max(max - size.X, min));

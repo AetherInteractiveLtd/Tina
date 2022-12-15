@@ -1,11 +1,10 @@
 import Roact from "@rbxts/roact";
 import { withHooksPure } from "@rbxts/roact-hooked";
+
 import { useTheme } from "../../theme/theme";
 import { FlareBar } from "./flare-bar";
 
-interface Props {}
-
-const Header = withHooksPure((props: Props) => {
+const Header = withHooksPure(() => {
 	const theme = useTheme();
 
 	return (

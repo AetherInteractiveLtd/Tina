@@ -1,4 +1,5 @@
 import { createReducer } from "@rbxts/rodux";
+
 import { IFlare } from "../../types/common";
 import { updateAtIndex } from "../../utilities/rodux-utils";
 import { ConsoleActions } from "./console-actions";
