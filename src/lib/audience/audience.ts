@@ -1,11 +1,10 @@
+import { UserType } from "../user/types";
 import { AudienceDeclaration } from "./types";
 
-import { UserType } from "../user/types";
-
 export class Audience implements AudienceDeclaration {
-	private listed: Player[] = [];
+	private listed: Array<Player> = [];
 
-	public list(audience: UserType[] | Player[]): AudienceDeclaration {
+	public list(audience: Array<UserType> | Array<Player>): AudienceDeclaration {
 		for (const viewer of audience) {
 			this.listed.push(typeOf(viewer) === "Instance" ? (viewer as Player) : (viewer as UserType).player);
 		}
@@ -13,7 +12,7 @@ export class Audience implements AudienceDeclaration {
 		return this;
 	}
 
-	public get(): Player[] {
+	public get(): Array<Player> {
 		return this.listed;
 	}
 

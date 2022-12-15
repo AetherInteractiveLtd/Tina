@@ -2,7 +2,6 @@ import { Players, RunService } from "@rbxts/services";
 
 import { TinaEvents } from "../events/tina_events";
 import { FriendPage } from "./methods";
-
 import { DefaultUserDeclaration, OfflineUserDeclaration, UserType } from "./types";
 
 export abstract class User implements DefaultUserDeclaration {
@@ -76,7 +75,7 @@ class DefaultUser extends User implements DefaultUserDeclaration {
 }
 
 class OfflineUser extends User implements OfflineUserDeclaration {
-	release(): void {
+	public release(): void {
 		/** Somehow, release the offline user if no longer needed */
 	}
 }
@@ -87,18 +86,18 @@ export namespace Users {
 	let TINA_USER_CLASS = DefaultUser as never as new (ref: Player | number) => UserType;
 
 	// eslint-disable-next-line no-inner-declarations
-	async function add(player: Player) {
+	function add(player: Player): void {
 		const user = new TINA_USER_CLASS(player);
-		TinaEvents.fireEventListener("user:added", user)
+		TinaEvents.fireEventListener("user:added", user);
 
 		usersMap.set(player, user);
 	}
 
 	// eslint-disable-next-line no-inner-declarations
-	async function remove(player: Player) {
+	function remove(player: Player): void {
 		const user = usersMap.get(player);
 		if (user !== undefined) {
-			TinaEvents.fireEventListener("user:removing", user) /** User removement */
+			TinaEvents.fireEventListener("user:removing", user); /** User removement */
 		}
 
 		usersMap.delete(player);
@@ -141,8 +140,9 @@ export namespace Users {
 	 * @returns a User object constructed from your defined User class.
 	 */
 	export function get<T extends Player | number>(from: T): UserType {
-		if (RunService.IsClient())
-			return "Can't retrieve users from the client." as never; /** Is this alright? Or JSDoc was enough? */
+		if (RunService.IsClient()) {
+			return "Can't retrieve users from the client." as never;
+		} /** Is this alright? Or JSDoc was enough? */
 
 		let user = typeOf(from) === "number" ? fromUserId(from as number) : fromPlayer(from as Player);
 		if (user === undefined) user = new TINA_USER_CLASS(from);

@@ -9,7 +9,7 @@ export enum EAction {
 declare type CondFunc = [Condition, EAction.COND];
 declare type StepFunc = [Callback, EAction.DO];
 
-export class EventListener<T extends unknown[] = unknown[]> {
+export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	protected readonly listeners: Array<CondFunc | StepFunc> = [];
 	protected readonly yieldThreads: Array<thread> = [];
 
@@ -41,14 +41,14 @@ export class EventListener<T extends unknown[] = unknown[]> {
 	/**
 	 * Yields current thread until resumption (emit call).
 	 */
-	public await(): LuaTuple<unknown[]> {
+	public await(): LuaTuple<Array<unknown>> {
 		this.yieldThreads.push(coroutine.running());
 
 		return coroutine.yield();
 	}
 
 	/** @hidden */
-	public async call<T extends unknown[]>(...args: T): Promise<void> {
+	public async call<T extends Array<unknown>>(...args: T): Promise<void> {
 		this._call(0, true, ...args);
 
 		if (this.yieldThreads.size() > 0) {
@@ -56,7 +56,7 @@ export class EventListener<T extends unknown[] = unknown[]> {
 		}
 	}
 
-	private _call<T extends unknown[]>(iteration: number, conditionPassed?: boolean, ...args: T) {
+	private _call<T extends Array<unknown>>(iteration: number, conditionPassed?: boolean, ...args: T): void {
 		if (iteration >= this.listeners.size()) return;
 
 		const [handlerOrCondition, action] = this.listeners[iteration];
@@ -99,7 +99,9 @@ export abstract class EventEmitter<Events extends {}> {
 
 			eventsArray.push(event);
 			this.events.set(token, eventsArray);
-		} else this.events.get(token)!.push(event);
+		} else {
+			this.events.get(token)!.push(event);
+		}
 
 		return event;
 	}
@@ -116,7 +118,7 @@ export abstract class EventEmitter<Events extends {}> {
 		if (!hasEvent) return;
 
 		for (const thread of this.events.get(token)!) {
-			thread.call(...args);
+			void thread.call(...args);
 		}
 	}
 }

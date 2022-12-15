@@ -1,13 +1,12 @@
 import { FunctionUtil } from "../utilities/functions";
-
 import { Condition, ConditionCallback } from "./types";
 
 export class COND {
-	public static create(callback: ConditionCallback) {
+	public static create(callback: ConditionCallback): typeof callback {
 		return callback;
 	}
 
-	public static eval<T extends unknown[]>(condition: Condition<T>, ...args: T): boolean {
+	public static eval<T extends Array<unknown>>(condition: Condition<T>, ...args: T): boolean {
 		return FunctionUtil.isFunction(condition) ? condition(...args) : condition;
 	}
 

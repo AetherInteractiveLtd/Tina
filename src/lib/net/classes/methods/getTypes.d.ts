@@ -1,5 +1,4 @@
 import { EventListener } from "../../../events";
-
 import { UserType } from "../../../user/types";
 
 export interface GETServerObjectDeclaration<R, S> {

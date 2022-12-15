@@ -2,10 +2,10 @@
  * Offers a variety of methods for functions, most checkers or runners.
  */
 export namespace FunctionUtil {
-	let freeThread: unknown = undefined;
+	let freeThread: unknown;
 
 	// eslint-disable-next-line no-inner-declarations
-	function acquireRunnerThreadAndCallEventHandler(func: Callback, ...args: Array<unknown>) {
+	function acquireRunnerThreadAndCallEventHandler(func: Callback, ...args: Array<unknown>): void {
 		const acquiredThread = freeThread;
 		freeThread = undefined;
 
@@ -15,7 +15,7 @@ export namespace FunctionUtil {
 	}
 
 	// eslint-disable-next-line no-inner-declarations
-	function runOn(...args: [Callback, ...Array<unknown>]) {
+	function runOn(...args: [Callback, ...Array<unknown>]): void {
 		acquireRunnerThreadAndCallEventHandler(...args);
 
 		// eslint-disable-next-line no-constant-condition

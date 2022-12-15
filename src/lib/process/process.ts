@@ -1,5 +1,4 @@
 import { EventListener } from "../events";
-
 import Scheduler from "./scheduler";
 
 type ProcessScheduler = typeof Scheduler;
@@ -23,12 +22,12 @@ export class Process extends EventListener<[]> {
 		Process.processes.set(name, this);
 	}
 
-	public resume() {
+	public resume(): void {
 		this.isSuspended = false;
 		this.ticker.addProcess(this);
 	}
 
-	public suspend(ticks = 1) {
+	public suspend(ticks = 1): void {
 		this.suspensionTime = ticks;
 		this.isSuspended = true;
 	}

@@ -12,8 +12,8 @@ export = () => {
 		testBinds() {
 			this.when("event")
 				.do(print) // Binding outputting functions is fine as well
-				.do(function () { })
-				.do(() => { }); // Both ways work the same, demonstration
+				.do(function () {})
+				.do(() => {}); // Both ways work the same, demonstration
 		}
 
 		testEmits() {
@@ -26,7 +26,7 @@ export = () => {
 				.await();
 		}
 
-		testBinding<X>(key: keyof Events, func: (...args: unknown[]) => X) {
+		testBinding<X>(key: keyof Events, func: (...args: Array<unknown>) => X) {
 			this.when(key).do(func);
 		}
 
@@ -62,7 +62,7 @@ export = () => {
 
 		it("should bind function correctly", () => {
 			expect(() => {
-				Events.testBinding("testingBind", (...args: unknown[]) => print(...args));
+				Events.testBinding("testingBind", (...args: Array<unknown>) => print(...args));
 			}).never.to.throw();
 		});
 

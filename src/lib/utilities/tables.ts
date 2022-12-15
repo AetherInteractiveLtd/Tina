@@ -5,7 +5,7 @@
  * Some of the most usefuls are `.filter()` and `.deepCopy()`.
  */
 export namespace TableUtil {
-	export function deepCopy(t: { [x: string]: unknown }): { [x: string]: unknown } {
+	export function deepCopy(t: { [x: string]: unknown }): typeof t {
 		const copyOfT: { [x: string]: unknown } = {};
 
 		for (const [key, value] of pairs(t)) {
@@ -19,7 +19,7 @@ export namespace TableUtil {
 		return copyOfT;
 	}
 
-	export function reconcile(t: { [x: string]: unknown }, template: { [x: string]: unknown }) {
+	export function reconcile(t: { [x: string]: unknown }, template: typeof t): void {
 		for (const [key, value] of pairs(template)) {
 			if (t[key] === undefined) {
 				if (type(value) === "table") {
@@ -33,7 +33,10 @@ export namespace TableUtil {
 		}
 	}
 
-	export function filter(t: { [x: string]: unknown } | Map<string, unknown>, filterFunc: (item: unknown) => boolean) {
+	export function filter(
+		t: { [x: string]: unknown } | Map<string, unknown>,
+		filterFunc: (item: unknown) => boolean,
+	): typeof t {
 		const filteredT: { [x: string]: unknown } = {};
 
 		for (const [key, value] of pairs(t)) {

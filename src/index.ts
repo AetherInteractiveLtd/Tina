@@ -1,23 +1,17 @@
-import TinaCore from "./lib/core";
-import TinaGame from "./lib/core/game";
-
-import logger from "./lib/logger";
-
-import { Process } from "./lib/process/process";
-import Scheduler from "./lib/process/scheduler";
-
-import Client from "./lib/net/utilities/client";
-import Server from "./lib/net/utilities/server";
-
-import Identifiers from "./lib/net/utilities/identifiers";
-
-import { Users } from "./lib/user/user";
-import { UserType } from "./lib/user/types";
-
 import { RunService } from "@rbxts/services";
 
-import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
+import TinaCore from "./lib/core";
+import TinaGame from "./lib/core/game";
 import { EventListener } from "./lib/events";
+import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
+import logger from "./lib/logger";
+import Client from "./lib/net/utilities/client";
+import Identifiers from "./lib/net/utilities/identifiers";
+import Server from "./lib/net/utilities/server";
+import { Process } from "./lib/process/process";
+import Scheduler from "./lib/process/scheduler";
+import { UserType } from "./lib/user/types";
+import { Users } from "./lib/user/user";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -131,7 +125,7 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror { }
+	export namespace Mirror {}
 }
 
 /** Export Tina itself */
@@ -139,7 +133,6 @@ export default Tina;
 
 /** Export Conditions Library */
 export { COND } from "./lib/conditions";
-
 /** Export EventEmitter Library */
 export { EventEmitter, EventListener } from "./lib/events";
 

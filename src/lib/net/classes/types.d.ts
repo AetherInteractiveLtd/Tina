@@ -1,5 +1,3 @@
-import { Endpoint } from "./methods/baseEndpointTypes";
-
 /*
  * Declarations
  */
@@ -8,7 +6,7 @@ export interface BaseRepository {}
 
 export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<string, RepositoryObjectDeclaration<T>>;
 
-export type RepositoryDeclaration<T extends BaseRepository> = {};
+export type RepositoryDeclaration = {};
 
 /**
  * Router class implementation for bootstrapping

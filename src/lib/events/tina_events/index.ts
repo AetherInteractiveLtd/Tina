@@ -11,7 +11,7 @@ export namespace TinaEvents {
 	/**
 	 * Adds a listener to the specific event mentioned, approach as there can't be recursive
 	 * imports from a file to the root file (Tina namespace).
-	 * 
+	 *
 	 * @param eventTo Tina event
 	 * @returns and EventListener
 	 */
@@ -30,7 +30,7 @@ export namespace TinaEvents {
 
 	/**
 	 * Should emit to the event, invoking and chaining all the listeners previously binded to it.
-	 * 
+	 *
 	 * @param eventTo event to emit.
 	 * @param args arguments for the event, defined previously.
 	 */
@@ -39,7 +39,7 @@ export namespace TinaEvents {
 
 		if (listeners !== undefined) {
 			for (const eventListener of listeners) {
-				eventListener.call(...args);
+				void eventListener.call(...args);
 			}
 		}
 	}
