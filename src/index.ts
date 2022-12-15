@@ -125,7 +125,7 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror {}
+	export namespace Mirror { }
 }
 
 /** Export Tina itself */
@@ -146,7 +146,7 @@ export { Audience } from "./lib/audience/audience";
 export { User, Users } from "./lib/user/user";
 
 /** Container export */
-export { Container } from "./lib/user/container";
+export { Container } from "./lib/container";
 
 /** Util exports */
 export { FunctionUtil } from "./lib/utilities/functions";

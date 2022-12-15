@@ -1,6 +1,6 @@
 import { DataStoreService, RunService } from "@rbxts/services";
 
-import logger from "../../../logger";
+import logger from "../../logger";
 import { BucketType } from "../classes/bucket/types";
 import { ItemDeclaration, ItemLoaderJob, ItemMethodsDataStore, ItemType } from "../classes/item/types";
 import { DataSaved, Template } from "../types";

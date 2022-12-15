@@ -1,6 +1,6 @@
-import { EventEmitter } from "../../../../events";
-import logger from "../../../../logger";
-import { TableUtil } from "../../../../utilities/tables";
+import { EventEmitter } from "../../../events";
+import logger from "../../../logger";
+import { TableUtil } from "../../../utilities/tables";
 import { Metadata, Template } from "../../types";
 import { saveAsync } from "../../utilities/datastore";
 import { BucketType } from "../bucket/types";
