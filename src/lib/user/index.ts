@@ -88,7 +88,7 @@ export abstract class User implements DefaultUserDeclaration {
 		const bucket = Container.getBucket(bucketKey, template);
 		const item = await bucket
 			.getItem(itemKey + this.player.UserId)
-			.catch(e =>
+			.catch((e: string) =>
 				logger.warn(
 					"[Container]: Trying to load Item, didn't work. Please rejoin the experience. Further detail: " + e,
 				),
