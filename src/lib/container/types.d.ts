@@ -5,6 +5,8 @@ export type Metadata = {
 	last_connection_timestamp: number; // metadata fields should be snake_case
 	load_timestamp: number;
 	version: string;
+
+	is_first_session: boolean;
 };
 
 export interface DataSaved {

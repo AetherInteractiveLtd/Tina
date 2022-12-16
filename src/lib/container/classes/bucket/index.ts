@@ -72,6 +72,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 							last_bucket_on: this.key,
 							last_connection_timestamp: os.time(),
 							load_timestamp: os.clock(),
+							is_first_session: true,
 							version: 1,
 						};
 

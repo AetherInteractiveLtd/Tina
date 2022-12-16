@@ -214,6 +214,7 @@ export function saveAsync(item: ItemDeclaration<Template>): void {
 			object.data = item.data;
 
 			object.metadata = {
+				is_first_session: false,
 				last_bucket_on: item.bucketOn.key,
 				last_connection_timestamp: os.time(),
 				version: keyInfo.Version,

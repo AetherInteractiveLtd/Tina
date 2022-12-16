@@ -1,12 +1,20 @@
 import { Players, RunService } from "@rbxts/services";
 
+import { Container } from "../container";
+import { ItemType } from "../container/classes/item/types";
+import { Template } from "../container/types";
 import { TinaEvents } from "../events/tina_events";
+import logger from "../logger";
 import { TinaNet } from "../net/tina_net";
 import { FriendPage } from "./methods";
-import { DefaultUserDeclaration, OfflineUserDeclaration, UserType } from "./types";
+import { DefaultUserDeclaration, LoadingOptions, OfflineUserDeclaration, UserType } from "./types";
 
 export abstract class User implements DefaultUserDeclaration {
 	public player: Player;
+
+	/** All data related */
+	private firstSession!: boolean;
+	private item!: ItemType<Template>;
 
 	constructor(private ref: Player | number) {
 		this.player = (
@@ -14,7 +22,11 @@ export abstract class User implements DefaultUserDeclaration {
 		)!;
 	}
 
-	public async friends(): Promise<Map<string, FriendPage>> {
+	public isFirstSession(): boolean {
+		return this.firstSession;
+	}
+
+	public async friends(onlineOnly: boolean): Promise<Map<string, FriendPage>> {
 		const friends: Map<string, FriendPage> = new Map();
 
 		try {
@@ -23,7 +35,11 @@ export abstract class User implements DefaultUserDeclaration {
 			if (friendsPages !== undefined) {
 				do {
 					for (const page of friendsPages.GetCurrentPage()) {
-						friends.set(page.Username, page);
+						if (onlineOnly && page.IsOnline) {
+							friends.set(page.Username, page);
+						} else if (onlineOnly === undefined) {
+							friends.set(page.Username, page);
+						}
 					}
 
 					friendsPages.AdvanceToNextPageAsync();
@@ -63,6 +79,32 @@ export abstract class User implements DefaultUserDeclaration {
 
 		return friends;
 	}
+
+	public async load({
+		bucket: bucketKey,
+		item: itemKey,
+		template,
+	}: LoadingOptions): Promise<typeof template | undefined> {
+		const bucket = Container.getBucket(bucketKey, template);
+		const item = await bucket
+			.getItem(itemKey + this.player.UserId)
+			.catch(e =>
+				logger.warn(
+					"[Container]: Trying to load Item, didn't work. Please rejoin the experience. Further detail: " + e,
+				),
+			);
+
+		this.item = item as ItemType<Template>;
+
+		if (item !== undefined) {
+			this.firstSession = item.metadata.is_first_session;
+			return item.data;
+		}
+	}
+
+	public unload(): void {
+		this.item?.lose();
+	}
 }
 
 class DefaultUser extends User implements DefaultUserDeclaration {
@@ -95,9 +137,12 @@ export namespace Users {
 	// eslint-disable-next-line no-inner-declarations
 	function remove(player: Player): void {
 		const user = usersMap.get(player);
+
 		if (user !== undefined) {
 			TinaEvents.fireEventListener("user:removing", user);
 			TinaNet.getRoute("user:added").sendAll(user);
+
+			user.unload();
 		}
 
 		usersMap.delete(player);
