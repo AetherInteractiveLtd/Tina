@@ -4,6 +4,9 @@
 	"[typescript]": {
 		"editor.defaultFormatter": "vscode.typescript-language-features",
 		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		}
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
