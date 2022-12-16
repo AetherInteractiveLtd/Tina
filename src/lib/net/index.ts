@@ -1,17 +1,11 @@
-/* Types */
-/* GET */
+import { UserType } from "../user/types";
 import { GetEndpoint } from "./classes/methods/get";
 import { GETDeclaration } from "./classes/methods/getTypes";
-/* POST */
 import { PostEndpoint } from "./classes/methods/post";
 import { POSTDeclaration } from "./classes/methods/postTypes";
-/* UPDATE */
 import { UpdateEndpoint } from "./classes/methods/update";
 import { UPDATEDeclaration } from "./classes/methods/updateTypes";
 import { Repository } from "./classes/repository";
-/**
- * Networking object holders
- */
 import { Router } from "./classes/router";
 import {
 	BaseEndpoints,
@@ -20,6 +14,7 @@ import {
 	RepositoryObjectDeclaration,
 	RouterDeclaration,
 } from "./classes/types";
+import { TinaNet } from "./tina_net";
 
 export namespace Network {
 	/**
@@ -69,6 +64,14 @@ export namespace Network {
 	export function registerEndpoints<T extends EndpointsDeclaration<BaseEndpoints>>(
 		endpoints: T,
 	): RouterDeclaration<T> {
+		{
+			TinaNet.setInternalRouter(
+				new Router({
+					"user:added": Network.Method.UPDATE<UserType>(),
+					"user:removing": Network.Method.UPDATE<UserType>(),
+				}),
+			);
+		}
 		return new Router(endpoints);
 	}
 

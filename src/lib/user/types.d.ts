@@ -7,13 +7,6 @@ export interface DefaultUserDeclaration {
 	player: Player;
 
 	/**
-	 * Returns whether it's the first session of the player or not.
-	 *
-	 * @returns a boolean.
-	 */
-	isFirstSession(): boolean;
-
-	/**
 	 * Used to retrieve asynchronously a user's friends.
 	 *
 	 * @returns a map holding every friend's page by username.

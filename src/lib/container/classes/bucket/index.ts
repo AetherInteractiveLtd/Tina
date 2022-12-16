@@ -1,10 +1,11 @@
 import { DataStoreService } from "@rbxts/services";
 
+import { TableUtil } from "../../../utilities/tables";
 import { DataSaved, Template } from "../../types";
 import { dataStoreQueueCall, registerIssue, servicesAvailable, setItemToAutoSave } from "../../utilities/datastore";
 import { Item } from "../item";
 import { ItemDeclaration, ItemType } from "../item/types";
-import { BucketImplementation } from "./types";
+import { BucketImplementation, BucketMetadata } from "./types";
 
 export class Bucket<T extends Template> implements BucketImplementation<T> {
 	public readonly bucket_metadata = {};
@@ -25,7 +26,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 	public async getItem(itemKey: string): Promise<ItemType<T> | undefined> {
 		assert(
 			type(itemKey) === "string" || itemKey.size() !== 0,
-			"[Container_Bucket[%s]]: Item's key can't be of another type than a string and it needs to have a length > 0.",
+			"[Container_Bucket[%s]]: Items must be of type string and need to have a length >= 1",
 		);
 
 		if (this.template === undefined) {
@@ -56,6 +57,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 
 				if (loadJob.id === id) {
 					[loadedData, keyInfo] = loadJob.data_saved!;
+
 					this.load_jobs.delete(itemKey);
 				}
 			} else {
@@ -63,7 +65,18 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 				this.load_jobs.set(itemKey, loadJob);
 
 				loadJob.data_saved = dataStoreQueueCall(itemKey, this, {
-					setItem: <T>(object: T, keyInfo: DataStoreKeyInfo): void => {},
+					missingItem: (object: Template): void => {
+						object.data = TableUtil.deepCopy(this.template);
+
+						object.metadata = {
+							last_bucket_on: this.key,
+							last_connection_timestamp: os.time(),
+							load_timestamp: os.clock(),
+							version: 1,
+						};
+
+						object.userIds = new Array();
+					},
 				});
 			}
 
@@ -86,7 +99,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 		}
 	}
 
-	public getMetadata() {
+	public getMetadata(): BucketMetadata {
 		return this.bucket_metadata;
 	}
 }

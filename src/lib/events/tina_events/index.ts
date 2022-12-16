@@ -1,8 +1,18 @@
+import { RunService } from "@rbxts/services";
+
+import { TinaNet } from "../../net/tina_net";
 import { EventListener } from "..";
 
 export interface TinaInternalEvents {
-	"user:added": () => void;
-	"user:removing": () => void;
+	/**
+	 * @server
+	 */
+	"user:added": defined;
+
+	/**
+	 * @server
+	 */
+	"user:removing": defined;
 }
 
 export namespace TinaEvents {
@@ -15,17 +25,21 @@ export namespace TinaEvents {
 	 * @param eventTo Tina event
 	 * @returns and EventListener
 	 */
-	export function addEventListener<T extends keyof TinaInternalEvents>(eventTo: T): EventListener<[never]> {
-		const event = new EventListener<[never]>();
-		const listeners = events.get(eventTo);
+	export function addEventListener<T extends keyof TinaInternalEvents>(eventTo: T): EventListener<[defined]> {
+		if (RunService.IsServer() === true) {
+			const event = new EventListener<[never]>();
+			const listeners = events.get(eventTo as string);
 
-		if (listeners === undefined) {
-			events.set(eventTo, [event]);
+			if (listeners === undefined) {
+				events.set(eventTo as string, [event]);
+			} else {
+				events.get(eventTo as string)!.push(event);
+			}
+
+			return event;
 		} else {
-			events.get(eventTo)!.push(event);
+			return TinaNet.getRoute(eventTo as string).when();
 		}
-
-		return event;
 	}
 
 	/**

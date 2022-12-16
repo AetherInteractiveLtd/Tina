@@ -4,7 +4,7 @@
 export interface BaseEndpoints {}
 export interface BaseRepository {}
 
-export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<string, RepositoryObjectDeclaration<T>>;
+export declare type EndpointsDeclaration<T extends BaseEndpoints> = Record<string, RepositoryObjectDeclaration<T> | T>;
 
 export type RepositoryDeclaration = {};
 

@@ -1,6 +1,7 @@
 import { Players, RunService } from "@rbxts/services";
 
 import { TinaEvents } from "../events/tina_events";
+import { TinaNet } from "../net/tina_net";
 import { FriendPage } from "./methods";
 import { DefaultUserDeclaration, OfflineUserDeclaration, UserType } from "./types";
 
@@ -11,10 +12,6 @@ export abstract class User implements DefaultUserDeclaration {
 		this.player = (
 			typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player)
 		)!;
-	}
-
-	public isFirstSession(): boolean {
-		return true;
 	}
 
 	public async friends(): Promise<Map<string, FriendPage>> {
@@ -88,6 +85,8 @@ export namespace Users {
 	// eslint-disable-next-line no-inner-declarations
 	function add(player: Player): void {
 		const user = new TINA_USER_CLASS(player);
+
+		TinaNet.getRoute("user:added").sendAll(user);
 		TinaEvents.fireEventListener("user:added", user);
 
 		usersMap.set(player, user);
@@ -97,7 +96,8 @@ export namespace Users {
 	function remove(player: Player): void {
 		const user = usersMap.get(player);
 		if (user !== undefined) {
-			TinaEvents.fireEventListener("user:removing", user); /** User removement */
+			TinaEvents.fireEventListener("user:removing", user);
+			TinaNet.getRoute("user:added").sendAll(user);
 		}
 
 		usersMap.delete(player);
@@ -124,8 +124,8 @@ export namespace Users {
 	/**
 	 * Used to change the User class from where all the Users are created.
 	 *
-	 * @param userClass the new user-defined User class.
 	 * @hidden
+	 * @param userClass the new user-defined User class.
 	 */
 	export function changeUserClass(userClass: new (ref: Player | number) => UserType): void {
 		TINA_USER_CLASS = userClass;
@@ -140,9 +140,7 @@ export namespace Users {
 	 * @returns a User object constructed from your defined User class.
 	 */
 	export function get<T extends Player | number>(from: T): UserType {
-		if (RunService.IsClient()) {
-			return "Can't retrieve users from the client." as never;
-		} /** Is this alright? Or JSDoc was enough? */
+		if (RunService.IsClient() === true) error("Can't retrieve users from the client.");
 
 		let user = typeOf(from) === "number" ? fromUserId(from as number) : fromPlayer(from as Player);
 		if (user === undefined) user = new TINA_USER_CLASS(from);
@@ -159,7 +157,7 @@ export namespace Users {
 	 * @returns an OfflineUser object.
 	 */
 	export function getOffline(userId: number): OfflineUserDeclaration {
-		if (RunService.IsClient()) return "Can't retrieve OfflineUser on client!" as never;
+		if (RunService.IsClient() === true) error("Can't retrieve offline users on client!");
 
 		return new OfflineUser(
 			userId,
@@ -167,7 +165,7 @@ export namespace Users {
 	}
 
 	/** Players set/remove from Users, operations for creating and caching, or removing players */
-	if (RunService.IsServer()) {
+	if (RunService.IsServer() === true) {
 		for (const player of Players.GetPlayers()) add(player);
 
 		Players.PlayerAdded.Connect(add);

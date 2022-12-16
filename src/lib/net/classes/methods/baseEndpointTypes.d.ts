@@ -1,4 +1,4 @@
-import { User } from "../../../user/user";
+import { User } from "../../../user";
 
 /**
  * Endpoint insertion for the event types, so we do it and users don't be mad at us for not doing it automatically.

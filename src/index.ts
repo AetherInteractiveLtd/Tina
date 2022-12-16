@@ -10,8 +10,8 @@ import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+import { Users } from "./lib/user";
 import { UserType } from "./lib/user/types";
-import { Users } from "./lib/user/user";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -116,7 +116,7 @@ namespace Tina {
 	 * @param event event name (defined internally specially for Tina)
 	 * @returns an EventListener object.
 	 */
-	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[never]> {
+	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[defined]> {
 		return TinaEvents.addEventListener(event);
 	}
 
@@ -125,7 +125,7 @@ namespace Tina {
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror { }
+	export namespace Mirror {}
 }
 
 /** Export Tina itself */
@@ -143,7 +143,7 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
-export { User, Users } from "./lib/user/user";
+export { User, Users } from "./lib/user";
 
 /** Container export */
 export { Container } from "./lib/container";

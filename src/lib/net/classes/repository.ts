@@ -20,6 +20,8 @@ export class Repository<T extends RepositoryDeclaration> implements RepositoryOb
 
 	/**
 	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, not sure when I'll need it for real.
+	 *
+	 * @hidden this shouldn't be exposed.
 	 */
 	public developmentOnly(): RepositoryObjectDeclaration<T> {
 		return this as RepositoryObjectDeclaration<T>;

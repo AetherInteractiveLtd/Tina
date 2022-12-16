@@ -1,5 +1,5 @@
 import { EventListener } from "../../../events";
-import { Users } from "../../../user/user";
+import { Users } from "../../../user";
 import Client from "../../utilities/client";
 import Server from "../../utilities/server";
 import { Endpoints } from "./baseEndpoint";

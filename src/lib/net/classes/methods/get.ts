@@ -1,6 +1,6 @@
 import { EventListener } from "../../../events";
+import { Users } from "../../../user";
 import { UserType } from "../../../user/types";
-import { Users } from "../../../user/user";
 import Client from "../../utilities/client";
 import Server from "../../utilities/server";
 import { Endpoints } from "./baseEndpoint";

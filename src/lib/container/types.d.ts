@@ -1,4 +1,5 @@
 export type Template = { [x: string]: any };
+
 export type Metadata = {
 	last_bucket_on: string;
 	last_connection_timestamp: number; // metadata fields should be snake_case
