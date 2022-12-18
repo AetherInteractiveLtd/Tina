@@ -2,7 +2,7 @@ import { RunService } from "@rbxts/services";
 
 import { EntityId } from "../types/ecs";
 import { Query } from "./query";
-import { World } from "./world";
+import { UnimplementedWorld, World } from "./world";
 
 export type ExecutionGroup = RBXScriptSignal;
 
@@ -11,7 +11,7 @@ export interface System {
 	 *
 	 * @param world
 	 */
-	configureQueries(world: World): void;
+	configureQueries(world: UnimplementedWorld): void;
 
 	/**
 	 * Automatically called when
@@ -27,7 +27,7 @@ export abstract class System {
 	public name = "System";
 	public priority = 0;
 
-	public abstract onUpdate(world: World): void;
+	public abstract onUpdate(world: UnimplementedWorld): void;
 }
 
 /**
@@ -38,7 +38,7 @@ export class SystemManager {
 
 	// private connections: Map<RBXScriptSignal, Array<RBXScriptConnection>> = new Map();
 
-	public start(world: World): void {
+	public start(world: UnimplementedWorld): void {
 		const executionDefault = world.options.defaultExecutionGroup
 			? world.options.defaultExecutionGroup
 			: RunService.Heartbeat;
@@ -71,11 +71,11 @@ export class ExampleSystem extends System {
 		this.executionGroup = RunService.RenderStepped;
 	}
 
-	public configureQueries(world: World): void {
+	public configureQueries(world: UnimplementedWorld): void {
 		// this.movementQuery = world.createQuery(Position, Velocity));
 	}
 
-	public onUpdate(world: World): void {
+	public onUpdate(world: UnimplementedWorld): void {
 		this.movementQuery.forEach((entityId: EntityId) => {
 			print(entityId);
 		});

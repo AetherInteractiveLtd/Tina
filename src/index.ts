@@ -16,6 +16,7 @@ import Identifiers from "./lib/net/utilities/identifiers";
 import { User } from "./lib/user/user";
 import { RunService } from "@rbxts/services";
 
+
 export enum Protocol {
 	/** Create/Load Online User Data */
 	CLOUD = "CLOUD",
@@ -132,3 +133,6 @@ export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
 export { User } from "./lib/user/user";
+
+/** ECS Library */
+export { Component, World } from "./lib/ecs";

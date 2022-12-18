@@ -1,7 +1,7 @@
 // // type Props = Partial<Omit<Component, keyof Component>>;
 
 import { EntityId } from "../types/ecs";
-import { UnimplementedWorld, World } from "./world";
+import { UnimplementedWorld } from "./world";
 
 export const enum ComponentTypes {
 	Boolean,
@@ -15,6 +15,8 @@ const x = {
 	x: ComponentTypes.Number,
 };
 
+type recTable = { [key: string]: recTable | unknown };
+
 export class Component {
 	/** @hidden */
 	public _componentData: { world?: UnimplementedWorld; id?: number } = {
@@ -22,15 +24,25 @@ export class Component {
 		id: undefined,
 	};
 
+	get(id: number) {
+		return this.dataPool.get(id);
+	}
+
+	set(id: number, data: Tree<ValidComponentData>) {
+		this.dataPool.set(id, data);
+	}
+
 	/** @hidden */
 	public componentArray: ComponentArray = [];
+
+	public dataPool: Map<EntityId, Tree<ValidComponentData>> = new Map();
 
 	/** @hidden */
 	public initialiseComponent(
 		world: UnimplementedWorld,
 		name: string,
 		id: number,
-		componentArray: ComponentArray,
+		componentArray: ComponentArray
 	): void {
 		this._componentData.world = world;
 		this._componentData.id = id;
