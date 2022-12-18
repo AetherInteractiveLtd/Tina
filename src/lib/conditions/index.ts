@@ -2,7 +2,7 @@ import { isFunction } from "../utilities/checkers";
 import { Condition, ConditionCallback } from "./types";
 
 export class COND {
-	public static create(callback: ConditionCallback) {
+	public static create(callback: ConditionCallback): Condition {
 		return callback;
 	}
 
