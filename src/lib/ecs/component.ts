@@ -3,7 +3,7 @@
 import { EntityId } from "../types/ecs";
 import { UnimplementedWorld } from "./world";
 
-export const enum ComponentTypes {
+export const enum ComponentTypes { // TODO: export higher
 	Boolean,
 	Custom,
 	None,

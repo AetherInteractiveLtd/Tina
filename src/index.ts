@@ -13,9 +13,8 @@ import Server from "./lib/net/utilities/server";
 import Identifiers from "./lib/net/utilities/identifiers";
 
 /* User abstraction class */
-import { User } from "./lib/user/user";
+import { User } from "./lib/user";
 import { RunService } from "@rbxts/services";
-
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -93,11 +92,13 @@ namespace Tina {
 		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
+	const _core = new TinaCore();
+
 	/**
 	 * Fetch the Tina core, a replacement for the `game` object in the vanilla Roblox API.
 	 */
 	export function core(): TinaCore {
-		return new TinaCore();
+		return _core;
 	}
 
 	export function process(name: string): Process {
@@ -132,7 +133,9 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
-export { User } from "./lib/user/user";
+export { User } from "./lib/user";
 
 /** ECS Library */
 export { Component, World } from "./lib/ecs";
+
+export { Interaction } from "./lib/etc/interaction";
