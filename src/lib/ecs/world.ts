@@ -1,8 +1,9 @@
+import { HttpService } from "@rbxts/services";
 import { EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { Component, createComponentArray, Tag, Tree, Type } from "./component";
+import { Component, ComponentTypes, createComponentArray, Tag, Tree, ValidComponentData } from "./component";
 import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
@@ -38,7 +39,7 @@ export interface WorldOptions {
  * const world = new World({...});
  * ```
  */
-export class World {
+export class World<WorldComponents extends Record<string, Tree<ValidComponentData>> = never> {
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
@@ -48,13 +49,26 @@ export class World {
 
 	public readonly systemManager: SystemManager;
 
-	constructor(options: WorldOptions) {
+	public id = HttpService.GenerateGUID();
+
+	private components: Record<keyof WorldComponents, Component | Tag>;
+
+	constructor(options: WorldOptions, components: WorldComponents) {
 		this.options = options;
 		this.queries = [];
 		this.componentsToUpdate = new SparseSet();
 
 		this.entityManager = new EntityManager();
 		this.systemManager = new SystemManager();
+
+		this.components = {} as Record<keyof WorldComponents, Component>;
+
+		for (const [name, data] of pairs(components)) {
+			this.components[name as keyof WorldComponents] = this.defineComponent(
+				name as string,
+				data as Tree<ValidComponentData>,
+			);
+		}
 	}
 
 	/** @returns The name of the world. */
@@ -153,19 +167,29 @@ export class World {
 		return this.entityManager.getNumberOfEntitiesInUse();
 	}
 
+	// TODO: Fix naming, create docs.
+	public getComponentObject(k: keyof WorldComponents): Component | Tag {
+		return this.components[k];
+	}
+
 	/**
 	 * Initialises a new component with the world.
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): Component {
+	private defineComponent<T extends Tree<ValidComponentData>>(name: string, def: T): Component {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
 
 		const component = new Component();
 		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
-		component.initialiseComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
+		component.initialiseComponent(
+			this,
+			name,
+			this.entityManager.getNextComponentId(),
+			createComponentArray(def, 1000),
+		);
 
 		return component;
 	}
@@ -190,13 +214,19 @@ export class World {
 	 *
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
-	 *     been defined previously with {@link defineComponent}.
+	 *     been defined previously with {@link World#defineComponent}.
 	 * @param data The optional data to initialise the component with.
 	 */
-	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
+	public addComponent<C extends keyof WorldComponents>(
+		entityId: EntityId,
+		componentName: C,
+		data?: Partial<ComponentDataTransform<WorldComponents[C]>>,
+	): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
+
+		const component = this.getComponentObject(componentName);
 
 		this.componentsToUpdate.add(entityId);
 
@@ -204,10 +234,18 @@ export class World {
 		{
 			const componentId = component._componentData.id!;
 			if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
-				this.entityManager.updateTo[entityId] = this.archetypeChange(
-					this.entityManager.updateTo[entityId],
-					componentId,
-				);
+				if (component instanceof Component) {
+					this.entityManager.updateTo[entityId] = this.archetypeChange(
+						this.entityManager.updateTo[entityId],
+						componentId,
+					);
+					component.set(entityId, data as Tree<ValidComponentData>);
+				} else if (component instanceof Tag) {
+					this.entityManager.updateTo[entityId] = this.archetypeChange(
+						this.entityManager.updateTo[entityId],
+						componentId,
+					);
+				}
 			}
 		}
 		debug.profileend();
@@ -218,16 +256,18 @@ export class World {
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): World {
+	public removeComponent(entityId: EntityId, component: keyof WorldComponents): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
 
 		this.componentsToUpdate.add(entityId);
 
+		const comp = this.components[component];
+
 		debug.profilebegin("World:removeComponent");
 		{
-			const componentId = component._componentData.id!;
+			const componentId = comp._componentData.id!;
 			if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
@@ -244,8 +284,8 @@ export class World {
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent<C extends Component | Tag>(entityId: EntityId, component: C): boolean {
-		const componentId = component._componentData.id!;
+	public hasComponent(entityId: EntityId, component: keyof WorldComponents): boolean {
+		const componentId = this.components[component]._componentData.id!;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
@@ -269,8 +309,9 @@ export class World {
 	 * Returns the component of on the entity of the given type.
 	 * @returns
 	 */
-	public getComponent<C>(entityId: EntityId /**component: ComponentType<C> */): C | undefined {
-		return undefined;
+	public getComponent<C extends keyof WorldComponents>(entityId: EntityId, component: C): Partial<ComponentDataTransform<WorldComponents[C]>> {
+		if (this.components[component] instanceof Tag) return {};
+		return (this.components[component] as Component).get(entityId) as {};
 	}
 
 	/**
@@ -360,4 +401,24 @@ export class World {
 	private hasComponentInternal(mask: Array<number>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
+}
+
+export type UnimplementedWorld = World<Record<string, Tree<ValidComponentData>>>;
+
+export type Builtins = Vector2Constructor | Vector3Constructor | CFrameConstructor;
+
+type BuiltinTransform<T> = T extends Vector2Constructor ? Vector2 : T extends Vector3Constructor ? Vector3 : T extends CFrameConstructor ? CFrame : never;
+
+type SingleComponentDataTransform<T> = T extends ComponentTypes.Boolean ? boolean 
+: T extends ComponentTypes.Number ? number
+: T extends ComponentTypes.String ? string 
+: T extends ComponentTypes.Custom ? never
+: T extends ComponentTypes.None ? undefined : T
+
+type ComponentDataTransform<Data> = {
+	[Key in keyof Data]: Data[Key] extends Builtins
+		? BuiltinTransform<Data[Key]>
+		: Data[Key] extends { [key: string]: unknown }
+		? ComponentDataTransform<Data[Key]>
+		: SingleComponentDataTransform<Data[Key]>;
 }

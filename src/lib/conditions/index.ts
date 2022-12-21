@@ -1,13 +1,12 @@
+import { isFunction } from "../utilities/checkers";
 import { Condition, ConditionCallback } from "./types";
 
-import { isFunction } from "../utilities/checkers";
-
 export class COND {
-	public static create(callback: ConditionCallback) {
+	public static create(callback: ConditionCallback): Condition {
 		return callback;
 	}
 
-	public static eval<T extends unknown[]>(condition: Condition<T>, ...args: T): boolean {
+	public static eval<T extends Array<unknown>>(condition: Condition<T>, ...args: T): boolean {
 		return isFunction(condition) ? condition(...args) : condition;
 	}
 

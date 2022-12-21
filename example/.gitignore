@@ -1,0 +1,10 @@
+/node_modules
+/out
+/include
+/build
+
+*.tsbuildinfo
+*.tgz
+
+# For mac users
+*.DS_store
