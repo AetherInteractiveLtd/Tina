@@ -1,7 +1,7 @@
 // // type Props = Partial<Omit<Component, keyof Component>>;
 
 import { EntityId } from "../types/ecs";
-import { UnimplementedWorld } from "./world";
+import { Builtins, UnimplementedWorld } from "./world";
 
 export const enum ComponentTypes { // TODO: export higher
 	Boolean,
@@ -10,12 +10,6 @@ export const enum ComponentTypes { // TODO: export higher
 	Number,
 	String,
 }
-
-const x = {
-	x: ComponentTypes.Number,
-};
-
-type recTable = { [key: string]: recTable | unknown };
 
 export class Component {
 	/** @hidden */
@@ -49,7 +43,7 @@ export class Component {
 		this.componentArray = componentArray;
 	}
 
-	public update(entityId: EntityId, data: typeof x): void {}
+	public update(entityId: EntityId): void {}
 }
 
 export class Tag {
@@ -90,7 +84,7 @@ export function createComponentArray<T extends Tree<ValidComponentData>>(def: T,
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 type InitFunc = () => unknown;
-export type ValidComponentData = ComponentTypes | ArrayConstructor | [InitFunc] | Array<unknown>;
+export type ValidComponentData = ComponentTypes | Builtins | ArrayConstructor | [InitFunc] | Array<unknown>;
 
 export type ComponentArray<T extends Tree<ValidComponentData> = Tree<ValidComponentData>> = T extends [InitFunc]
 	? Array<ReturnType<T[0]>>

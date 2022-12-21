@@ -405,6 +405,10 @@ export class World<WorldComponents extends Record<string, Tree<ValidComponentDat
 
 export type UnimplementedWorld = World<Record<string, Tree<ValidComponentData>>>;
 
+export type Builtins = Vector2Constructor | Vector3Constructor | CFrameConstructor;
+
+type BuiltinTransform<T> = T extends Vector2Constructor ? Vector2 : T extends Vector3Constructor ? Vector3 : T extends CFrameConstructor ? CFrame : never;
+
 type SingleComponentDataTransform<T> = T extends ComponentTypes.Boolean ? boolean 
 : T extends ComponentTypes.Number ? number
 : T extends ComponentTypes.String ? string 
@@ -412,7 +416,9 @@ type SingleComponentDataTransform<T> = T extends ComponentTypes.Boolean ? boolea
 : T extends ComponentTypes.None ? undefined : T
 
 type ComponentDataTransform<Data> = {
-	[Key in keyof Data]: Data[Key] extends { [key: string]: unknown }
+	[Key in keyof Data]: Data[Key] extends Builtins
+		? BuiltinTransform<Data[Key]>
+		: Data[Key] extends { [key: string]: unknown }
 		? ComponentDataTransform<Data[Key]>
 		: SingleComponentDataTransform<Data[Key]>;
 }
