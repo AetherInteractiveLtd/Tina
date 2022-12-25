@@ -1,20 +1,16 @@
+import { RunService } from "@rbxts/services";
+
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-
 import logger from "./lib/logger";
-
-import { Process } from "./lib/process/process";
-import Scheduler from "./lib/process/scheduler";
-
 /* Networking namespace */
 import Client from "./lib/net/utilities/client";
-import Server from "./lib/net/utilities/server";
-
 import Identifiers from "./lib/net/utilities/identifiers";
-
+import Server from "./lib/net/utilities/server";
+import { Process } from "./lib/process/process";
+import Scheduler from "./lib/process/scheduler";
 /* User abstraction class */
 import { User } from "./lib/user/user";
-import { RunService } from "@rbxts/services";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
