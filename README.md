@@ -1,6 +1,6 @@
 <p align="center">
 
-<img align="center" src="https://raw.githubusercontent.com/AetherInteractiveLtd/Tina/add_assets/assets/BannerBranding.png" width="300" style="padding-bottom: 20px">
+<img align="center" src="https://raw.githubusercontent.com/AetherInteractiveLtd/Tina/main/assets/BannerBranding.png" width="300" style="padding-bottom: 20px">
 
 <div align="center">
 
@@ -22,6 +22,10 @@ We use <img src="https://roblox-ts.com/img/roblox-ts.svg" width="20" style="tran
 We use <img src="https://rojo.space/img/logo.png" width="34" style="transform: translateY(3px)"> [**Rojo**](https://rojo.space/) to sync our project to Roblox Studio. You will need to [install](https://rojo.space/docs/v7/getting-started/installation/) Rojo to use Tina.
 
 We use <img src="assets/etc/roact.png" width="20" style="transform: translateY(3px)"> [**Roact**](https://roblox.github.io/roact/) as our UI framework [for now](https://github.com/AetherInteractiveLtd/Tina).
+
+## Documentation
+
+Documentation is available at <a href="https://tina.ataether.com/" target="_blank"><img src="https://raw.githubusercontent.com/AetherInteractiveLtd/Tina/main/assets/DocsAccess.png" /></a>
 
 ## Design Principles
 
