@@ -25,7 +25,7 @@ We use <img src="assets/etc/roact.png" width="20" style="transform: translateY(3
 
 ## Documentation
 
-Documentation is available at <a href="https://tina.ataether.com/" target="_blank"><img src="https://raw.githubusercontent.com/AetherInteractiveLtd/Tina/main/assets/DocsAccess.png" /></a>
+Documentation is available at  <a href="https://tina.ataether.com/" target="_blank"><img width="55" src="https://raw.githubusercontent.com/AetherInteractiveLtd/Tina/main/assets/DocsAccess.png" /></a>
 
 ## Design Principles
 
