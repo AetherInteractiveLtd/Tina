@@ -1,12 +1,15 @@
-import { EventListener } from "../events";
+import { EventEmitter, EventListener } from "../events";
 import Scheduler from "./scheduler";
 
 type ProcessScheduler = typeof Scheduler;
+interface Events {
+	_default: [dt: number];
+}
 
 /**
  *
  */
-export class Process extends EventListener<[]> {
+export class Process extends EventEmitter<Events> {
 	public static processes = new Map<string, Process>();
 
 	public name: string;

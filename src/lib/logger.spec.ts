@@ -4,8 +4,8 @@ import { EventEmitter } from "..";
 
 export = () => {
 	interface Events {
-		event: (message: string) => string;
-		testingBind: () => void;
+		event: [message: string];
+		testingBind: [];
 	}
 
 	class Class extends EventEmitter<Events> {
@@ -30,7 +30,7 @@ export = () => {
 			this.when(key).do(func);
 		}
 
-		testEmitting<T extends keyof Events>(key: keyof Events, ...args: Parameters<Events[T]>) {
+		testEmitting<T extends keyof Events>(key: keyof Events, ...args: Events[T]) {
 			this.emit(key, ...args);
 		}
 	}
