@@ -1,4 +1,3 @@
-import { UserType } from "../user/types";
 import { GetEndpoint } from "./classes/methods/get";
 import { GETDeclaration } from "./classes/methods/getTypes";
 import { PostEndpoint } from "./classes/methods/post";
@@ -67,8 +66,8 @@ export namespace Network {
 		{
 			TinaNet.setInternalRouter(
 				new Router({
-					"user:added": Network.Method.UPDATE<UserType>(),
-					"user:removing": Network.Method.UPDATE<UserType>(),
+					"user:added": Network.Method.UPDATE<never>(),
+					"user:removing": Network.Method.UPDATE<never>(),
 				}),
 			);
 		}

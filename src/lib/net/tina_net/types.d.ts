@@ -1,7 +1,6 @@
-import { UserType } from "../../user/types";
 import { UPDATEDeclaration } from "../classes/methods/updateTypes";
 
 export interface InternalRouter {
-	"user:added": UPDATEDeclaration<UserType>;
-	"user:removing": UPDATEDeclaration<UserType>;
+	"user:added": UPDATEDeclaration<never>;
+	"user:removing": UPDATEDeclaration<never>;
 }

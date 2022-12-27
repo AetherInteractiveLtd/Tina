@@ -1,8 +1,8 @@
 import { EventEmitter } from "../../../events";
 import logger from "../../../logger";
 import { TableUtil } from "../../../utilities/tables";
+import { Data } from "../../data_actions";
 import { Metadata, Template } from "../../types";
-import { saveAsync } from "../../utilities/datastore";
 import { BucketType } from "../bucket/types";
 import { ItemDeclaration, ItemEvents, ItemImplementation } from "./types";
 
@@ -50,6 +50,6 @@ export class Item<T extends Template> extends EventEmitter<ItemEvents<T>> implem
 	}
 
 	public lose(): void {
-		saveAsync(this as ItemDeclaration<Template>);
+		Data.save(this as ItemDeclaration<Template>);
 	}
 }

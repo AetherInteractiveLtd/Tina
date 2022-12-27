@@ -24,7 +24,7 @@ export interface BucketImplementation<T extends Template> {
 	 *
 	 * @param itemKey the key of an item which either already exists or doesn't within a bucket.
 	 */
-	getItem(itemKey: string): Promise<ItemType<T> | undefined>;
+	getItem(itemKey: string): ItemType<T> | undefined;
 
 	/**
 	 * Returns the metadata linked to an existing bucket, if not, will return nil.

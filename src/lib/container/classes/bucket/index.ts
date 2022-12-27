@@ -1,8 +1,8 @@
 import { DataStoreService } from "@rbxts/services";
 
 import { TableUtil } from "../../../utilities/tables";
+import { Autosave, Data, registerIssue } from "../../data_actions";
 import { DataSaved, Template } from "../../types";
-import { dataStoreQueueCall, registerIssue, servicesAvailable, setItemToAutoSave } from "../../utilities/datastore";
 import { Item } from "../item";
 import { ItemDeclaration, ItemType } from "../item/types";
 import { BucketImplementation, BucketMetadata } from "./types";
@@ -23,7 +23,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 		this._globalDataStore = DataStoreService.GetDataStore(key);
 	}
 
-	public async getItem(itemKey: string): Promise<ItemType<T> | undefined> {
+	public getItem(itemKey: string): ItemType<T> | undefined {
 		assert(
 			type(itemKey) === "string" || itemKey.size() !== 0,
 			"[Container_Bucket[%s]]: Items must be of type string and need to have a length >= 1",
@@ -39,7 +39,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 			return;
 		}
 
-		while (servicesAvailable === true) {
+		while (Data.servicesAvailable === true) {
 			let loadedData!: DataSaved | Template;
 			let keyInfo!: DataStoreKeyInfo;
 
@@ -64,7 +64,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 				loadJob = { id, data_saved: undefined };
 				this.load_jobs.set(itemKey, loadJob);
 
-				loadJob.data_saved = dataStoreQueueCall(itemKey, this, {
+				loadJob.data_saved = Data.queueCall(itemKey, this, {
 					missingItem: (object: Template): void => {
 						object.data = TableUtil.deepCopy(this.template);
 
@@ -91,7 +91,7 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 					bucketOn: this,
 				});
 
-				setItemToAutoSave(item); // Add it to being autosaved
+				Autosave.set(item); // Add it to being autosaved
 
 				return item;
 			} else {

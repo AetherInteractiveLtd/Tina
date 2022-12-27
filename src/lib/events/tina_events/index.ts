@@ -7,12 +7,12 @@ export interface TinaInternalEvents {
 	/**
 	 * @server
 	 */
-	"user:added": defined;
+	"user:added": never;
 
 	/**
 	 * @server
 	 */
-	"user:removing": defined;
+	"user:removing": never;
 }
 
 export namespace TinaEvents {
@@ -25,7 +25,9 @@ export namespace TinaEvents {
 	 * @param eventTo Tina event
 	 * @returns and EventListener
 	 */
-	export function addEventListener<T extends keyof TinaInternalEvents>(eventTo: T): EventListener<[defined]> {
+	export function addEventListener<T extends keyof TinaInternalEvents>(
+		eventTo: T,
+	): EventListener<[TinaInternalEvents[T]]> {
 		if (RunService.IsServer() === true) {
 			const event = new EventListener<[never]>();
 			const listeners = events.get(eventTo as string);
