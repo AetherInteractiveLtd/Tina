@@ -19,7 +19,7 @@ interface ServerNet {
 	 * @param to as Player[], should be the list of players to send the remote to.
 	 * @param contents, of type T.
 	 */
-	send: <T extends {}>(id: string, to: Player[], contents: T) => void;
+	send: <T extends {}>(id: string, to: Array<Player>, contents: T) => void;
 
 	/**
 	 * sendAll should do the same, but individually by the Group
@@ -36,7 +36,7 @@ interface ServerNet {
 	 * @param blacklist as Player[], should mark the places where you can't be.
 	 * @param contents of type T.
 	 */
-	sendAllExcept: <T>(id: string, blacklist: Player[], contents: T) => void;
+	sendAllExcept: <T>(id: string, blacklist: Array<Player>, contents: T) => void;
 
 	/**
 	 * @hidden

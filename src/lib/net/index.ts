@@ -1,29 +1,19 @@
-/* Types */
-import {
-	BaseEndpoints,
-	RepositoryDeclaration,
-	RepositoryObjectDeclaration,
-	EndpointsDeclaration,
-	RouterDeclaration,
-} from "./classes/types";
-
-/**
- * Networking object holders
- */
-import { Router } from "./classes/router";
-import { Repository } from "./classes/repository";
-
-/* POST */
-import { PostEndpoint } from "./classes/methods/post";
-import { POSTDeclaration } from "./classes/methods/postTypes";
-
-/* UPDATE */
-import { UpdateEndpoint } from "./classes/methods/update";
-import { UPDATEDeclaration } from "./classes/methods/updateTypes";
-
-/* GET */
 import { GetEndpoint } from "./classes/methods/get";
 import { GETDeclaration } from "./classes/methods/getTypes";
+import { PostEndpoint } from "./classes/methods/post";
+import { POSTDeclaration } from "./classes/methods/postTypes";
+import { UpdateEndpoint } from "./classes/methods/update";
+import { UPDATEDeclaration } from "./classes/methods/updateTypes";
+import { Repository } from "./classes/repository";
+import { Router } from "./classes/router";
+import {
+	BaseEndpoints,
+	EndpointsDeclaration,
+	RepositoryDeclaration,
+	RepositoryObjectDeclaration,
+	RouterDeclaration,
+} from "./classes/types";
+import { TinaNet } from "./tina_net";
 
 export namespace Network {
 	/**
@@ -73,6 +63,14 @@ export namespace Network {
 	export function registerEndpoints<T extends EndpointsDeclaration<BaseEndpoints>>(
 		endpoints: T,
 	): RouterDeclaration<T> {
+		{
+			TinaNet.setInternalRouter(
+				new Router({
+					"user:added": Network.Method.UPDATE<never>(),
+					"user:removing": Network.Method.UPDATE<never>(),
+				}),
+			);
+		}
 		return new Router(endpoints);
 	}
 
@@ -82,9 +80,7 @@ export namespace Network {
 	 * @param repositoryObject should describe an object with the possible values that can be within.
 	 * @returns a new Repository object.
 	 */
-	export function repository<T extends RepositoryDeclaration<BaseEndpoints>>(
-		repositoryObject: T,
-	): RepositoryObjectDeclaration<T> {
+	export function repository<T extends RepositoryDeclaration>(repositoryObject: T): RepositoryObjectDeclaration<T> {
 		return new Repository(repositoryObject);
 	}
 }

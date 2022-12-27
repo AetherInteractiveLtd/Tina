@@ -16,8 +16,23 @@ local Client = {}
 local Queue: { Packet }  = {}
 local Listeners: { Listener } = {}
 
-local function runListener(listener: Listener, ...: { Contents })
-    task.spawn(listener, ...)
+local freeThread = nil
+
+local function acquireRunnerThreadAndCallEventHandler(fn, ...)
+	local acquired_runner_thread = freeThread
+	freeThread = nil
+
+	fn(...)
+
+	freeThread = acquired_runner_thread
+end
+
+local function runEventHandlerInFreeThread(...)
+	acquireRunnerThreadAndCallEventHandler(...)
+
+	while true do
+		acquireRunnerThreadAndCallEventHandler(coroutine.yield())
+	end
 end
 
 function Client._init()
@@ -37,7 +52,11 @@ function Client._init()
 
     TinaRemote.OnClientEvent:Connect(function(packet: Packet)
         for _, listener: Listener in Listeners[packet.id] do
-            runListener(listener, packet.contents)
+            if not freeThread then
+                freeThread = coroutine.create(runEventHandlerInFreeThread)
+            end
+
+            task.spawn(freeThread, listener, packet.contents)
         end
     end)
 end

@@ -14,6 +14,7 @@
     "test:run": "set RUST_BACKTRACE=full & dir & run-in-roblox --place ./build/test.rbxlx --script ./out/testBootstrap.server.lua",
     "test": "npm run publish && npm run test:build && npm run test:rojo"
   },
+  "exports": "./out/index.d.ts",
   "keywords": [],
   "author": "",
   "license": "ISC",

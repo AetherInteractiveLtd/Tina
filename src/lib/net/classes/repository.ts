@@ -1,6 +1,6 @@
-import { BaseEndpoints, RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
+import { RepositoryDeclaration, RepositoryObjectDeclaration } from "./types";
 
-export class Repository<T extends RepositoryDeclaration<BaseEndpoints>> implements RepositoryObjectDeclaration<T> {
+export class Repository<T extends RepositoryDeclaration> implements RepositoryObjectDeclaration<T> {
 	/**
 	 * A Repository is a Networking Object used to store other Networking Objects, such as Remotes and another repositories.
 	 *
@@ -20,6 +20,8 @@ export class Repository<T extends RepositoryDeclaration<BaseEndpoints>> implemen
 
 	/**
 	 * TODO: adding this when i configure it to be dependant on user configuration rather than a set location, not sure when I'll need it for real.
+	 *
+	 * @hidden this shouldn't be exposed.
 	 */
 	public developmentOnly(): RepositoryObjectDeclaration<T> {
 		return this as RepositoryObjectDeclaration<T>;

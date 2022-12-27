@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { COND } from "..";
+import { COND } from ".";
 
 export = () => {
 	describe("Conditional methods", () => {
