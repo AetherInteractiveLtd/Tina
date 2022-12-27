@@ -1,11 +1,15 @@
 import { AudienceDeclaration } from "../../../../audience/types";
 import { EventListener } from "../../../../events";
 import Client from "../../../utilities/client";
+import Identifiers from "../../../utilities/identifiers";
 import Server from "../../../utilities/server";
-import { AbstractEndpoint } from "../endpoint/endpoint";
 import { UPDATEDeclaration } from "./types";
 
-export class UpdateEndpoint<T> extends AbstractEndpoint implements UPDATEDeclaration<T> {
+export class UpdateEndpoint<T> implements UPDATEDeclaration<T> {
+	constructor(private readonly id: string) {
+		this.id = Identifiers.create(id);
+	}
+
 	public when(): EventListener<[value: T]> {
 		const eventListener: EventListener<[T]> = new EventListener();
 

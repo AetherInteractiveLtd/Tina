@@ -35,7 +35,7 @@ export namespace TinaEvents {
 
 			return event;
 		} else {
-			return TinaNet.get(to).when();
+			return TinaNet.get(eventTo as string).when();
 		}
 	}
 

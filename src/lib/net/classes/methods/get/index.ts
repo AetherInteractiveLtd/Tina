@@ -2,11 +2,15 @@ import { EventListener } from "../../../../events";
 import { Users } from "../../../../user";
 import { UserType } from "../../../../user/default/types";
 import Client from "../../../utilities/client";
+import Identifiers from "../../../utilities/identifiers";
 import Server from "../../../utilities/server";
-import { AbstractEndpoint } from "../endpoint/endpoint";
 import { GETDeclaration } from "./types";
 
-export class GetEndpoint<S, R> extends AbstractEndpoint implements GETDeclaration<S, R> {
+export class GetEndpoint<S, R> implements GETDeclaration<S, R> {
+	constructor(private readonly id: string) {
+		this.id = Identifiers.create(id);
+	}
+
 	public when(): EventListener<[R]> {
 		const eventListener: EventListener<[R]> = new EventListener();
 

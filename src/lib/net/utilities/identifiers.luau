@@ -9,10 +9,14 @@ local Identifiers = {}
 
 local AutoSerde: Folder = nil
 
+
 local isServer = RunService:IsServer()
 local isClient = RunService:IsClient()
 
+type toSend = string
+
 function Identifiers._init()
+	if isClient then
 	if isClient then
 		AutoSerde = ReplicatedStorage:WaitForChild("Identifier") :: Folder
 
@@ -34,25 +38,29 @@ function Identifiers._init()
 			end
 		end)
 	elseif isServer then
+	elseif isServer then
 		AutoSerde = Instance.new("Folder")
 		AutoSerde.Name = "Identifier"
 		AutoSerde.Parent = ReplicatedStorage
 	end
 end
 
-function Identifiers.create(): string
-	local current = numOfSerials + 1
-	local id = tostring(current)
+function Identifiers.create(id: string): string
+	assert(type(id) == "string", "[TinaNet]: Id must be a string")
 
-	assert(current <= 65536, "Over the identification cap: " .. id)
-
+	if not sendDict[id] and isClient then
+		return Identifiers.await(id)
+	elseif sendDict[id] and isClient then
 	if not sendDict[id] and isClient then
 		return Identifiers.await(id)
 	elseif sendDict[id] and isClient then
 		return sendDict[id] :: string
 	end
 
-	local packed = string.pack("H", current)
+	assert(numOfSerials <= 65536, "Over the identification cap: " .. id)
+	numOfSerials += 1
+
+	local packed: string = string.pack("H", id, numOfSerials)
 	AutoSerde:SetAttribute(id, packed)
 
 	sendDict[id] = packed
@@ -64,11 +72,13 @@ function Identifiers.create(): string
 end
 
 function Identifiers.await(id: string): string
+function Identifiers.await(id: string): string
 	local identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
 
 	if (identifier) then
 		return identifier
 	else
+		task.delay(2, function() warn("[TinaNet]: Infinite yield possible within: ", id) end)
 		task.delay(2, function() warn("[TinaNet]: Infinite yield possible within: ", id) end)
 
 		repeat
