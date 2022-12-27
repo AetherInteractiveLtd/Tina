@@ -1,10 +1,10 @@
 interface Identifiers {
 	/**
-	 * Creates an identifier, and it returns a compressed identifier. Can be created from a string.
+	 * Creates a unique identifier for an endpoint, if it's on client it awaits for the result.
 	 *
-	 * @param identifierName a possible identifier to compress.
+	 * @param id an id to compress from.
 	 */
-	createIdentifier: (identifierName: string) => string;
+	create: (id: string) => string;
 
 	/**
 	 * Returns the initial decompressed identifier.
@@ -23,10 +23,10 @@ interface Identifiers {
 	/**
 	 * Yields current thread waiting for the identifier existance.
 	 *
-	 * @client (most likely)
+	 * @client
 	 * @param identifierName identifier to wait for.
 	 */
-	waitForIdentifier: (identifierName: string) => string;
+	await: (identifierName: string) => string;
 
 	/**
 	 * @hidden

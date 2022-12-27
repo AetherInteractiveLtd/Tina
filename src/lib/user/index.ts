@@ -56,7 +56,7 @@ export namespace Users {
 			users.set(player, user);
 
 			TinaEvents.fireEventListener("user:added", user);
-			TinaNet.getRoute("user:added")?.send(player, user as never);
+			TinaNet.get("user:added")?.send(player, user as never);
 		});
 
 		Players.PlayerRemoving.Connect((player: Player): void => {
@@ -66,7 +66,7 @@ export namespace Users {
 				users.delete(player);
 
 				TinaEvents.fireEventListener("user:removing", user);
-				TinaNet.getRoute("user:removing")?.send(player, user as never);
+				TinaNet.get("user:removing")?.send(player, user as never);
 			}
 		});
 	}

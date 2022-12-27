@@ -1,6 +1,3 @@
---[[ Code source from BridgeNet RC, authorised for use by license holder. ]]
-
---!strict
 local ReplicatedStorage: ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService: RunService = game:GetService("RunService")
 
@@ -11,12 +8,14 @@ local numOfSerials: number = 0
 local Identifiers = {}
 
 local AutoSerde: Folder = nil
+
 local isServer = RunService:IsServer()
+local isClient = RunService:IsClient()
 
 type toSend = string
 
 function Identifiers._init()
-	if RunService:IsClient() then
+	if isClient then
 		AutoSerde = ReplicatedStorage:WaitForChild("Identifier") :: Folder
 
 		for id, value in AutoSerde:GetAttributes() do
@@ -35,26 +34,26 @@ function Identifiers._init()
 				receiveDict[oldValue] = nil
 			end
 		end)
-	else
+	elseif isServer then
 		AutoSerde = Instance.new("Folder")
 		AutoSerde.Name = "Identifier"
 		AutoSerde.Parent = ReplicatedStorage
 	end
 end
 
-function Identifiers.createIdentifier(id: string): string
-	assert(type(id) == "string", "ID must be a string")
+function Identifiers.create(id: string): string
+	assert(type(id) == "string", "[TinaNet]: Id must be a string")
 
-	if not sendDict[id] and not isServer then
-		return Identifiers.waitForIdentifier(id)
-	elseif sendDict[id] and not isServer then
+	if not sendDict[id] and isClient then
+		return Identifiers.await(id)
+	elseif sendDict[id] and isClient then
 		return sendDict[id] :: string
 	end
 
 	assert(numOfSerials <= 65536, "Over the identification cap: " .. id)
 	numOfSerials += 1
 
-	local packed: string = string.pack("H", numOfSerials)
+	local packed: string = string.pack("H", id, numOfSerials)
 	AutoSerde:SetAttribute(id, packed)
 
 	sendDict[id] = packed
@@ -63,15 +62,13 @@ function Identifiers.createIdentifier(id: string): string
 	return packed
 end
 
-function Identifiers.waitForIdentifier(id: string): string
+function Identifiers.await(id: string): string
 	local identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
 
 	if (identifier) then
 		return identifier
 	else
-		task.delay(2, function()
-			warn("Infinite yield. ID: ", id)
-		end)
+		task.delay(2, function() warn("[TinaNet]: Infinite yield possible within: ", id) end)
 
 		repeat
 			identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)

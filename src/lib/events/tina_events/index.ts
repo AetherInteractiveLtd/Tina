@@ -40,7 +40,7 @@ export namespace TinaEvents {
 
 			return event;
 		} else {
-			return TinaNet.getRoute(eventTo as string).when();
+			return TinaNet.get(eventTo as string).when();
 		}
 	}
 
