@@ -12,7 +12,7 @@ import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { Users } from "./lib/user";
 import { AbstractUser } from "./lib/user/default";
-import { UserType } from "./lib/user/default/types";
+import { DefaultUserDeclaration } from "./lib/user/default/types";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -84,7 +84,7 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
+	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
 		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
