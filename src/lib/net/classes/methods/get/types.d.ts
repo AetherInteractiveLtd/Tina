@@ -1,5 +1,5 @@
-import { EventListener } from "../../../events";
-import { UserType } from "../../../user/default/types";
+import { EventListener } from "../../../../events";
+import { UserType } from "../../../../user/default/types";
 
 export interface GETServerObjectDeclaration<R, S> {
 	/**

@@ -1,5 +1,7 @@
 import { Players, RunService } from "@rbxts/services";
 
+import { TinaEvents } from "../events/tina_events";
+import { TinaNet } from "../net/tina_net";
 import { ClientUser } from "./default/client";
 import { ClientUserImplementation } from "./default/client/types";
 import { ServerUser } from "./default/server";
@@ -11,7 +13,7 @@ class DefaultClientUser extends ClientUser implements ClientUserImplementation {
 class DefaultServerUser extends ServerUser implements ServerUserImplementation { }
 
 export namespace Users {
-	const users: Map<number, DefaultUserDeclaration> = new Map();
+	const users: Map<Player, DefaultUserDeclaration> = new Map();
 
 	const isServer = RunService.IsServer();
 
@@ -41,8 +43,20 @@ export namespace Users {
 		if (isServer) {
 			Players.PlayerAdded.Connect(player => { });
 
-			Players.PlayerRemoving.Connect(player => { });
+			TinaEvents.fireEventListener("user:added", user);
+			TinaNet.get("user:added")?.send(player, user as never);
 		}
+
+		Players.PlayerRemoving.Connect((player: Player): void => {
+			const user = users.get(player);
+
+			if (user !== undefined) {
+				users.delete(player);
+
+				TinaEvents.fireEventListener("user:removing", user);
+				TinaNet.get("user:removing")?.send(player, user as never);
+			}
+		});
 	}
 }
 

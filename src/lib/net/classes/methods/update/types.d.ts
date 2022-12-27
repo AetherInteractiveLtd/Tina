@@ -1,5 +1,5 @@
-import { AudienceDeclaration } from "../../../audience/types";
-import { EventListener } from "../../../events";
+import { AudienceDeclaration } from "../../../../audience/types";
+import { EventListener } from "../../../../events";
 
 interface UPDATEServerObjectDeclaration<T> {
 	/**
