@@ -57,7 +57,7 @@ export namespace Network {
 				new Router({
 					"user:added": Network.Method.UPDATE<never>(""),
 					"user:removing": Network.Method.UPDATE<never>(""),
-				}),
+				} as never),
 			);
 		}
 
