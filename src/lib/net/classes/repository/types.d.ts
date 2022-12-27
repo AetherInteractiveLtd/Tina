@@ -2,6 +2,11 @@ export interface BaseRepository { }
 
 export interface RepositoryImplementation<T extends BaseRepository> {
 	/**
+	 * @hidden (internals purposes)
+	 */
+	repository: T;
+
+	/**
 	 * Navigates to the closest subdirectory with that name if it exists.
 	 *
 	 * @param pathTo as string, is the path to retrieve from the directory.

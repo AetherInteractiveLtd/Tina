@@ -1,4 +1,4 @@
-import { UserType } from "../user/types";
+import { UserType } from "../user/default/types";
 
 export interface AudienceDeclaration {
 	/**

@@ -13,8 +13,7 @@ class DefaultUser extends AbstractUser implements DefaultUserImplementation {
 
 export namespace Users {
 	const users: Map<Player, DefaultUserImplementation> = new Map();
-
-	export let TINA_USER_CLASS = DefaultUser as never as new (ref: Player | number) => DefaultUserImplementation;
+	let TINA_USER_CLASS = DefaultUser as never as new (ref: Player | number) => DefaultUserImplementation;
 
 	/**
 	 * Used to change the User class from where all the Users are created.
@@ -55,8 +54,11 @@ export namespace Users {
 			const user = new TINA_USER_CLASS(player);
 			users.set(player, user);
 
-			TinaEvents.fireEventListener("user:added", user);
-			TinaNet.get("user:added")?.send(player, user as never);
+			// Events
+			{
+				TinaEvents.fireEventListener("user:added", user as never);
+				TinaNet.get("user:added").send(player, user as never);
+			}
 		});
 
 		Players.PlayerRemoving.Connect((player: Player): void => {
@@ -65,8 +67,11 @@ export namespace Users {
 			if (user !== undefined) {
 				users.delete(player);
 
-				TinaEvents.fireEventListener("user:removing", user);
-				TinaNet.get("user:removing")?.send(player, user as never);
+				// Events
+				{
+					TinaEvents.fireEventListener("user:removing", user as never);
+					TinaNet.get("user:removing").send(player, user as never);
+				}
 			}
 		});
 	}

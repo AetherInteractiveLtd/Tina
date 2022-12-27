@@ -5,6 +5,11 @@ import { BaseEndpoints } from "../../types";
  */
 export interface RouterDeclaration<T extends BaseEndpoints> {
 	/**
+	 * @hidden (internals purposes)
+	 */
+	endpoints: T;
+
+	/**
 	 * Returns whatever it was stored within the specified directory.
 	 *
 	 * @param path as keyof T, should be an acceptable key of the dictionary passed with all the endpoints on `registerEndpoints`.
