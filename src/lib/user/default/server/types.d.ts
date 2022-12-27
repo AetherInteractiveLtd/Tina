@@ -1,3 +1,5 @@
+import { AudienceDeclaration } from "../../../audience/types";
+
 export interface FriendPage {
 	AvatarFinal: boolean;
 	AvatarUri: string;
