@@ -16,6 +16,6 @@ export namespace TinaNet {
 			}
 
 			export function get<T extends keyof InternalRouter, U extends InternalRouter[T]>(route: T | string): U {
-				return internalRouter?.dir(route as T) as U;
+				return internalRouter.dir(route as T) as never;
 			}
 		}

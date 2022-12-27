@@ -66,12 +66,11 @@ export namespace Network {
 	): RouterDeclaration<T> {
 		{
 			TinaNet.setRouter(
-				TinaNet.setRouter(
-					new Router({
-						"user:added": Network.Method.UPDATE<never>(""),
-						"user:removing": Network.Method.UPDATE<never>(""),
-					}),
-				);
+				new Router({
+					"user:added": Network.Method.UPDATE<never>(""),
+					"user:removing": Network.Method.UPDATE<never>(""),
+				} as never),
+			);
 		}
 
 
