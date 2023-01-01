@@ -1,7 +1,5 @@
 import { RunService } from "@rbxts/services";
 
-import { EntityId } from "../types/ecs";
-import { Query } from "./query";
 import { World } from "./world";
 
 export type ExecutionGroup = RBXScriptSignal;
@@ -12,13 +10,6 @@ export interface System {
 	 * @param world
 	 */
 	configureQueries(world: World): void;
-
-	/**
-	 * Automatically called when
-	 * @param entity
-	 */
-	onEntityAdded?(entity: EntityId): void;
-	onEntityRemoved?(entity: EntityId): void;
 }
 
 export abstract class System {
@@ -55,29 +46,16 @@ export class SystemManager {
 	}
 
 	public scheduleSystem(system: System): void {
-		this.systems.push(system);
+		this.scheduleSystems([system]);
+	}
+
+	public scheduleSystems(systems: Array<System>): void {
+		for (const system of systems) {
+			this.systems.push(system);
+		}
 	}
 
 	public endSystem(): void {}
 
-	public sortSystems(): void {}
-}
-
-export class ExampleSystem extends System {
-	private movementQuery!: Query;
-
-	constructor() {
-		super();
-		this.executionGroup = RunService.RenderStepped;
-	}
-
-	public configureQueries(world: World): void {
-		// this.movementQuery = world.createQuery(Position, Velocity));
-	}
-
-	public onUpdate(world: World): void {
-		this.movementQuery.forEach((entityId: EntityId) => {
-			print(entityId);
-		});
-	}
+	private sortSystems(): void {}
 }

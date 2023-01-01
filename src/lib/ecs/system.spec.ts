@@ -35,6 +35,28 @@ export = (): void => {
 			expect(callCount).to.equal(1);
 		});
 
+		it("should be able to schedule multiple systems", () => {
+			let callCount = 0;
+
+			const system1 = {} as System;
+			system1.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			const system2 = {} as System;
+			system2.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystems([system1, system2]);
+			manager.start(world);
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+			expect(callCount).to.equal(2);
+		});
+
 		it("should be able to configure queries", () => {
 			const system = {} as System;
 			let query;
