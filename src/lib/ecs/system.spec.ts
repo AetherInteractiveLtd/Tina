@@ -134,6 +134,63 @@ export = (): void => {
 			tempBindableEvent.Fire();
 			expect(callCount).to.equal(1);
 		});
+
+		it("should be ordered by execution group", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+			const systemOrder: Array<number> = [];
+
+			const system1 = {} as System;
+			system1.priority = 1;
+			system1.executionGroup = tempBindableEvent.Event;
+			system1.onUpdate = (): void => {
+				systemOrder.push(3);
+			};
+
+			const system2 = {} as System;
+			system2.priority = 100;
+			system2.executionGroup = tempBindableEvent.Event;
+			system2.onUpdate = (): void => {
+				systemOrder.push(1);
+			};
+
+			const system3 = {} as System;
+			system3.priority = 5;
+			system3.executionGroup = tempBindableEvent.Event;
+			system3.onUpdate = (): void => {
+				systemOrder.push(2);
+			};
+
+			const system4 = {} as System;
+			system4.priority = 1;
+			system4.onUpdate = (): void => {
+				systemOrder.push(6);
+			};
+
+			const system5 = {} as System;
+			system5.priority = 100;
+			system5.onUpdate = (): void => {
+				systemOrder.push(4);
+			};
+
+			const system6 = {} as System;
+			system6.priority = 5;
+			system6.onUpdate = (): void => {
+				systemOrder.push(5);
+			};
+
+			manager.scheduleSystems([system1, system2, system3, system4, system5, system6]);
+			manager.start(world);
+
+			expect(shallowEquals(systemOrder, [])).to.equal(true);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			print(systemOrder);
+			expect(shallowEquals(systemOrder, [1, 2, 3, 4, 5, 6])).to.equal(true);
+
+			tempBindableEvent.Destroy();
+		});
 	});
 
 	afterAll(() => {
