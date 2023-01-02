@@ -6,12 +6,13 @@ const RunService = game.GetService("RunService");
  *
  */
 export class ProcessScheduler {
-	static TPS = 20; // Grab value from tina.yaml when able
+	private static TPS = 20; // Grab value from tina.yaml when able
 	private lastTick: number;
 	private timeBetweenTicks: number;
 	private connection?: RBXScriptConnection;
 	private processes: Array<Process> = new Array();
 	private processesToRemove: Array<Process> = new Array();
+
 	/** Used to keep track of when the .update() method is running since .removeProcess() could be called during a Process callback. */
 	private updating = false;
 
@@ -46,7 +47,7 @@ export class ProcessScheduler {
 			// Run active processes
 			if (process.isSuspended) continue;
 			try {
-				process.call();
+				void process.call();
 			} catch (error) {
 				// TODO: log any errors properly.
 			}
@@ -84,11 +85,11 @@ export class ProcessScheduler {
 	}
 
 	public hasProcess(name: string): boolean {
-		return !!this.processes.find((p) => p.name === name);
+		return !!this.processes.find(p => p.name === name);
 	}
 
 	public getProcess(name: string): Process | undefined {
-		return this.processes.find((p) => p.name === name);
+		return this.processes.find(p => p.name === name);
 	}
 
 	public start(): void {

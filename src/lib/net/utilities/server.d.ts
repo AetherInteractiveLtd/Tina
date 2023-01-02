@@ -1,42 +1,36 @@
 interface ServerNet {
 	/**
-	 * listen should connect a listener to the server binder.
+	 * Binds a callback for client's request.
 	 *
-	 * @example
-	 * ```
-	 * event.listen("internalIndentifier", (plr: Player, ...args: unknown[]) => { ... });
-	 * ```
-	 *
-	 * @param id as string, should denote the identifier name.
-	 * @param callback as a Callback (function), should denote the actual.
+	 * @param id endpoint's id.
+	 * @param callback being a function of type `(player: Player, value: never) => void`.
 	 */
 	listen: (id: string, callback: (player: Player, value: never) => void) => string;
 
 	/**
-	 * send should pack and compress everything, schedule it to be sent and release such memory when no longer needed.
+	 * Sends data over the network to the client.
 	 *
-	 * @param id as string, should denote the identifier name.
-	 * @param to as Player[], should be the list of players to send the remote to.
-	 * @param contents, of type T.
+	 * @param id endpoint's id.
+	 * @param value of type `T` described previously on declaration.
 	 */
-	send: <T extends {}>(id: string, to: Player[], contents: T) => void;
+	send: <T extends {}>(id: string, to: Array<Player>, contents: T) => void;
 
 	/**
-	 * sendAll should do the same, but individually by the Group
+	 * Sends data over the network to all the connected clients.
 	 *
-	 * @param id as string, should denote the identifier name.
-	 * @param contents of type T.
+	 * @param id endpoint's id.
+	 * @param value of type `T` described previously on declaration.
 	 */
-	sendAll: <T>(id: string, contents: T) => void;
+	sendAll: <T>(id: string, value: T) => void;
 
 	/**
-	 * Fires the remote for everyone with a blacklist.
+	 * Sends data over the network to all the non-blacklisted clients.
 	 *
-	 * @param id as string, should denote the identifier name.
-	 * @param blacklist as Player[], should mark the places where you can't be.
-	 * @param contents of type T.
+	 * @param id endpoint's id.
+	 * @param blacklist should be an array of players to blacklist.
+	 * @param value of type `T` described previously on declaration.
 	 */
-	sendAllExcept: <T>(id: string, blacklist: Player[], contents: T) => void;
+	sendAllExcept: <T>(id: string, blacklist: Array<Player>, value: T) => void;
 
 	/**
 	 * @hidden

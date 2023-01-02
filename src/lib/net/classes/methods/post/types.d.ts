@@ -1,8 +1,7 @@
-import { ServerEvent } from "./baseEndpointTypes";
+import { EventListener } from "../../../../events";
+import { ServerEvent } from "../types";
 
-import { EventListener } from "../../../events";
-
-export interface POSTServerObjectDeclaration<T> {
+export interface POSTServerObjectImplementation<T> {
 	/**
 	 * when returns an event listener used to bind actions to be called.
 	 *
@@ -12,7 +11,7 @@ export interface POSTServerObjectDeclaration<T> {
 	when(): EventListener<ServerEvent<T>>;
 }
 
-export interface POSTClientObjectDeclaration<T> {
+export interface POSTClientObjectImplementation<T> {
 	/**
 	 * POST is a one-way method, which lets client send requests of change to the server, server won't be able to send any data back.
 	 *
@@ -22,4 +21,4 @@ export interface POSTClientObjectDeclaration<T> {
 	send(toSend: T): void;
 }
 
-export declare type POSTDeclaration<T> = POSTServerObjectDeclaration<T> & POSTClientObjectDeclaration<T>;
+export declare type POSTDeclaration<T> = POSTServerObjectImplementation<T> & POSTClientObjectImplementation<T>;

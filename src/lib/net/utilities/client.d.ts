@@ -1,23 +1,17 @@
 interface ClientNet {
 	/**
-	 * listen should connect a listener to the client binder.
+	 * Binds a callback for server's request.
 	 *
-	 * @example
-	 * ```
-	 * event.listen("identifier", (...args: unknown[]) => {});
-	 * ```
-	 *
-	 * @param id as string, should denote the identifier name
-	 * @param callback as a Callback (function), should denote the actual
+	 * @param id endpoint's id.
+	 * @param callback being a function of type `(value: never) => void`.
 	 */
 	listen: (id: string, callback: (value: never) => void) => string;
 
 	/**
-	 * call should pack and compress everything, schedule it to be sent and release such memory when no longer needed.
+	 * Sends data over the network to the server.
 	 *
-	 * @param id as string, should denote the identifier name
-	 * @param args, should be the actual parameters of type T.
-	 * @returns unknown[], returns some arguments of type unknown being an array.
+	 * @param id endpoint's id.
+	 * @param value of type `T` described previously on declaration.
 	 */
 	send: <T>(id: string, value: T) => void;
 
