@@ -4,6 +4,10 @@ import { Query } from "./query";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
 
+function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
+	return a.join() === b.join();
+}
+
 const bindableEvent = new Instance("BindableEvent");
 
 const world = {} as World;
@@ -22,6 +26,7 @@ export = (): void => {
 			let callCount = 0;
 
 			const system = {} as System;
+			system.priority = 0;
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -39,11 +44,13 @@ export = (): void => {
 			let callCount = 0;
 
 			const system1 = {} as System;
+			system1.priority = 0;
 			system1.onUpdate = (): void => {
 				callCount += 1;
 			};
 
 			const system2 = {} as System;
+			system2.priority = 0;
 			system2.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -68,6 +75,43 @@ export = (): void => {
 			manager.start(world);
 
 			expect(query).to.be.ok();
+		});
+
+		it("should call systems in correct priority order", () => {
+			const systemOrder: Array<number> = [];
+
+			const system1 = {} as System;
+			system1.priority = 1;
+			system1.onUpdate = (): void => {
+				systemOrder.push(4);
+			};
+
+			const system2 = {} as System;
+			system2.priority = 1000;
+			system2.onUpdate = (): void => {
+				systemOrder.push(1);
+			};
+
+			const system3 = {} as System;
+			system3.priority = 25;
+			system3.onUpdate = (): void => {
+				systemOrder.push(3);
+			};
+
+			const system4 = {} as System;
+			system4.priority = 100;
+			system4.onUpdate = (): void => {
+				systemOrder.push(2);
+			};
+
+			manager.scheduleSystems([system1, system2, system3, system4]);
+			manager.start(world);
+
+			expect(shallowEquals(systemOrder, [])).to.equal(true);
+
+			bindableEvent.Fire();
+			print(systemOrder);
+			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
 	});
 
