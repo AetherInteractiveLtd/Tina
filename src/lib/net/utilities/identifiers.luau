@@ -12,8 +12,6 @@ local AutoSerde: Folder = nil
 local isServer = RunService:IsServer()
 local isClient = RunService:IsClient()
 
-type toSend = string
-
 function Identifiers._init()
 	if isClient then
 		AutoSerde = ReplicatedStorage:WaitForChild("Identifier") :: Folder
@@ -25,6 +23,7 @@ function Identifiers._init()
 
 		AutoSerde.AttributeChanged:Connect(function(id: string)
 			local packed: string = AutoSerde:GetAttribute(id)
+
 			if packed then
 				sendDict[id] = packed
 				receiveDict[packed] = id
@@ -41,8 +40,11 @@ function Identifiers._init()
 	end
 end
 
-function Identifiers.create(id: string): string
-	assert(type(id) == "string", "[TinaNet]: Id must be a string")
+function Identifiers.create(): string
+	local current = numOfSerials + 1
+	local id = tostring(current)
+
+	assert(current <= 65536, "Over the identification cap: " .. id)
 
 	if not sendDict[id] and isClient then
 		return Identifiers.await(id)
@@ -50,14 +52,13 @@ function Identifiers.create(id: string): string
 		return sendDict[id] :: string
 	end
 
-	assert(numOfSerials <= 65536, "Over the identification cap: " .. id)
-	numOfSerials += 1
-
-	local packed: string = string.pack("H", id, numOfSerials)
+	local packed = string.pack("H", current)
 	AutoSerde:SetAttribute(id, packed)
 
 	sendDict[id] = packed
 	receiveDict[packed] = id
+
+	numOfSerials = current
 
 	return packed
 end

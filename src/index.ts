@@ -22,6 +22,9 @@ export enum Protocol {
 }
 
 namespace Tina {
+	const isClient = RunService.IsClient();
+	const isServer = RunService.IsServer();
+
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
 	 *
@@ -31,32 +34,21 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
+		/**
+		 * Processes initialisation.
+		 */
 		{
-			/** Networking start up for  */
-			Server._init();
+			if (isServer) {
+				Server._init();
+			} else if (isClient) {
+				Client._init();
+			}
+
 			Identifiers._init();
 		}
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
-	}
-
-	/**
-	 * Starts up the client networking, meaning event connections. This should be used **ONCE** on the client, recommended to be under an intialiser file for the client.
-	 *
-	 * Usage example:
-	 * ```ts
-	 * import Tina from "@rbxts/tina"
-	 * Tina.startNet();
-	 * ```
-	 *
-	 * @client
-	 */
-	export function startNet(): void {
-		if (RunService.IsClient()) {
-			Client._init();
-			Identifiers._init();
-		}
 	}
 
 	/**
@@ -136,6 +128,7 @@ export default Tina;
 
 /** Export Conditions Library */
 export { COND } from "./lib/conditions";
+
 /** Export EventEmitter Library */
 export { EventEmitter, EventListener } from "./lib/events";
 

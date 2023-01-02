@@ -1,16 +1,12 @@
 import { EventListener } from "../../../../events";
 import { Users } from "../../../../user";
 import Client from "../../../utilities/client";
-import Identifiers from "../../../utilities/identifiers";
 import Server from "../../../utilities/server";
+import { AbstractEndpoint } from "../endpoint/endpoint";
 import { ServerEvent } from "../types";
 import { POSTDeclaration } from "./types";
 
-export class PostEndpoint<T> implements POSTDeclaration<T> {
-	constructor(private readonly id: string) {
-		this.id = Identifiers.create(id);
-	}
-
+export class PostEndpoint<T> extends AbstractEndpoint implements POSTDeclaration<T> {
 	public when(): EventListener<ServerEvent<T>> {
 		const eventListener: EventListener<ServerEvent<T>> = new EventListener();
 

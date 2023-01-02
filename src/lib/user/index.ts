@@ -34,16 +34,15 @@ export namespace Users {
 	export function get(from: Player | number): UserType {
 		if (RunService.IsClient() === true) error("Can't retrieve users from the client.");
 
-		const possiblePlayer = Players.GetPlayerByUserId(from as number);
 		const ref =
 			type(from) === "number"
-				? possiblePlayer !== undefined
-					? possiblePlayer
-					: error("[Users]: Can't give ")
+				? Players.GetPlayerByUserId(from as number) !== undefined
+					? Players.GetPlayerByUserId(from as number)
+					: error(`[Tina:User]: User seems to not exist at all, id provided=${from}`)
 				: (from as Player);
 
-		const possibleUser = users.get(ref);
-		const user = possibleUser !== undefined ? possibleUser : new TINA_USER_CLASS(ref);
+		const possibleUser = users.get(ref!);
+		const user = possibleUser !== undefined ? possibleUser : new TINA_USER_CLASS(ref!);
 
 		return user;
 	}

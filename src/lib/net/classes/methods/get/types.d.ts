@@ -1,7 +1,7 @@
 import { EventListener } from "../../../../events";
 import { UserType } from "../../../../user/default/types";
 
-export interface GETServerObjectDeclaration<R, S> {
+export interface GETServerObjectImplementation<R, S> {
 	/**
 	 * Should be the callback defined on the declaration.
 	 *
@@ -16,7 +16,7 @@ export interface GETServerObjectDeclaration<R, S> {
 	reply(func: (user: UserType, value: R) => S): void;
 }
 
-export interface GETClientObjectDeclaration<S, R> {
+export interface GETClientObjectImplementation<S, R> {
 	/**
 	 * You can send data for the server to manipulate it/use it, and send it back if needed with `.send()`. If you just want to retrieve data, use `.get()` instead.
 	 *
@@ -57,4 +57,4 @@ export interface GETClientObjectDeclaration<S, R> {
 	when(): EventListener<[value: R]>;
 }
 
-export declare type GETDeclaration<S, R> = GETServerObjectDeclaration<S, R> & GETClientObjectDeclaration<S, R>;
+export declare type GETDeclaration<S, R> = GETServerObjectImplementation<S, R> & GETClientObjectImplementation<S, R>;

@@ -1,7 +1,7 @@
 import { AudienceDeclaration } from "../../../../audience/types";
 import { EventListener } from "../../../../events";
 
-interface UPDATEServerObjectDeclaration<T> {
+interface UPDATEServerObjectImplementation<T> {
 	/**
 	 * UPDATE is a one-way method, which lets client listen for changes request from the server, client can't send any data back or send any packet at all.
 	 *
@@ -25,7 +25,7 @@ interface UPDATEServerObjectDeclaration<T> {
 	sendAll(value: T): void;
 }
 
-interface UPDATEClientObjectDeclaration<T> {
+interface UPDATEClientObjectImplementation<T> {
 	/**
 	 * when returns an event listener used to bind actions to be called.
 	 *
@@ -35,4 +35,4 @@ interface UPDATEClientObjectDeclaration<T> {
 	when(): EventListener<[value: T]>;
 }
 
-export declare type UPDATEDeclaration<T> = UPDATEServerObjectDeclaration<T> & UPDATEClientObjectDeclaration<T>;
+export declare type UPDATEDeclaration<T> = UPDATEServerObjectImplementation<T> & UPDATEClientObjectImplementation<T>;

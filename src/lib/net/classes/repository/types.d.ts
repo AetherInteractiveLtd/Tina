@@ -2,7 +2,7 @@ export interface BaseRepository { }
 
 export interface RepositoryImplementation<T extends BaseRepository> {
 	/**
-	 * @hidden (internals purposes)
+	 * @hidden
 	 */
 	repository: T;
 
