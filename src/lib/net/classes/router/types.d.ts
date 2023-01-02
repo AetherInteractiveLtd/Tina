@@ -5,7 +5,7 @@ import { BaseEndpoints } from "../../types";
  */
 export interface RouterDeclaration<T extends BaseEndpoints> {
 	/**
-	 * @hidden (internals purposes)
+	 * @hidden
 	 */
 	endpoints: T;
 

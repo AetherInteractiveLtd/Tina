@@ -21,8 +21,8 @@ export namespace Network {
 		 *
 		 * @param id possible unique identifier, can be empty.
 		 */
-		export function POST<T>(id: string): POSTDeclaration<T> {
-			return new PostEndpoint(id);
+		export function POST<T>(): POSTDeclaration<T> {
+			return new PostEndpoint();
 		}
 
 		/**
@@ -30,8 +30,8 @@ export namespace Network {
 		 *
 		 * @param identifier possible unique identifier, can be empty.
 		 */
-		export function UPDATE<T>(identifier: string): UPDATEDeclaration<T> {
-			return new UpdateEndpoint(identifier);
+		export function UPDATE<T>(): UPDATEDeclaration<T> {
+			return new UpdateEndpoint();
 		}
 
 		/**
@@ -39,8 +39,8 @@ export namespace Network {
 		 *
 		 * @param identifier possible unique identifier, can be empty.
 		 */
-		export function GET<S, R>(identifier: string): GETDeclaration<S, R> {
-			return new GetEndpoint(identifier);
+		export function GET<S, R>(): GETDeclaration<S, R> {
+			return new GetEndpoint();
 		}
 	}
 
@@ -55,8 +55,8 @@ export namespace Network {
 		{
 			TinaNet.setRouter(
 				new Router({
-					"user:added": Network.Method.UPDATE<never>(""),
-					"user:removing": Network.Method.UPDATE<never>(""),
+					"user:added": Network.Method.UPDATE<never>(),
+					"user:removing": Network.Method.UPDATE<never>(),
 				} as never),
 			);
 		}

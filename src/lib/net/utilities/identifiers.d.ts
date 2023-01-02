@@ -4,7 +4,7 @@ interface Identifiers {
 	 *
 	 * @param id an id to compress from.
 	 */
-	create: (id: string) => string;
+	create: () => string;
 
 	/**
 	 * Returns the initial decompressed identifier.
