@@ -25,9 +25,12 @@ export abstract class System {
  *
  */
 export class SystemManager {
-	private systems: Array<System> = [];
+	private systems: Array<System>;
+	// private connections: Map<ExecutionGroup, Array<RBXScriptConnection>> = new Map();
 
-	// private connections: Map<RBXScriptSignal, Array<RBXScriptConnection>> = new Map();
+	constructor() {
+		this.systems = [];
+	}
 
 	public start(world: World): void {
 		const executionDefault = world.options.defaultExecutionGroup
@@ -39,7 +42,12 @@ export class SystemManager {
 				system.configureQueries(world);
 			}
 
-			executionDefault.Connect(() => {
+			let executionGroup = executionDefault;
+			if (system.executionGroup !== undefined) {
+				executionGroup = system.executionGroup;
+			}
+
+			executionGroup.Connect(() => {
 				system.onUpdate(world);
 			});
 		}
@@ -53,9 +61,15 @@ export class SystemManager {
 		for (const system of systems) {
 			this.systems.push(system);
 		}
+
+		this.sortSystems();
 	}
 
 	public endSystem(): void {}
 
-	private sortSystems(): void {}
+	private sortSystems(): void {
+		this.systems.sort((a, b) => {
+			return a.priority < b.priority;
+		});
+	}
 }

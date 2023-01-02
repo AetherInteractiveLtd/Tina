@@ -113,6 +113,27 @@ export = (): void => {
 			print(systemOrder);
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
+
+		it("should allow non-default execution groups", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+
+			let callCount = 0;
+
+			const system = {} as System;
+			system.priority = 0;
+			system.executionGroup = tempBindableEvent.Event;
+			system.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystem(system);
+			manager.start(world);
+
+			expect(callCount).to.equal(0);
+
+			tempBindableEvent.Fire();
+			expect(callCount).to.equal(1);
+		});
 	});
 
 	afterAll(() => {
