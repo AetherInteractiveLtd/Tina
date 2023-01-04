@@ -18,10 +18,10 @@ let manager = {} as SystemManager;
 
 export = (): void => {
 	beforeEach(() => {
-		manager = new SystemManager();
+		manager = new SystemManager(world);
 	});
-
 	describe("A system should", () => {
+		FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
 
@@ -32,7 +32,7 @@ export = (): void => {
 			};
 
 			manager.scheduleSystem(system);
-			manager.start(world);
+			manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -56,7 +56,7 @@ export = (): void => {
 			};
 
 			manager.scheduleSystems([system1, system2]);
-			manager.start(world);
+			manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -70,9 +70,10 @@ export = (): void => {
 			system.configureQueries = (world: World): void => {
 				query = new Query(world).mask;
 			};
+			system.onUpdate = (): void => {};
 
 			manager.scheduleSystem(system);
-			manager.start(world);
+			manager.start();
 
 			expect(query).to.be.ok();
 		});
@@ -105,12 +106,11 @@ export = (): void => {
 			};
 
 			manager.scheduleSystems([system1, system2, system3, system4]);
-			manager.start(world);
+			manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
 			bindableEvent.Fire();
-			print(systemOrder);
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
 
@@ -127,7 +127,7 @@ export = (): void => {
 			};
 
 			manager.scheduleSystem(system);
-			manager.start(world);
+			manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -139,23 +139,25 @@ export = (): void => {
 			const tempBindableEvent = new Instance("BindableEvent");
 			const systemOrder: Array<number> = [];
 
+			const event = tempBindableEvent.Event;
+
 			const system1 = {} as System;
 			system1.priority = 1;
-			system1.executionGroup = tempBindableEvent.Event;
+			system1.executionGroup = event;
 			system1.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
 			const system2 = {} as System;
 			system2.priority = 100;
-			system2.executionGroup = tempBindableEvent.Event;
+			system2.executionGroup = event;
 			system2.onUpdate = (): void => {
 				systemOrder.push(1);
 			};
 
 			const system3 = {} as System;
 			system3.priority = 5;
-			system3.executionGroup = tempBindableEvent.Event;
+			system3.executionGroup = event;
 			system3.onUpdate = (): void => {
 				systemOrder.push(2);
 			};
@@ -179,14 +181,13 @@ export = (): void => {
 			};
 
 			manager.scheduleSystems([system1, system2, system3, system4, system5, system6]);
-			manager.start(world);
+			manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
 			tempBindableEvent.Fire();
 			bindableEvent.Fire();
 
-			print(systemOrder);
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4, 5, 6])).to.equal(true);
 
 			tempBindableEvent.Destroy();

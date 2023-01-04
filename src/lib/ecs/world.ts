@@ -54,7 +54,7 @@ export class World {
 		this.componentsToUpdate = new SparseSet();
 
 		this.entityManager = new EntityManager();
-		this.systemManager = new SystemManager();
+		this.systemManager = new SystemManager(this);
 	}
 
 	/** @returns The name of the world. */
@@ -97,7 +97,7 @@ export class World {
 	}
 
 	public start(): void {
-		this.systemManager.start(this);
+		this.systemManager.start();
 	}
 
 	/**
@@ -165,7 +165,7 @@ export class World {
 
 		const component = new Component();
 		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
-		component.initialiseComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
+		component.initializeComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
 
 		return component;
 	}
@@ -179,7 +179,7 @@ export class World {
 		}
 
 		const tag = new Tag();
-		tag.initialiseTag(this, this.entityManager.getNextComponentId());
+		tag.initializeTag(this, this.entityManager.getNextComponentId());
 
 		return tag;
 	}
@@ -191,7 +191,7 @@ export class World {
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
 	 *     been defined previously with {@link defineComponent}.
-	 * @param data The optional data to initialise the component with.
+	 * @param data The optional data to initialize the component with.
 	 */
 	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
 		if (!this.has(entityId)) {

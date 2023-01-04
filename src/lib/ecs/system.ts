@@ -13,10 +13,25 @@ export interface System {
 }
 
 export abstract class System {
-	public after: Array<string> = [];
+	/** An optional set of systems that must be executed before this system */
+	public after?: Array<System>;
+
+	/**
+	 * The group that this system will be executed on, e.g. Heartbeat,
+	 * RenderStepped, etc.
+	 */
 	public executionGroup?: ExecutionGroup;
+
+	/** The name of the system, primarily used for debugging purposes. */
 	public name = "System";
+
+	/**
+	 * The priority order of the system.
+	 * A higher priority means the system will execute first.
+	 * */
 	public priority = 0;
+
+	//public dt = 0; // could we set the delta time of the onUpdate function of a system
 
 	public abstract onUpdate(world: World): void;
 }
@@ -25,32 +40,40 @@ export abstract class System {
  *
  */
 export class SystemManager {
-	private systems: Array<System>;
+	private systems: Array<System> = [];
+	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
 	// private connections: Map<ExecutionGroup, Array<RBXScriptConnection>> = new Map();
 
-	constructor() {
-		this.systems = [];
-	}
+	private executionGroups: Set<ExecutionGroup> = new Set();
 
-	public start(world: World): void {
-		const executionDefault = world.options.defaultExecutionGroup
+	private executionDefault: ExecutionGroup;
+	private world: World;
+
+	constructor(world: World) {
+		this.executionDefault = world.options.defaultExecutionGroup
 			? world.options.defaultExecutionGroup
 			: RunService.Heartbeat;
+		this.world = world;
+	}
 
-		for (const system of this.systems) {
+	public start(): void {
+		this.systems.forEach(system => {
+			if (!system.onUpdate) {
+				throw error(`System ${system.name} does not have an onUpdate method`);
+			}
+
 			if (system.configureQueries !== undefined) {
-				system.configureQueries(world);
+				system.configureQueries(this.world);
 			}
+		});
 
-			let executionGroup = executionDefault;
-			if (system.executionGroup !== undefined) {
-				executionGroup = system.executionGroup;
-			}
-
+		this.executionGroups.forEach(executionGroup => {
 			executionGroup.Connect(() => {
-				system.onUpdate(world);
+				this.systemsByExecutionGroup.get(executionGroup)?.forEach(system => {
+					system.onUpdate(this.world);
+				});
 			});
-		}
+		});
 	}
 
 	public scheduleSystem(system: System): void {
@@ -58,9 +81,19 @@ export class SystemManager {
 	}
 
 	public scheduleSystems(systems: Array<System>): void {
-		for (const system of systems) {
+		systems.forEach(system => {
+			let executionGroup = this.executionDefault;
+			if (system.executionGroup !== undefined) {
+				executionGroup = system.executionGroup;
+			}
+
+			if (!this.executionGroups.has(executionGroup)) {
+				this.executionGroups.add(executionGroup);
+				this.systemsByExecutionGroup.set(executionGroup, []);
+			}
+
 			this.systems.push(system);
-		}
+		});
 
 		this.sortSystems();
 	}
@@ -68,8 +101,18 @@ export class SystemManager {
 	public endSystem(): void {}
 
 	private sortSystems(): void {
-		this.systems.sort((a, b) => {
-			return a.priority < b.priority;
+		this.systems.forEach(system => {
+			this.systemsByExecutionGroup
+				.get(system.executionGroup ? system.executionGroup : this.executionDefault)
+				?.push(system);
+		});
+
+		this.systemsByExecutionGroup.forEach(group => {
+			group.sort((a, b) => {
+				return a.priority > b.priority;
+			});
 		});
 	}
+
+	private sortSystemByDependency(): void {}
 }
