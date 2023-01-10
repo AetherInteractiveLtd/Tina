@@ -21,7 +21,7 @@ export = (): void => {
 		manager = new SystemManager(world);
 	});
 	describe("A system should", () => {
-		FOCUS();
+		// FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
 
@@ -111,6 +111,7 @@ export = (): void => {
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
 			bindableEvent.Fire();
+			print(systemOrder);
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
 
@@ -169,18 +170,18 @@ export = (): void => {
 			};
 
 			const system5 = {} as System;
-			system5.priority = 100;
+			system5.priority = 5;
 			system5.onUpdate = (): void => {
-				systemOrder.push(4);
-			};
-
-			const system6 = {} as System;
-			system6.priority = 5;
-			system6.onUpdate = (): void => {
 				systemOrder.push(5);
 			};
 
-			manager.scheduleSystems([system1, system2, system3, system4, system5, system6]);
+			const system6 = {} as System;
+			system6.priority = 100;
+			system6.onUpdate = (): void => {
+				systemOrder.push(4);
+			};
+
+			manager.scheduleSystems([system1, system2, system3, system5, system6, system4]);
 			manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
@@ -189,6 +190,95 @@ export = (): void => {
 			bindableEvent.Fire();
 
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4, 5, 6])).to.equal(true);
+
+			tempBindableEvent.Destroy();
+		});
+
+		it("should be able to call systems in order", () => {
+			const systemOrder: Array<number> = [];
+
+			const system1 = {} as System;
+			system1.priority = 0;
+			system1.onUpdate = (): void => {
+				systemOrder.push(3);
+			};
+
+			const system2 = {} as System;
+			system2.priority = 0;
+			system2.after = [system1];
+
+			system2.onUpdate = (): void => {
+				systemOrder.push(2);
+			};
+
+			const system3 = {} as System;
+			system3.priority = 0;
+			system3.after = [system2];
+			system3.onUpdate = (): void => {
+				systemOrder.push(1);
+			};
+
+			manager.scheduleSystems([system2, system1, system3]);
+			manager.start();
+
+			expect(shallowEquals(systemOrder, [])).to.equal(true);
+
+			bindableEvent.Fire();
+
+			print(systemOrder);
+			expect(shallowEquals(systemOrder, [3, 2, 1])).to.equal(true);
+
+			const systemOrder1: Array<number> = [];
+
+			const system4 = {} as System;
+			system4.priority = 0;
+			system4.onUpdate = (): void => {
+				systemOrder1.push(3);
+			};
+
+			const system5 = {} as System;
+			system5.priority = 0;
+			system5.after = [system4];
+			system5.onUpdate = (): void => {
+				systemOrder1.push(2);
+			};
+
+			const system6 = {} as System;
+			system6.priority = 0;
+			system6.after = [system4, system5];
+			system6.onUpdate = (): void => {
+				systemOrder1.push(1);
+			};
+
+			manager = new SystemManager(world);
+			manager.scheduleSystems([system5, system4, system6]);
+			manager.start();
+
+			expect(shallowEquals(systemOrder1, [])).to.equal(true);
+
+			bindableEvent.Fire();
+			print(systemOrder1);
+			expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
+		});
+
+		it("should not allow systems to be scheduled after each other on different execution groups", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+
+			const event = tempBindableEvent.Event;
+
+			const system1 = {} as System;
+			system1.priority = 1;
+			system1.onUpdate = (): void => {};
+
+			const system2 = {} as System;
+			system2.executionGroup = event;
+			system2.priority = 100;
+			system2.after = [system1];
+			system2.onUpdate = (): void => {};
+
+			expect(() => {
+				manager.scheduleSystems([system1, system2]);
+			}).to.throw();
 
 			tempBindableEvent.Destroy();
 		});

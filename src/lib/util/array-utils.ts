@@ -23,3 +23,23 @@ export function slice<TValue extends defined>(
 
 	return array.move(math.max(0, startIndex), endPosition - 1, 0, []);
 }
+
+/**
+ *
+ * @param arr
+ * @param comparisonFn
+ * @returns
+ */
+export function insertionSort<T>(array: Array<T>, comparisonFn: (a: T, b: T) => boolean): Array<T> {
+	for (let i = 1; i < array.size(); i++) {
+		const tmp = array[i];
+		let j = i - 1;
+		while (j >= 0 && comparisonFn(array[j], tmp)) {
+			array[j + 1] = array[j];
+			j--;
+		}
+		array[j + 1] = tmp;
+	}
+
+	return array;
+}

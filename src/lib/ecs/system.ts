@@ -1,5 +1,6 @@
 import { RunService } from "@rbxts/services";
 
+import { insertionSort } from "../util/array-utils";
 import { World } from "./world";
 
 export type ExecutionGroup = RBXScriptSignal;
@@ -33,6 +34,10 @@ export abstract class System {
 
 	//public dt = 0; // could we set the delta time of the onUpdate function of a system
 
+	/**
+	 *
+	 * @param world
+	 */
 	public abstract onUpdate(world: World): void;
 }
 
@@ -56,6 +61,9 @@ export class SystemManager {
 		this.world = world;
 	}
 
+	/**
+	 *
+	 */
 	public start(): void {
 		this.systems.forEach(system => {
 			if (!system.onUpdate) {
@@ -76,10 +84,23 @@ export class SystemManager {
 		});
 	}
 
+	/**
+	 * Call this so schedule an individual system.
+	 *
+	 * Calling this function is a potentially expensive operation. It is best
+	 * advised to use {@link scheduleSystems} instead, and add multiple
+	 * systems at once.
+	 *
+	 * @param system
+	 */
 	public scheduleSystem(system: System): void {
 		this.scheduleSystems([system]);
 	}
 
+	/**
+	 *
+	 * @param systems
+	 */
 	public scheduleSystems(systems: Array<System>): void {
 		systems.forEach(system => {
 			let executionGroup = this.executionDefault;
@@ -98,8 +119,14 @@ export class SystemManager {
 		this.sortSystems();
 	}
 
+	/**
+	 *
+	 */
 	public endSystem(): void {}
 
+	/**
+	 *
+	 */
 	private sortSystems(): void {
 		this.systems.forEach(system => {
 			this.systemsByExecutionGroup
@@ -107,12 +134,52 @@ export class SystemManager {
 				?.push(system);
 		});
 
-		this.systemsByExecutionGroup.forEach(group => {
-			group.sort((a, b) => {
-				return a.priority > b.priority;
-			});
+		this.systemsByExecutionGroup.forEach((systems, group) => {
+			this.systemsByExecutionGroup.set(group, this.orderSystemsByExecutionGroup(systems));
 		});
 	}
 
-	private sortSystemByDependency(): void {}
+	/**
+	 *
+	 * @param systems
+	 */
+	private validateSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			if (system.after !== undefined) {
+				system.after.forEach(afterSystem => {
+					if (system.executionGroup !== afterSystem.executionGroup) {
+						throw error(`System ${system.name} and ${afterSystem.name} are in different execution groups`);
+					}
+				});
+			}
+		});
+	}
+
+	/**
+	 *
+	 * @param unscheduledSystems
+	 * @returns
+	 */
+	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
+		this.validateSystems(unscheduledSystems);
+
+		unscheduledSystems.sort((a, b) => {
+			if (a.after !== undefined && a.after.includes(b)) {
+				if (b.after !== undefined && b.after.includes(a)) {
+					throw error(`Systems ${a.name} and ${b.name} are in a circular dependency`);
+				}
+				return false;
+			}
+
+			if (b.after !== undefined && b.after.includes(a)) {
+				return true;
+			}
+
+			return false;
+		});
+
+		return insertionSort<System>(unscheduledSystems, (a, b) => {
+			return a.priority < b.priority;
+		});
+	}
 }
