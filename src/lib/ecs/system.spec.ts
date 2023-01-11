@@ -27,6 +27,7 @@ export = (): void => {
 
 			const system = {} as System;
 			system.priority = 0;
+			system.enabled = true;
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -45,12 +46,14 @@ export = (): void => {
 
 			const system1 = {} as System;
 			system1.priority = 0;
+			system1.enabled = true;
 			system1.onUpdate = (): void => {
 				callCount += 1;
 			};
 
 			const system2 = {} as System;
 			system2.priority = 0;
+			system2.enabled = true;
 			system2.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -66,6 +69,7 @@ export = (): void => {
 
 		it("should be able to configure queries", () => {
 			const system = {} as System;
+			system.enabled = true;
 			let query;
 			system.configureQueries = (world: World): void => {
 				query = new Query(world).mask;
@@ -83,24 +87,28 @@ export = (): void => {
 
 			const system1 = {} as System;
 			system1.priority = 1;
+			system1.enabled = true;
 			system1.onUpdate = (): void => {
 				systemOrder.push(4);
 			};
 
 			const system2 = {} as System;
 			system2.priority = 1000;
+			system2.enabled = true;
 			system2.onUpdate = (): void => {
 				systemOrder.push(1);
 			};
 
 			const system3 = {} as System;
 			system3.priority = 25;
+			system3.enabled = true;
 			system3.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
 			const system4 = {} as System;
 			system4.priority = 100;
+			system4.enabled = true;
 			system4.onUpdate = (): void => {
 				systemOrder.push(2);
 			};
@@ -122,6 +130,7 @@ export = (): void => {
 
 			const system = {} as System;
 			system.priority = 0;
+			system.enabled = true;
 			system.executionGroup = tempBindableEvent.Event;
 			system.onUpdate = (): void => {
 				callCount += 1;
@@ -144,6 +153,7 @@ export = (): void => {
 
 			const system1 = {} as System;
 			system1.priority = 1;
+			system1.enabled = true;
 			system1.executionGroup = event;
 			system1.onUpdate = (): void => {
 				systemOrder.push(3);
@@ -151,6 +161,7 @@ export = (): void => {
 
 			const system2 = {} as System;
 			system2.priority = 100;
+			system2.enabled = true;
 			system2.executionGroup = event;
 			system2.onUpdate = (): void => {
 				systemOrder.push(1);
@@ -158,6 +169,7 @@ export = (): void => {
 
 			const system3 = {} as System;
 			system3.priority = 5;
+			system3.enabled = true;
 			system3.executionGroup = event;
 			system3.onUpdate = (): void => {
 				systemOrder.push(2);
@@ -165,18 +177,21 @@ export = (): void => {
 
 			const system4 = {} as System;
 			system4.priority = 1;
+			system4.enabled = true;
 			system4.onUpdate = (): void => {
 				systemOrder.push(6);
 			};
 
 			const system5 = {} as System;
 			system5.priority = 5;
+			system5.enabled = true;
 			system5.onUpdate = (): void => {
 				systemOrder.push(5);
 			};
 
 			const system6 = {} as System;
 			system6.priority = 100;
+			system6.enabled = true;
 			system6.onUpdate = (): void => {
 				systemOrder.push(4);
 			};
@@ -199,12 +214,14 @@ export = (): void => {
 
 			const system1 = {} as System;
 			system1.priority = 0;
+			system1.enabled = true;
 			system1.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
 			const system2 = {} as System;
 			system2.priority = 0;
+			system2.enabled = true;
 			system2.after = [system1];
 
 			system2.onUpdate = (): void => {
@@ -213,6 +230,7 @@ export = (): void => {
 
 			const system3 = {} as System;
 			system3.priority = 0;
+			system3.enabled = true;
 			system3.after = [system2];
 			system3.onUpdate = (): void => {
 				systemOrder.push(1);
@@ -232,12 +250,14 @@ export = (): void => {
 
 			const system4 = {} as System;
 			system4.priority = 0;
+			system4.enabled = true;
 			system4.onUpdate = (): void => {
 				systemOrder1.push(3);
 			};
 
 			const system5 = {} as System;
 			system5.priority = 0;
+			system5.enabled = true;
 			system5.after = [system4];
 			system5.onUpdate = (): void => {
 				systemOrder1.push(2);
@@ -245,6 +265,7 @@ export = (): void => {
 
 			const system6 = {} as System;
 			system6.priority = 0;
+			system6.enabled = true;
 			system6.after = [system4, system5];
 			system6.onUpdate = (): void => {
 				systemOrder1.push(1);
@@ -268,11 +289,13 @@ export = (): void => {
 
 			const system1 = {} as System;
 			system1.priority = 1;
+			system1.enabled = true;
 			system1.onUpdate = (): void => {};
 
 			const system2 = {} as System;
 			system2.executionGroup = event;
 			system2.priority = 100;
+			system2.enabled = true;
 			system2.after = [system1];
 			system2.onUpdate = (): void => {};
 
@@ -281,6 +304,33 @@ export = (): void => {
 			}).to.throw();
 
 			tempBindableEvent.Destroy();
+		});
+
+		it("should be able to disable and enable a system", () => {
+			let callCount = 0;
+
+			const system = {} as System;
+			system.priority = 1;
+			system.enabled = true;
+			system.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystems([system]);
+			manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+
+			manager.disableSystem(system);
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+
+			manager.enableSystem(system);
+			bindableEvent.Fire();
+			expect(callCount).to.equal(2);
 		});
 	});
 

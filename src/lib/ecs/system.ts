@@ -39,13 +39,15 @@ export abstract class System {
 	 * @param world
 	 */
 	public abstract onUpdate(world: World): void;
+
+	public enabled = true;
 }
 
 /**
  *
  */
 export class SystemManager {
-	private systems: Array<System> = [];
+	private systems: Array<System> = new Array();
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
 	// private connections: Map<ExecutionGroup, Array<RBXScriptConnection>> = new Map();
 
@@ -78,6 +80,10 @@ export class SystemManager {
 		this.executionGroups.forEach(executionGroup => {
 			executionGroup.Connect(() => {
 				this.systemsByExecutionGroup.get(executionGroup)?.forEach(system => {
+					if (!system.enabled) {
+						return;
+					}
+
 					system.onUpdate(this.world);
 				});
 			});
@@ -122,7 +128,32 @@ export class SystemManager {
 	/**
 	 *
 	 */
-	public endSystem(): void {}
+	public unscheduleSystem(): void {}
+
+	/**
+	 * Enabled a system.
+	 *
+	 * This will not error if a system that is already enabled is enabled
+	 * again.
+	 *
+	 * @param system The system that should be enabled.
+	 */
+	public enableSystem(system: System): void {
+		system.enabled = true;
+	}
+
+	/**
+	 * Disable a system.
+	 *
+	 * As scheduling a system can be a potentially expensive operation,
+	 * this can be used for systems that are expected to be reenabled at a
+	 * later point.
+	 *
+	 * @param system The system that should be disabled.
+	 */
+	public disableSystem(system: System): void {
+		system.enabled = false;
+	}
 
 	/**
 	 *
