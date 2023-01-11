@@ -40,6 +40,14 @@ export abstract class System {
 	 */
 	public abstract onUpdate(world: World): void;
 
+	/**
+	 * Whether or not a system should be called.
+	 *
+	 * This should not be called directly. Instead you should use the
+	 * {@link SystemManager.enableSystem} & {@link SystemManager.disableSystem}
+	 * functions respectively.
+	 * @hidden
+	 */
 	public enabled = true;
 }
 
@@ -49,7 +57,6 @@ export abstract class System {
 export class SystemManager {
 	private systems: Array<System> = new Array();
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
-	// private connections: Map<ExecutionGroup, Array<RBXScriptConnection>> = new Map();
 
 	private executionGroups: Set<ExecutionGroup> = new Set();
 
@@ -128,7 +135,20 @@ export class SystemManager {
 	/**
 	 *
 	 */
-	public unscheduleSystem(): void {}
+	public unscheduleSystem(system: System): void {
+		this.unscheduleSystems([system]);
+	}
+
+	public unscheduleSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			this.systems.remove(this.systems.indexOf(system));
+
+			const systemInExecutionGroup = this.systemsByExecutionGroup.get(
+				system.executionGroup ?? this.executionDefault,
+			);
+			systemInExecutionGroup?.remove(systemInExecutionGroup.indexOf(system));
+		});
+	}
 
 	/**
 	 * Enabled a system.
@@ -160,9 +180,7 @@ export class SystemManager {
 	 */
 	private sortSystems(): void {
 		this.systems.forEach(system => {
-			this.systemsByExecutionGroup
-				.get(system.executionGroup ? system.executionGroup : this.executionDefault)
-				?.push(system);
+			this.systemsByExecutionGroup.get(system.executionGroup ?? this.executionDefault)?.push(system);
 		});
 
 		this.systemsByExecutionGroup.forEach((systems, group) => {

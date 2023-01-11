@@ -332,6 +332,29 @@ export = (): void => {
 			bindableEvent.Fire();
 			expect(callCount).to.equal(2);
 		});
+
+		it("should be able to unschedule a system", () => {
+			let callCount = 0;
+
+			const system = {} as System;
+			system.priority = 0;
+			system.enabled = true;
+			system.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystems([system]);
+			manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+
+			manager.unscheduleSystem(system);
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+		});
 	});
 
 	afterAll(() => {
