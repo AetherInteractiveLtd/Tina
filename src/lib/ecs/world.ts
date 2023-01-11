@@ -154,7 +154,7 @@ export class World {
 	}
 
 	/**
-	 * Initialises a new component with the world.
+	 * Initializes a new component with the world.
 	 *
 	 * @param def
 	 */

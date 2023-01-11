@@ -4,12 +4,12 @@
  * when the universe of possible values is very large but used very sparingly
  * and the set is iterated often or cleared often.
  *
- * The sparse set will grow as needed to accomodate values added.
+ * The sparse set will grow as needed to accommodate values added.
  */
 export class SparseSet {
 	/** The elements stored in the sparse set. */
 	public dense: Array<number>;
-	/** An array that maps the set's items to their indicies in the dense. */
+	/** An array that maps the set's items to their indices in the dense. */
 	public sparse: Array<number>;
 
 	constructor() {
