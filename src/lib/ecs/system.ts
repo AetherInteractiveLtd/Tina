@@ -1,51 +1,234 @@
-import { ALL } from "./query";
+import { RunService } from "@rbxts/services";
+
+import { insertionSort } from "../util/array-utils";
 import { World } from "./world";
 
-export type System = () => void;
+export type ExecutionGroup = RBXScriptSignal;
 
-export type SystemReturn = {
-	system: System;
-	priority: number;
-	name: string;
-	after: Array<string>;
-};
+export interface System {
+	/**
+	 *
+	 * @param world
+	 */
+	configureQueries(world: World): void;
+}
 
+export abstract class System {
+	/** An optional set of systems that must be executed before this system */
+	public after?: Array<System>;
+
+	/**
+	 * The group that this system will be executed on, e.g. Heartbeat,
+	 * RenderStepped, etc.
+	 */
+	public executionGroup?: ExecutionGroup;
+
+	/** The name of the system, primarily used for debugging purposes. */
+	public name = "System";
+
+	/**
+	 * The priority order of the system.
+	 * A higher priority means the system will execute first.
+	 * */
+	public priority = 0;
+
+	//public dt = 0; // could we set the delta time of the onUpdate function of a system
+
+	/**
+	 *
+	 * @param world
+	 */
+	public abstract onUpdate(world: World): void;
+
+	/**
+	 * Whether or not a system should be called.
+	 *
+	 * This should not be called directly. Instead you should use the
+	 * {@link SystemManager.enableSystem} & {@link SystemManager.disableSystem}
+	 * functions respectively.
+	 * @hidden
+	 */
+	public enabled = true;
+}
+
+/**
+ *
+ */
 export class SystemManager {
-	private systems: Array<System> = [];
+	private systems: Array<System> = new Array();
+	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
 
+	private executionGroups: Set<ExecutionGroup> = new Set();
+
+	private executionDefault: ExecutionGroup;
+	private world: World;
+
+	constructor(world: World) {
+		this.executionDefault = world.options.defaultExecutionGroup
+			? world.options.defaultExecutionGroup
+			: RunService.Heartbeat;
+		this.world = world;
+	}
+
+	/**
+	 *
+	 */
 	public start(): void {
-		for (const system of this.systems) {
-			system();
-		}
+		this.systems.forEach(system => {
+			if (!system.onUpdate) {
+				throw error(`System ${system.name} does not have an onUpdate method`);
+			}
+
+			if (system.configureQueries !== undefined) {
+				system.configureQueries(this.world);
+			}
+		});
+
+		this.executionGroups.forEach(executionGroup => {
+			executionGroup.Connect(() => {
+				this.systemsByExecutionGroup.get(executionGroup)?.forEach(system => {
+					if (!system.enabled) {
+						return;
+					}
+
+					system.onUpdate(this.world);
+				});
+			});
+		});
 	}
 
+	/**
+	 * Call this so schedule an individual system.
+	 *
+	 * Calling this function is a potentially expensive operation. It is best
+	 * advised to use {@link scheduleSystems} instead, and add multiple
+	 * systems at once.
+	 *
+	 * @param system
+	 */
 	public scheduleSystem(system: System): void {
-		this.systems.push(system);
+		this.scheduleSystems([system]);
 	}
 
-	public endSystem(): void {}
+	/**
+	 *
+	 * @param systems
+	 */
+	public scheduleSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			let executionGroup = this.executionDefault;
+			if (system.executionGroup !== undefined) {
+				executionGroup = system.executionGroup;
+			}
 
-	public sortSystems(): void {}
-}
+			if (!this.executionGroups.has(executionGroup)) {
+				this.executionGroups.add(executionGroup);
+				this.systemsByExecutionGroup.set(executionGroup, []);
+			}
 
-// @System({
-// 	name: "ExampleSystem",
-// 	after: [],
-// 	step: RunService.Heartbeat,
-// })
+			this.systems.push(system);
+		});
 
-export default function exampleSystem(world: World): SystemReturn {
-	const position = world.defineTag();
-	const query = world.createQuery(ALL(position));
+		this.sortSystems();
+	}
 
-	return {
-		system: update(query),
-		priority: 0,
-		name: "ExampleSystem",
-		after: [],
-	};
-}
+	/**
+	 *
+	 */
+	public unscheduleSystem(system: System): void {
+		this.unscheduleSystems([system]);
+	}
 
-function update(query:): void {
-	print("Hi!");
+	public unscheduleSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			this.systems.remove(this.systems.indexOf(system));
+
+			const systemInExecutionGroup = this.systemsByExecutionGroup.get(
+				system.executionGroup ?? this.executionDefault,
+			);
+			systemInExecutionGroup?.remove(systemInExecutionGroup.indexOf(system));
+		});
+	}
+
+	/**
+	 * Enabled a system.
+	 *
+	 * This will not error if a system that is already enabled is enabled
+	 * again.
+	 *
+	 * @param system The system that should be enabled.
+	 */
+	public enableSystem(system: System): void {
+		system.enabled = true;
+	}
+
+	/**
+	 * Disable a system.
+	 *
+	 * As scheduling a system can be a potentially expensive operation,
+	 * this can be used for systems that are expected to be reenabled at a
+	 * later point.
+	 *
+	 * @param system The system that should be disabled.
+	 */
+	public disableSystem(system: System): void {
+		system.enabled = false;
+	}
+
+	/**
+	 *
+	 */
+	private sortSystems(): void {
+		this.systems.forEach(system => {
+			this.systemsByExecutionGroup.get(system.executionGroup ?? this.executionDefault)?.push(system);
+		});
+
+		this.systemsByExecutionGroup.forEach((systems, group) => {
+			this.systemsByExecutionGroup.set(group, this.orderSystemsByExecutionGroup(systems));
+		});
+	}
+
+	/**
+	 *
+	 * @param systems
+	 */
+	private validateSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			if (system.after !== undefined) {
+				system.after.forEach(afterSystem => {
+					if (system.executionGroup !== afterSystem.executionGroup) {
+						throw error(`System ${system.name} and ${afterSystem.name} are in different execution groups`);
+					}
+				});
+			}
+		});
+	}
+
+	/**
+	 *
+	 * @param unscheduledSystems
+	 * @returns
+	 */
+	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
+		this.validateSystems(unscheduledSystems);
+
+		unscheduledSystems.sort((a, b) => {
+			if (a.after !== undefined && a.after.includes(b)) {
+				if (b.after !== undefined && b.after.includes(a)) {
+					throw error(`Systems ${a.name} and ${b.name} are in a circular dependency`);
+				}
+				return false;
+			}
+
+			if (b.after !== undefined && b.after.includes(a)) {
+				return true;
+			}
+
+			return false;
+		});
+
+		return insertionSort<System>(unscheduledSystems, (a, b) => {
+			return a.priority < b.priority;
+		});
+	}
 }

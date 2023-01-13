@@ -155,7 +155,7 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entitiy that matches the given query.
+	 * Runs a callback for each entity that matches the given query.
 	 *
 	 * If the callback returns `false`, the iteration will stop, and no other
 	 * entities in this query will be iterated over.
@@ -186,7 +186,7 @@ export class Query {
 	}
 
 	/**
-	 * Traverses the query mask, and returns true if the archhetype mask
+	 * Traverses the query mask, and returns true if the archetype mask
 	 * matches the given query.
 	 *
 	 * This function should not be used directly, and instead is used

@@ -20,7 +20,7 @@ class MockComponent {
 	public componentArray: ComponentArray = [];
 
 	/** @hidden */
-	public initialiseComponent(world: World, id: number, componentArray: ComponentArray): void {
+	public initializeComponent(world: World, id: number, componentArray: ComponentArray): void {
 		this._componentData.world = world;
 		this._componentData.id = id;
 		this.componentArray = componentArray;
@@ -33,7 +33,7 @@ export = (): void => {
 	beforeEach(() => {
 		for (let i = 0; i < 33; i++) {
 			const component = new MockComponent();
-			component.initialiseComponent(world, i, []);
+			component.initializeComponent(world, i, []);
 			components.push(component as unknown as Component);
 		}
 	});
