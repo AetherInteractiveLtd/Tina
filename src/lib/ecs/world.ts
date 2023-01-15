@@ -86,7 +86,7 @@ export class World {
 			query = new Query(this, ALL(...raw));
 			this.entityManager.archetypes.forEach(archetype => {
 				if (Query.match(archetype.mask, query.mask)) {
-					query.a.push(archetype);
+					query.archetypes.push(archetype);
 				}
 			});
 			this.queries.push(query);
@@ -96,6 +96,9 @@ export class World {
 		return query;
 	}
 
+	/**
+	 *
+	 */
 	public start(): void {
 		this.systemManager.start();
 	}
@@ -348,15 +351,21 @@ export class World {
 		if (!this.entityManager.archetypes.has(mask.join(","))) {
 			const arch = new Archetype(slice(mask));
 			this.entityManager.archetypes.set(mask.join(","), arch);
-			for (const query of this.queries) {
+			this.queries.forEach(query => {
 				if (Query.match(mask, query.mask)) {
-					query.a.push(arch);
+					query.archetypes.push(arch);
 				}
-			}
+			});
 		}
 		return this.entityManager.archetypes.get(mask.join(","))!;
 	}
 
+	/**
+	 *
+	 * @param mask
+	 * @param componentId
+	 * @returns
+	 */
 	private hasComponentInternal(mask: Array<number>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}

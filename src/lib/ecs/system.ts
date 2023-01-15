@@ -20,6 +20,9 @@ export abstract class System {
 	/**
 	 * The group that this system will be executed on, e.g. Heartbeat,
 	 * RenderStepped, etc.
+	 *
+	 * The only requirements for an execution group is that the group has a
+	 * .Connect method.
 	 */
 	public executionGroup?: ExecutionGroup;
 
@@ -29,14 +32,22 @@ export abstract class System {
 	/**
 	 * The priority order of the system.
 	 * A higher priority means the system will execute first.
-	 * */
+	 */
 	public priority = 0;
 
-	//public dt = 0; // could we set the delta time of the onUpdate function of a system
+	/** The time since the system was last called. */
+	public dt = 0;
 
 	/**
+	 * The onUpdate method is called on every execution of this systems
+	 * execution group.
 	 *
-	 * @param world
+	 * This should not typically be called manually, and instead the system
+	 * should be scheduled according to an exwecution group using the
+	 * {@link World.scheduleSystem} function.
+	 *
+	 * @param world The world that this system belongs to, this will be
+	 * automatically passed in by the owning world on each system execution.
 	 */
 	public abstract onUpdate(world: World): void;
 
@@ -52,7 +63,8 @@ export abstract class System {
 }
 
 /**
- *
+ * The system manager is used to handle all scheduling and execution logic of
+ * any system in a given world.
  */
 export class SystemManager {
 	private systems: Array<System> = new Array();
@@ -64,9 +76,7 @@ export class SystemManager {
 	private world: World;
 
 	constructor(world: World) {
-		this.executionDefault = world.options.defaultExecutionGroup
-			? world.options.defaultExecutionGroup
-			: RunService.Heartbeat;
+		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.Heartbeat;
 		this.world = world;
 	}
 
@@ -91,6 +101,7 @@ export class SystemManager {
 						return;
 					}
 
+					system.dt = os.clock() - system.dt;
 					system.onUpdate(this.world);
 				});
 			});
@@ -98,19 +109,20 @@ export class SystemManager {
 	}
 
 	/**
-	 * Call this so schedule an individual system.
+	 * Call this to schedule an individual system.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
-	 * advised to use {@link scheduleSystems} instead, and add multiple
-	 * systems at once.
+	 * advised to use {@link scheduleSystems} instead, and add multiple systems
+	 * at once.
 	 *
-	 * @param system
+	 * @param system The system to schedule.
 	 */
 	public scheduleSystem(system: System): void {
 		this.scheduleSystems([system]);
 	}
 
 	/**
+	 * Schedules a given set of systems at once.
 	 *
 	 * @param systems
 	 */
@@ -134,11 +146,16 @@ export class SystemManager {
 
 	/**
 	 *
+	 * @param system
 	 */
 	public unscheduleSystem(system: System): void {
 		this.unscheduleSystems([system]);
 	}
 
+	/**
+	 *
+	 * @param systems
+	 */
 	public unscheduleSystems(systems: Array<System>): void {
 		systems.forEach(system => {
 			this.systems.remove(this.systems.indexOf(system));
@@ -148,6 +165,12 @@ export class SystemManager {
 			);
 			systemInExecutionGroup?.remove(systemInExecutionGroup.indexOf(system));
 		});
+
+		// TODO: look into re-sorting systems. Removing a system could cause a
+		// dependency conflict where a system originally relied on this one.
+		// The other option to save resources could be to force the user to
+		// unschedule any dependent systems themselves, and throw an error if
+		// the user doesn't.
 	}
 
 	/**
@@ -160,6 +183,11 @@ export class SystemManager {
 	 */
 	public enableSystem(system: System): void {
 		system.enabled = true;
+
+		// Should we also be enabling systems that depend here? Likely just
+		// issue a warning to the dev that it hasn't been enabled.
+
+		// do we include dev-only logging for things like this?
 	}
 
 	/**
@@ -173,10 +201,12 @@ export class SystemManager {
 	 */
 	public disableSystem(system: System): void {
 		system.enabled = false;
+
+		// Should we also be disabling dependent systems here?
 	}
 
 	/**
-	 *
+	 * Internally sorts all systems.
 	 */
 	private sortSystems(): void {
 		this.systems.forEach(system => {
@@ -189,23 +219,7 @@ export class SystemManager {
 	}
 
 	/**
-	 *
-	 * @param systems
-	 */
-	private validateSystems(systems: Array<System>): void {
-		systems.forEach(system => {
-			if (system.after !== undefined) {
-				system.after.forEach(afterSystem => {
-					if (system.executionGroup !== afterSystem.executionGroup) {
-						throw error(`System ${system.name} and ${afterSystem.name} are in different execution groups`);
-					}
-				});
-			}
-		});
-	}
-
-	/**
-	 *
+	 * Orders systems within the same execution group by their dependencies.
 	 * @param unscheduledSystems
 	 * @returns
 	 */
@@ -227,8 +241,28 @@ export class SystemManager {
 			return false;
 		});
 
-		return insertionSort<System>(unscheduledSystems, (a, b) => {
+		return insertionSort(unscheduledSystems, (a, b) => {
 			return a.priority < b.priority;
+		});
+	}
+
+	/**
+	 * Checks a given set of systems to ensure that the current scheduling
+	 * requirements are valid.
+	 *
+	 * If the current requirements cannot be met, this function will throw an
+	 * error and halt execution.
+	 * @param systems
+	 */
+	private validateSystems(systems: Array<System>): void {
+		systems.forEach(system => {
+			if (system.after !== undefined) {
+				system.after.forEach(afterSystem => {
+					if (system.executionGroup !== afterSystem.executionGroup) {
+						throw error(`System ${system.name} and ${afterSystem.name} are in different execution groups`);
+					}
+				});
+			}
 		});
 	}
 }
