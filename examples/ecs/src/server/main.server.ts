@@ -1,8 +1,8 @@
 import { RunService } from "@rbxts/services";
 
-import { Component } from "../component";
-import { System } from "../system";
-import { World } from "../world";
+import { Component } from "../../component";
+import { System } from "../../system";
+import { World } from "../../world";
 import { BasicSystem } from "./systems/basic-system";
 
 const world = new World({
@@ -15,8 +15,10 @@ const world = new World({
 // 	world.defineComponent({});
 // }
 
-// world.scheduleSystem(new BasicSystem());
+// for (const module of script.Parent?.systems.GetChildren()) {
 
-// world.start();
+world.scheduleSystem(new BasicSystem());
 
-// world.add();
+world.start();
+
+world.add();

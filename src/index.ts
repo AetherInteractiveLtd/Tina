@@ -128,3 +128,9 @@ export { Audience } from "./lib/audience/audience";
 
 /** User abstract class */
 export { User } from "./lib/user/user";
+
+/** ECS Library  */
+export { Component } from "./lib/ecs/component";
+export { Query } from "./lib/ecs/query";
+export { System } from "./lib/ecs/system";
+export { World } from "./lib/ecs/world";

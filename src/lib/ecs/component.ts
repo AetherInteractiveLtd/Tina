@@ -32,7 +32,7 @@ export class Component {
 		this.componentArray = componentArray;
 	}
 
-	public update(entityId: EntityId, data: typeof x): void {}
+	public update(world: World, entityId: EntityId, data: typeof x): void {}
 }
 
 export class Tag {
