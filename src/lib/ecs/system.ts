@@ -92,6 +92,8 @@ export class SystemManager {
 			if (system.configureQueries !== undefined) {
 				system.configureQueries(this.world);
 			}
+
+			system.dt = os.clock();
 		});
 
 		this.executionGroups.forEach(executionGroup => {
