@@ -23,7 +23,7 @@ export class SparseSet {
 	 * @returns `true` if the element is in the set
 	 */
 	public has(x: number): boolean {
-		const sparse = this.sparse[x] !== undefined ? this.sparse[x] : math.huge;
+		const sparse = this.sparse[x] ?? math.huge;
 		return sparse < this.dense.size() && this.dense[sparse] === x;
 	}
 

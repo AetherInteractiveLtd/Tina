@@ -57,6 +57,7 @@ export class Tag {
  * @returns
  */
 export function createComponentArray<T extends Tree<Type>>(def: T, max: number): ComponentArray<T> {
+	// if the table already exists then we're just looking to increase the size of the array
 	if (type(def) === "table") {
 		if ((def as Array<T>).size() > 0) {
 			return [...new Array<T>(max)].map(def[0 as never]) as never;
