@@ -2,6 +2,9 @@ import { EntityId } from "../types/ecs";
 import { Component } from "./component";
 import { World } from "./world";
 
+/**
+ *
+ */
 export interface EntityContainer {
 	entityId: EntityId;
 
@@ -90,8 +93,8 @@ export class EntityContainerPool {
 			// The pool is empty, so expand it by roughly 10%.
 			// This could be a potentially expensive operation.
 			warn(
-				`Entity pool for ${this.world.toString()} is currently empty. Expanding by 10%. If this is an issue, ",
-				"consider increasing the initial size of the pool.`,
+				`Entity pool for ${this.world.toString()} is currently empty. Expanding by 10%. If this is an issue, `,
+				`consider increasing the initial size of the pool.`,
 			);
 
 			debug.profilebegin("EntityPool.expand");
@@ -134,8 +137,8 @@ export class EntityContainerPool {
 			const entityContainer = new EntityContainerInternal(this.world);
 			this.pool.push(entityContainer);
 		}
-		this.setupEntityContainerStorage(this.size);
 		this.size += newEntities;
+		this.setupEntityContainerStorage(this.size);
 	}
 
 	/**

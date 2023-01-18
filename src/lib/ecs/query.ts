@@ -100,7 +100,7 @@ export function NOT(components: RawQuery | Component): RawQuery {
  *
  * const world = new World();
  * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
- * query.forEach((entityId) => {
+ * query.forEach((entity) => {
  * 	// ...
  * });
  * ```
@@ -140,7 +140,7 @@ export class Query {
 				} else {
 					throw error(
 						`Component ${(i as unknown as Component)._componentData.id} does not belong to world ` +
-							`${tostring(this.world)}`,
+						`${tostring(this.world)}`,
 					);
 				}
 			} else {
@@ -175,6 +175,10 @@ export class Query {
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityContainer) => boolean | void): void {
+		if (this.archetypes.size() === 0) {
+			return;
+		}
+
 		const container = this.entityContainerPool.aquire(-1);
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;

@@ -162,14 +162,14 @@ export class World {
 	 *
 	 * @param def
 	 */
-	public defineComponent<T extends Tree<Type>>(def: T): Component {
+	public defineComponent<T extends Tree<Type>>(def?: T): Component {
 		if (this.entityManager.getEntityId() > 0) {
 			throw error("Cannot define components after entities have been created");
 		}
 
 		const component = new Component();
 		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
-		component.initializeComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
+		// component.initializeComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
 
 		return component;
 	}
