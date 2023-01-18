@@ -1,4 +1,3 @@
-import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { Component } from "./component";
 import { EntityContainer, EntityContainerPool } from "./entity";
@@ -176,18 +175,18 @@ export class Query {
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityContainer) => boolean | void): void {
+		const container = this.entityContainerPool.aquire(-1);
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
-				const container = this.entityContainerPool.aquire(entities[j - 1]);
-				if (!callback(container)) {
-					this.entityContainerPool.release(container);
+				container.initializeEntityContainer(entities[j - 1]);
+				if (!callback(container as EntityContainer)) {
 					break;
 				}
-				this.entityContainerPool.release(container);
 			}
 		}
 
+		this.entityContainerPool.release(container);
 		this.world.flush();
 	}
 
