@@ -1,6 +1,7 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
+import { EntityContainerPool } from "./entity";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { World } from "./world";
 
@@ -18,20 +19,24 @@ export class EntityManager {
 	public entities: Array<Archetype>;
 	private entitiesToDestroy: SparseSet;
 	public updateTo: Array<Archetype>;
-	private readonly rm: SparseSet;
+	private readonly reusableEntityIds: SparseSet;
+
+	public readonly entityContainerPool: EntityContainerPool;
 
 	private componentId = 0;
 	private entityId = 0;
 	private size = 0;
 
-	constructor() {
+	constructor(entityContainerPool: EntityContainerPool) {
 		this.archetypes = new Map();
 
-		this.rm = new SparseSet();
+		this.reusableEntityIds = new SparseSet();
 		this.entitiesToDestroy = new SparseSet();
 		this.entities = [];
 		this.updateTo = [];
 		this.empty = new Archetype([]);
+
+		this.entityContainerPool = entityContainerPool;
 	}
 
 	public getEntityId(): number {
@@ -62,8 +67,8 @@ export class EntityManager {
 	 * @returns The id of the next available entity.
 	 */
 	public createEntity(): EntityId {
-		if (this.rm.dense.size() > 0) {
-			const entityId = this.rm.dense.pop()!;
+		if (this.reusableEntityIds.dense.size() > 0) {
+			const entityId = this.reusableEntityIds.dense.pop()!;
 			this.createEntityInternal(entityId);
 			return entityId;
 		}
@@ -113,7 +118,7 @@ export class EntityManager {
 	public destroyPendingEntities(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
-			this.rm.add(entityId);
+			this.reusableEntityIds.add(entityId);
 			this.size--;
 		}
 		this.entitiesToDestroy.dense.clear();

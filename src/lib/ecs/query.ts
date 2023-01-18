@@ -1,6 +1,7 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { Component } from "./component";
+import { EntityContainer, EntityContainerPool } from "./entity";
 import { World } from "./world";
 
 export type RawQuery =
@@ -111,48 +112,50 @@ export class Query {
 	public archetypes: Array<Archetype>;
 	public mask: QueryMask;
 	/** The world that the query belongs to. */
-	public world: World;
+	public readonly world: World;
+
+	private readonly entityContainerPool: EntityContainerPool;
 
 	constructor(world: World, query?: RawQuery) {
-		/**
-		 * Creates a decision tree from a given query.
-		 * @param raw The raw data to create the decision tree from.
-		 */
-		const createQuery = (raw: RawQuery): QueryMask => {
-			if (raw.op === NOT) {
-				return { op: raw.op, dt: createQuery(raw.dt as RawQuery) } as QueryMask;
-			}
-
-			const numbers: Array<number> = [];
-			const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
-			for (const i of raw.dt as Array<RawQuery>) {
-				if ("_componentData" in i) {
-					if ((i as unknown as Component)._componentData.world === world) {
-						numbers.push((i as unknown as Component)._componentData.id!);
-					} else {
-						throw error(
-							`Component ${
-								(i as unknown as Component)._componentData.id
-							} does not belong to world ${tostring(world)}`,
-						);
-					}
-				} else {
-					ret.push(createQuery(i));
-				}
-			}
-
-			ret[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
-			for (const i of numbers) {
-				ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
-			}
-
-			return { op: raw.op, dt: ret } as QueryMask;
-		};
-
 		this.archetypes = new Array<Archetype>();
-		this.mask = query ? createQuery(query) : { op: ALL, dt: new Array<number>() };
+		this.mask = query ? this.createQuery(query) : { op: ALL, dt: new Array<number>() };
 		this.world = world;
+		this.entityContainerPool = world.entityManager.entityContainerPool;
 	}
+
+	/**
+	 * Creates a decision tree from a given query.
+	 * @param raw The raw data to create the decision tree from.
+	 */
+	private createQuery = (raw: RawQuery): QueryMask => {
+		if (raw.op === NOT) {
+			return { op: raw.op, dt: this.createQuery(raw.dt as RawQuery) } as QueryMask;
+		}
+
+		const numbers: Array<number> = [];
+		const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
+		for (const i of raw.dt as Array<RawQuery>) {
+			if ("_componentData" in i) {
+				if ((i as unknown as Component)._componentData.world === this.world) {
+					numbers.push((i as unknown as Component)._componentData.id!);
+				} else {
+					throw error(
+						`Component ${(i as unknown as Component)._componentData.id} does not belong to world ` +
+							`${tostring(this.world)}`,
+					);
+				}
+			} else {
+				ret.push(this.createQuery(i));
+			}
+		}
+
+		ret[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
+		for (const i of numbers) {
+			ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
+		}
+
+		return { op: raw.op, dt: ret } as QueryMask;
+	};
 
 	/**
 	 * Runs a callback for each entity that matches the given query.
@@ -172,13 +175,16 @@ export class Query {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityId) => boolean | void): void {
+	public forEach(callback: (entityId: EntityContainer) => boolean | void): void {
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
-				if (!callback(entities[j - 1])) {
+				const container = this.entityContainerPool.aquire(entities[j - 1]);
+				if (!callback(container)) {
+					this.entityContainerPool.release(container);
 					break;
 				}
+				this.entityContainerPool.release(container);
 			}
 		}
 

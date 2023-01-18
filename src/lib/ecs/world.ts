@@ -3,6 +3,7 @@ import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { Component, createComponentArray, Tag, Tree, Type } from "./component";
+import { EntityContainerPool } from "./entity";
 import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
@@ -53,7 +54,7 @@ export class World {
 		this.queries = [];
 		this.componentsToUpdate = new SparseSet();
 
-		this.entityManager = new EntityManager();
+		this.entityManager = new EntityManager(new EntityContainerPool(this, 100));
 		this.systemManager = new SystemManager(this);
 	}
 
