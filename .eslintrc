@@ -45,6 +45,7 @@
 				"ignoreVoid": true
 			}
 		],
+		"@typescript-eslint/no-explicit-any": "warn",
 		"@typescript-eslint/no-unused-vars": "warn",
 		"@typescript-eslint/explicit-function-return-type": "warn",
 		"@typescript-eslint/interface-name-prefix": "off",
@@ -84,6 +85,7 @@
 				"allowEmptyCatch": true
 			}
 		],
+		"no-void": "off",
 		"no-extra-boolean-cast": "off",
 		"no-undef-init": "error",
 		"prefer-const": "off",

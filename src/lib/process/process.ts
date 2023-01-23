@@ -3,9 +3,6 @@ import Scheduler from "./scheduler";
 
 type ProcessScheduler = typeof Scheduler;
 
-/**
- *
- */
 export class Process extends EventListener<[]> {
 	public static processes = new Map<string, Process>();
 
@@ -17,6 +14,7 @@ export class Process extends EventListener<[]> {
 
 	constructor(name: string, ticker: ProcessScheduler) {
 		super();
+
 		this.name = name;
 		this.ticker = ticker;
 
@@ -24,12 +22,12 @@ export class Process extends EventListener<[]> {
 		Process.processes.set(name, this);
 	}
 
-	public resume() {
+	public resume(): void {
 		this.isSuspended = false;
 		this.ticker.addProcess(this);
 	}
 
-	public suspend(ticks = 1) {
+	public suspend(ticks = 1): void {
 		this.suspensionTime = ticks;
 		this.isSuspended = true;
 	}
