@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { ComponentTypes } from "./component";
+import { ComponentInternal, ComponentTypes, createComponent, createTag, TagComponentInternal } from "./component";
 import { World } from "./world";
 
 let world: World;
@@ -12,50 +12,91 @@ export = (): void => {
 
 	describe("a component should", () => {
 		it("be able to be created", () => {
-			const component = world.defineComponent({
-				x: 0,
+			const component = createComponent({
+				x: ComponentTypes.number,
 			});
-
 			expect(component).to.be.ok();
 		});
 
 		it("be able to be given to an entity", () => {
-			const component = world.defineComponent({
-				x: 0,
+			const component = createComponent({
+				x: ComponentTypes.number,
 			});
-
 			const entity = world.add();
 			world.addComponent(entity, component);
-
 			world.flush();
-
 			expect(world.hasComponent(entity, component)).to.equal(true);
 		});
 
-		// TODO: We could potentially change the typing of defineComponent to be more strict to not allow {}
-		it("should not be able to be created without any data", () => {
-			expect(() => {
-				world.defineComponent({});
-			}).to.throw();
-		});
-
-		it("should be able to update its data", () => {
-			const component = world.defineComponent({
-				x: ComponentTypes.Number,
+		it("be able to be removed from an entity", () => {
+			const component = createComponent({
+				x: ComponentTypes.number,
 			});
-
 			const entity = world.add();
 			world.addComponent(entity, component);
+			world.flush();
+			world.removeComponent(entity, component);
+			world.flush();
+			expect(world.hasComponent(entity, component)).to.equal(false);
+		});
 
+		it("be able to update its data", () => {
+			const component = createComponent({
+				x: ComponentTypes.number,
+			});
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+			component.update(entity, {
+				x: 1,
+			});
+			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
+			print(component);
+			const component2 = createComponent({
+				x: ComponentTypes.number,
+			});
+			const entity2 = world.add();
+			world.addComponent(entity2, component2, {
+				x: 2,
+			});
+			world.flush();
+			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
+		});
+	});
+
+	describe("a tag should", () => {
+		it("be able to be created", () => {
+			const tag = createTag();
+			expect(tag).to.be.ok();
+		});
+
+		it("be able to be given to an entity", () => {
+			const tag = createTag();
+			const entity = world.add();
+			world.addTag(entity, tag);
+			world.flush();
+			expect(world.hasTag(entity, tag)).to.equal(true);
+		});
+
+		it("be able to be removed from an entity", () => {
+			const tag = createTag();
+			const entity = world.add();
+			world.addTag(entity, tag);
+			world.flush();
+			world.removeTag(entity, tag);
+			world.flush();
+			expect(world.hasTag(entity, tag)).to.equal(false);
+		});
+
+		it("not hold any data", () => {
+			const tag = createTag() as TagComponentInternal;
+			const entity = world.add();
+			world.addTag(entity, tag);
 			world.flush();
 
-			// component.update(entity, {
-			// 	x: 1,
-			// });
-
-			// expect(world.getComponent(entity, component)).to.equal({
-			// 	x: 1,
-			// });
+			for (const [key] of pairs(tag)) {
+				expect(tag[key]).to.equal(tag.componentId);
+			}
 		});
 	});
 };

@@ -44,8 +44,9 @@ export = (): void => {
 	});
 
 	describe("A world with one entity should", () => {
+		let id: number;
 		beforeEach(() => {
-			world.add();
+			id = world.add();
 			world.flush();
 		});
 
@@ -54,7 +55,7 @@ export = (): void => {
 		});
 
 		it("have a size of 0 after an entity is destroyed", () => {
-			world.remove(0);
+			world.remove(id);
 			world.flush();
 			expect(world.size()).to.equal(0);
 		});

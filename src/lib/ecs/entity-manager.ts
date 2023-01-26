@@ -5,13 +5,22 @@ import { EntityContainerPool } from "./entity";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { World } from "./world";
 
+let globalEntityId = 0;
+let globalComponentId = 0;
+
+export function getNextComponentId(): number {
+	return globalComponentId++;
+}
+
 /**
  * A class for managing entities within the world.
  *
  * This class is created internally by the {@link World} class, and should not
  * be accessed directly.
  *
- * //TODO: Remove the weird coupling between this and the world class.
+ * //TODO: Remove the weird coupling between this and the world class;
+ * we can take the system manager helpers out of the world class as the user
+ * should sparingly use it after world creation.
  */
 export class EntityManager {
 	public archetypes: Map<string, Archetype>;
@@ -23,8 +32,8 @@ export class EntityManager {
 
 	public readonly entityContainerPool: EntityContainerPool;
 
-	private componentId = 0;
-	private entityId = 0;
+	// private componentId = 0;
+	// private entityId = 0;
 	private size = 0;
 
 	constructor(entityContainerPool: EntityContainerPool) {
@@ -40,11 +49,11 @@ export class EntityManager {
 	}
 
 	public getEntityId(): number {
-		return this.entityId;
+		return globalEntityId;
 	}
 
 	public getNextComponentId(): number {
-		return this.componentId++;
+		return globalComponentId++;
 	}
 
 	/**
@@ -73,13 +82,13 @@ export class EntityManager {
 			return entityId;
 		}
 
-		if (this.entityId === 0) {
-			this.empty.mask = new Array<number>(math.ceil(this.componentId / 32), 0);
+		if (this.size === 0) {
+			this.empty.mask = new Array<number>(math.ceil(globalComponentId / 32), 0);
 			this.archetypes.set(this.empty.mask.join(","), this.empty);
 		}
 
-		this.createEntityInternal(this.entityId);
-		return this.entityId++;
+		this.createEntityInternal(globalEntityId);
+		return globalEntityId++;
 	}
 
 	/**

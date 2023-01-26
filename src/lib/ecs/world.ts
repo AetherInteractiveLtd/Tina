@@ -1,8 +1,10 @@
+import { HttpService } from "@rbxts/services";
+
 import { EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { Component, createComponentArray, Tag, Tree, Type } from "./component";
+import { AnyComponent, AnyComponentInternal, GetComponentSchema, OptionalKeys, TagComponent } from "./component";
 import { EntityContainerPool } from "./entity";
 import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -40,11 +42,15 @@ export interface WorldOptions {
  * ```
  */
 export class World {
+	public worldId = HttpService.GenerateGUID(false);
+
 	public readonly entityManager: EntityManager;
 	public readonly options: WorldOptions;
 
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet;
+
+	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query>;
 
 	public readonly systemManager: SystemManager;
@@ -60,7 +66,7 @@ export class World {
 
 	/** @returns The name of the world. */
 	public toString(): string {
-		return this.options.name !== undefined ? this.options.name : "World";
+		return this.options.name ?? "World";
 	}
 
 	/**
@@ -84,7 +90,7 @@ export class World {
 
 		debug.profilebegin("World:createQuery");
 		{
-			query = new Query(this, ALL(...raw));
+			query = new Query(this, this.entityManager.entityContainerPool.acquire(-1), ALL(...raw));
 			this.entityManager.archetypes.forEach(archetype => {
 				if (Query.match(archetype.mask, query.mask)) {
 					query.archetypes.push(archetype);
@@ -98,7 +104,10 @@ export class World {
 	}
 
 	/**
+	 * Starts the given world.
 	 *
+	 * This should only be called after all components, and preferably all
+	 * systems have been registered.
 	 */
 	public start(): void {
 		this.systemManager.start();
@@ -158,37 +167,6 @@ export class World {
 	}
 
 	/**
-	 * Initializes a new component with the world.
-	 *
-	 * @param def
-	 */
-	public defineComponent<T extends Tree<Type>>(def?: T): Component {
-		if (this.entityManager.getEntityId() > 0) {
-			throw error("Cannot define components after entities have been created");
-		}
-
-		const component = new Component();
-		// TODO: currently this is hardcoded to a max of 1000 entities; should update this to be dynamic
-		// component.initializeComponent(this, this.entityManager.getNextComponentId(), createComponentArray(def, 1000));
-
-		return component;
-	}
-
-	/**
-	 *
-	 */
-	public defineTag(): Tag {
-		if (this.entityManager.getEntityId() > 0) {
-			throw error("Cannot define tags after entities have been created");
-		}
-
-		const tag = new Tag();
-		tag.initializeTag(this, this.entityManager.getNextComponentId());
-
-		return tag;
-	}
-
-	/**
 	 * Adds a given component to the entity. If the entity already has the
 	 * given component, then an error is thrown.
 	 *
@@ -197,7 +175,11 @@ export class World {
 	 *     been defined previously with {@link defineComponent}.
 	 * @param data The optional data to initialize the component with.
 	 */
-	public addComponent<C extends Component | Tag>(entityId: EntityId, component: C, data?: Partial<C>): World {
+	public addComponent<C extends AnyComponent>(
+		entityId: EntityId,
+		component: C,
+		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+	): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -206,7 +188,7 @@ export class World {
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = component._componentData.id!;
+			const componentId = (component as unknown as AnyComponentInternal).componentId;
 			if (!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
@@ -216,13 +198,28 @@ export class World {
 		}
 		debug.profileend();
 
+		// TODO: this needs to be deferred until the next update
+		if (data !== undefined) {
+			component.update(entityId, data);
+		}
+
 		return this;
+	}
+
+	/**
+	 *
+	 * @param entityId
+	 * @param tag
+	 * @returns
+	 */
+	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
+		return this.addComponent(entityId, tag as unknown as AnyComponent);
 	}
 
 	/**
 	 * Removes the component of the given type from the entity.
 	 */
-	public removeComponent<C extends Component | Tag>(entityId: EntityId, component: C): World {
+	public removeComponent<C extends AnyComponent>(entityId: EntityId, component: C): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -231,7 +228,7 @@ export class World {
 
 		debug.profilebegin("World:removeComponent");
 		{
-			const componentId = component._componentData.id!;
+			const componentId = (component as unknown as AnyComponentInternal).componentId;
 			if (this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)) {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
@@ -245,12 +242,26 @@ export class World {
 	}
 
 	/**
+	 *
+	 * @param entityId
+	 * @param tag
+	 * @returns
+	 */
+	public removeTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
+		return this.removeComponent(entityId, tag as unknown as AnyComponent);
+	}
+
+	/**
 	 * Returns whether the entity has the given component.
 	 * @returns Whether the entity has the given component.
 	 */
-	public hasComponent<C extends Component | Tag>(entityId: EntityId, component: C): boolean {
-		const componentId = component._componentData.id!;
+	public hasComponent<C extends AnyComponent>(entityId: EntityId, component: C): boolean {
+		const componentId = (component as unknown as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
+	}
+
+	public hasTag<C extends TagComponent>(entityId: EntityId, tag: C): boolean {
+		return this.hasComponent(entityId, tag as unknown as AnyComponent);
 	}
 
 	/**

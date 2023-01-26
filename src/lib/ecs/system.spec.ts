@@ -1,5 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { EntityContainerInternal } from "./entity";
 import { Query } from "./query";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
@@ -72,7 +73,7 @@ export = (): void => {
 			system.enabled = true;
 			let query;
 			system.configureQueries = (world: World): void => {
-				query = new Query(world).mask;
+				query = new Query(world, {} as EntityContainerInternal).mask;
 			};
 			system.onUpdate = (): void => {};
 
@@ -119,7 +120,6 @@ export = (): void => {
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
 			bindableEvent.Fire();
-			print(systemOrder);
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
 
@@ -243,7 +243,6 @@ export = (): void => {
 
 			bindableEvent.Fire();
 
-			print(systemOrder);
 			expect(shallowEquals(systemOrder, [3, 2, 1])).to.equal(true);
 
 			const systemOrder1: Array<number> = [];
@@ -278,7 +277,7 @@ export = (): void => {
 			expect(shallowEquals(systemOrder1, [])).to.equal(true);
 
 			bindableEvent.Fire();
-			print(systemOrder1);
+
 			expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
 		});
 

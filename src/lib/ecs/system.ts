@@ -67,12 +67,10 @@ export abstract class System {
  * any system in a given world.
  */
 export class SystemManager {
+	private executionDefault: ExecutionGroup;
+	private executionGroups: Set<ExecutionGroup> = new Set();
 	private systems: Array<System> = new Array();
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
-
-	private executionGroups: Set<ExecutionGroup> = new Set();
-
-	private executionDefault: ExecutionGroup;
 	private world: World;
 
 	constructor(world: World) {

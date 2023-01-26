@@ -1,5 +1,5 @@
 import { EntityId } from "../types/ecs";
-import { Component } from "./component";
+import { AnyComponent } from "./component";
 import { World } from "./world";
 
 /**
@@ -8,8 +8,8 @@ import { World } from "./world";
 export interface EntityContainer {
 	entityId: EntityId;
 
-	addComponent<C extends Component>(component: C): this;
-	removeComponent<C extends Component>(component: C): this;
+	addComponent<C extends AnyComponent>(component: C): this;
+	removeComponent<C extends AnyComponent>(component: C): this;
 
 	pin(): void;
 	unpin(): void;
@@ -42,22 +42,18 @@ export class EntityContainerInternal {
 		this.entityId = entityId;
 	}
 
-	public addComponent<C extends Component>(component: C): this {
+	public addComponent<C extends AnyComponent>(component: C): this {
 		this.world.addComponent(this.entityId!, component);
 		return this;
 	}
 
-	public removeComponent<C extends Component>(component: C): this {
+	public removeComponent<C extends AnyComponent>(component: C): this {
 		this.world.removeComponent(this.entityId!, component);
 		return this;
 	}
 
 	public pin(): void {}
 	public unpin(): void {}
-
-	// public release(): void {
-	// 	this.entityId = undefined;
-	// }
 }
 
 /**
@@ -84,7 +80,7 @@ export class EntityContainerPool {
 	 * Gets the next available entity from the pool.
 	 * @returns An available entity.
 	 */
-	public aquire(entityId: EntityId): EntityContainerInternal {
+	public acquire(entityId: EntityId): EntityContainerInternal {
 		assert(this.firstAvailable !== undefined, "No more entities available");
 
 		const entityContainer = this.firstAvailable;
@@ -97,7 +93,7 @@ export class EntityContainerPool {
 				`consider increasing the initial size of the pool.`,
 			);
 
-			debug.profilebegin("EntityPool.expand");
+			debug.profilebegin("EntityPool:expand");
 			{
 				this.expand(math.round(this.size * 0.1) + 1);
 			}

@@ -1,11 +1,11 @@
 import { Archetype } from "./collections/archetype";
-import { Component } from "./component";
-import { EntityContainer, EntityContainerPool } from "./entity";
+import { AnyComponent, AnyComponentInternal } from "./component";
+import { EntityContainer, EntityContainerInternal } from "./entity";
 import { World } from "./world";
 
 export type RawQuery =
-	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | Component> }
-	| { op: typeof NOT; dt: RawQuery | Component };
+	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent> }
+	| { op: typeof NOT; dt: RawQuery | AnyComponent };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
@@ -29,7 +29,7 @@ type QueryMask = Group | Not | MLeaf;
  *
  * @param components The components or query to match to.
  */
-export function ALL(...components: Array<RawQuery | Component>): RawQuery {
+export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
 	if (components.size() === 0) {
 		throw error("ALL must have at least one component");
 	}
@@ -54,7 +54,7 @@ export function ALL(...components: Array<RawQuery | Component>): RawQuery {
  *
  * @param components The components or query to match to.
  */
-export function ANY(...components: Array<RawQuery | Component>): RawQuery {
+export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
 	if (components.size() === 0) {
 		throw error("ANY must have at least one component");
 	}
@@ -79,7 +79,7 @@ export function ANY(...components: Array<RawQuery | Component>): RawQuery {
  *
  * @param components The components or query to match to.
  */
-export function NOT(components: RawQuery | Component): RawQuery {
+export function NOT(components: RawQuery | AnyComponent): RawQuery {
 	return { op: NOT, dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components) };
 }
 
@@ -113,13 +113,14 @@ export class Query {
 	/** The world that the query belongs to. */
 	public readonly world: World;
 
-	private readonly entityContainerPool: EntityContainerPool;
+	/** A local entity class that is reused throughout a query. */
+	private entityContainerForQuery: EntityContainerInternal;
 
-	constructor(world: World, query?: RawQuery) {
+	constructor(world: World, entityContainer: EntityContainerInternal, query?: RawQuery) {
 		this.archetypes = new Array<Archetype>();
 		this.mask = query ? this.createQuery(query) : { op: ALL, dt: new Array<number>() };
 		this.world = world;
-		this.entityContainerPool = world.entityManager.entityContainerPool;
+		this.entityContainerForQuery = entityContainer;
 	}
 
 	/**
@@ -134,14 +135,13 @@ export class Query {
 		const numbers: Array<number> = [];
 		const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
 		for (const i of raw.dt as Array<RawQuery>) {
-			if ("_componentData" in i) {
-				if ((i as unknown as Component)._componentData.world === this.world) {
-					numbers.push((i as unknown as Component)._componentData.id!);
+			if ("componentId" in i) {
+				const componentId = (i as unknown as AnyComponentInternal).componentId;
+				if (componentId !== undefined) {
+					numbers.push(componentId);
 				} else {
-					throw error(
-						`Component ${(i as unknown as Component)._componentData.id} does not belong to world ` +
-						`${tostring(this.world)}`,
-					);
+					// TODO: Better error message
+					throw error(`A Component has not been initialized properly.`);
 				}
 			} else {
 				ret.push(this.createQuery(i));
@@ -164,7 +164,7 @@ export class Query {
 	 *
 	 * #### Usage Example:
 	 * ```ts
-	 * query.forEach((entityId) => {
+	 * query.forEach((entity) => {
 	 * 	// ...
 	 * });
 	 * ```
@@ -179,18 +179,16 @@ export class Query {
 			return;
 		}
 
-		const container = this.entityContainerPool.aquire(-1);
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
-				container.initializeEntityContainer(entities[j - 1]);
-				if (!callback(container as EntityContainer)) {
+				this.entityContainerForQuery.initializeEntityContainer(entities[j - 1]);
+				if (!callback(this.entityContainerForQuery as EntityContainer)) {
 					break;
 				}
 			}
 		}
 
-		this.entityContainerPool.release(container);
 		this.world.flush();
 	}
 
