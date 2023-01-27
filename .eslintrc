@@ -7,10 +7,7 @@
 		"sourceType": "module",
 		"project": "./tsconfig.json"
 	},
-	"ignorePatterns": [
-		"/out",
-		"/tests"
-	],
+	"ignorePatterns": ["/out", "/tests"],
 	"plugins": [
 		"@typescript-eslint",
 		"@typescript-eslint/eslint-plugin",
@@ -46,17 +43,11 @@
 			}
 		],
 		"@typescript-eslint/no-explicit-any": "warn",
+		"@typescript-eslint/no-unused-vars": "warn",
 		"@typescript-eslint/explicit-function-return-type": [
-			"warn", {
-				"allowExpressions": true
-			}
-		],
-		"@typescript-eslint/no-unused-vars": [
 			"warn",
 			{
-				"argsIgnorePattern": "^_",
-				"varsIgnorePattern": "^_",
-				"caughtErrorsIgnorePattern": "^_"
+				"allowExpressions": true
 			}
 		],
 		"@typescript-eslint/interface-name-prefix": "off",
@@ -76,11 +67,7 @@
 				}
 			}
 		],
-		"curly": [
-			"warn",
-			"multi-line",
-			"consistent"
-		],
+		"curly": ["warn", "multi-line", "consistent"],
 		"no-param-reassign": "warn",
 		"no-autofix/prefer-const": "warn",
 		"no-constant-condition": [
