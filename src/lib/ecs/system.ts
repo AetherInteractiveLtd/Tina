@@ -38,6 +38,8 @@ export abstract class System {
 	/** The time since the system was last called. */
 	public dt = 0;
 
+	public lastCalled = 0;
+
 	/**
 	 * The onUpdate method is called on every execution of this systems
 	 * execution group.
@@ -91,7 +93,7 @@ export class SystemManager {
 				system.configureQueries(this.world);
 			}
 
-			system.dt = os.clock();
+			system.lastCalled = os.clock();
 		});
 
 		this.executionGroups.forEach(executionGroup => {
@@ -101,7 +103,8 @@ export class SystemManager {
 						return;
 					}
 
-					system.dt = os.clock() - system.dt;
+					system.dt = os.clock() - system.lastCalled;
+					system.lastCalled = os.clock();
 					system.onUpdate(this.world);
 				});
 			});
