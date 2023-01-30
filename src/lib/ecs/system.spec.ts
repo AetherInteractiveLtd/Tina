@@ -1,6 +1,5 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { EntityContainerInternal } from "./entity";
 import { Query } from "./query";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
@@ -73,7 +72,7 @@ export = (): void => {
 			system.enabled = true;
 			let query;
 			system.configureQueries = (world: World): void => {
-				query = new Query(world, {} as EntityContainerInternal).mask;
+				query = new Query(world).mask;
 			};
 			system.onUpdate = (): void => {};
 

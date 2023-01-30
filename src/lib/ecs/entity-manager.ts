@@ -1,7 +1,6 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { EntityContainerPool } from "./entity";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { World } from "./world";
 
@@ -30,13 +29,9 @@ export class EntityManager {
 	public updateTo: Array<Archetype>;
 	private readonly reusableEntityIds: SparseSet;
 
-	public readonly entityContainerPool: EntityContainerPool;
-
-	// private componentId = 0;
-	// private entityId = 0;
 	private size = 0;
 
-	constructor(entityContainerPool: EntityContainerPool) {
+	constructor() {
 		this.archetypes = new Map();
 
 		this.reusableEntityIds = new SparseSet();
@@ -44,8 +39,6 @@ export class EntityManager {
 		this.entities = [];
 		this.updateTo = [];
 		this.empty = new Archetype([]);
-
-		this.entityContainerPool = entityContainerPool;
 	}
 
 	public getEntityId(): number {

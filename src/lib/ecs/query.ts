@@ -1,6 +1,6 @@
+import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { AnyComponent, AnyComponentInternal } from "./component";
-import { EntityContainer, EntityContainerInternal } from "./entity";
 import { World } from "./world";
 
 export type RawQuery =
@@ -114,13 +114,15 @@ export class Query {
 	public readonly world: World;
 
 	/** A local entity class that is reused throughout a query. */
-	private entityContainerForQuery: EntityContainerInternal;
+	// private entityContainerForQuery: EntityContainerInternal;
 
-	constructor(world: World, entityContainer: EntityContainerInternal, query?: RawQuery) {
+	private matchingComponents: Array<AnyComponent> = new Array<AnyComponent>();
+
+	constructor(world: World, query?: RawQuery) {
 		this.archetypes = new Array<Archetype>();
 		this.mask = query ? this.createQuery(query) : { op: ALL, dt: new Array<number>() };
 		this.world = world;
-		this.entityContainerForQuery = entityContainer;
+		// this.entityContainerForQuery = entityContainer;
 	}
 
 	/**
@@ -174,7 +176,7 @@ export class Query {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityContainer) => boolean | void): void {
+	public forEach(callback: (entityId: EntityId) => boolean | void): void {
 		if (this.archetypes.size() === 0) {
 			return;
 		}
@@ -182,8 +184,7 @@ export class Query {
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
-				this.entityContainerForQuery.initializeEntityContainer(entities[j - 1]);
-				if (!callback(this.entityContainerForQuery as EntityContainer)) {
+				if (!callback(entities[j - 1])) {
 					break;
 				}
 			}
@@ -218,6 +219,7 @@ export class Query {
 					return false;
 				}
 			}
+
 			return true;
 		}
 

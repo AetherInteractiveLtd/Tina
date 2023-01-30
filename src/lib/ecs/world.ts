@@ -5,7 +5,6 @@ import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { AnyComponent, AnyComponentInternal, GetComponentSchema, OptionalKeys, TagComponent } from "./component";
-import { EntityContainerPool } from "./entity";
 import { EntityManager } from "./entity-manager";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
@@ -60,7 +59,7 @@ export class World {
 		this.queries = [];
 		this.componentsToUpdate = new SparseSet();
 
-		this.entityManager = new EntityManager(new EntityContainerPool(this, 100));
+		this.entityManager = new EntityManager();
 		this.systemManager = new SystemManager(this);
 	}
 
@@ -90,7 +89,7 @@ export class World {
 
 		debug.profilebegin("World:createQuery");
 		{
-			query = new Query(this, this.entityManager.entityContainerPool.acquire(-1), ALL(...raw));
+			query = new Query(this, ALL(...raw));
 			this.entityManager.archetypes.forEach(archetype => {
 				if (Query.match(archetype.mask, query.mask)) {
 					query.archetypes.push(archetype);
@@ -198,9 +197,8 @@ export class World {
 		}
 		debug.profileend();
 
-		// TODO: this needs to be deferred until the next update
 		if (data !== undefined) {
-			component.update(entityId, data);
+			component.set(entityId, data);
 		}
 
 		return this;

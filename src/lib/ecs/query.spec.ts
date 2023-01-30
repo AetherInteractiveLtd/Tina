@@ -1,21 +1,29 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { EntityContainerInternal } from "./entity";
+import { EntityId } from "../types/ecs";
+import { Tree, Type } from "./component";
 import { ALL, ANY, NOT, Query } from "./query";
 import { World } from "./world";
 
-const components = new Array<MockComponent>(32);
+const components = new Array<MockComponent<defined>>(32);
 
 const world = {} as World;
-const entity = {} as EntityContainerInternal;
 
-type MockComponent = { componentData: Array<never>; componentId: number; update(): void };
+type MockComponent<T extends Tree<Type>> = {
+	componentData: Array<never>;
+	componentId: number;
+	set(): void;
+	get<U extends keyof T>(entityId: EntityId, key: U): T[U] extends Array<infer K> ? K : never;
+};
 
-function createMockComponent(id: number): MockComponent {
+function createMockComponent<T extends Tree<Type>>(id: number): MockComponent<T> {
 	return {
 		componentData: [],
 		componentId: id,
-		update(): void {},
+		set(): void {},
+		get<U extends keyof T>(entityId: EntityId, key: U): T[U] extends Array<infer K> ? K : never {
+			return undefined as never;
+		},
 	};
 }
 
@@ -39,7 +47,7 @@ export = (): void => {
 
 		describe("match", () => {
 			it("empty", () => {
-				const query = new Query({} as World, entity).mask;
+				const query = new Query({} as World).mask;
 
 				for (let i = 0; i < 20; i++) {
 					expect(Query.match(new Array<number>(math.floor(math.random() * 1000)), query)).to.equal(true);
@@ -47,7 +55,7 @@ export = (): void => {
 			});
 
 			it("ALL", () => {
-				const query = new Query(world, entity, ALL(components[0], components[2], components[3])).mask;
+				const query = new Query(world, ALL(components[0], components[2], components[3])).mask;
 				expect(Query.match([13], query)).to.equal(true);
 				expect(Query.match([14], query)).to.equal(false);
 				expect(Query.match([15, 0], query)).to.equal(true);
@@ -55,7 +63,7 @@ export = (): void => {
 			});
 
 			it("NOT", () => {
-				const query = new Query(world, entity, NOT(components[1])).mask;
+				const query = new Query(world, NOT(components[1])).mask;
 				expect(Query.match([0], query)).to.equal(true);
 				expect(Query.match([5], query)).to.equal(true);
 				expect(Query.match([7], query)).to.equal(false);
@@ -64,7 +72,7 @@ export = (): void => {
 			});
 
 			it("ANY", () => {
-				const query = new Query(world, entity, ANY(components[0], components[2], components[5])).mask;
+				const query = new Query(world, ANY(components[0], components[2], components[5])).mask;
 				expect(Query.match([0], query)).to.equal(false);
 				expect(Query.match([10], query)).to.equal(false);
 				expect(Query.match([13], query)).to.equal(true);
@@ -74,7 +82,7 @@ export = (): void => {
 
 			// TODO: Move away from 32 bit operators since lua doesn't support them
 			it("more than 32 components", () => {
-				const query = new Query(world, entity, ALL(components[0], components[32])).mask;
+				const query = new Query(world, ALL(components[0], components[32])).mask;
 				expect(Query.match([1, 1], query)).to.equal(true);
 				expect(Query.match([1, 2, 1], query)).to.equal(false);
 				expect(Query.match([3, 3, 0], query)).to.equal(true);
@@ -83,7 +91,7 @@ export = (): void => {
 			});
 
 			it("complex query #1", () => {
-				const query = new Query(world, entity, ALL(components[1], ANY(components[2], NOT(components[0])))).mask;
+				const query = new Query(world, ALL(components[1], ANY(components[2], NOT(components[0])))).mask;
 				expect(Query.match([2], query)).to.equal(true);
 				expect(Query.match([3], query)).to.equal(false);
 				expect(Query.match([5, 0], query)).to.equal(false);
@@ -92,7 +100,7 @@ export = (): void => {
 			});
 
 			it("complex query #2", () => {
-				const query = new Query(world, entity, ALL(NOT(ANY(components[0], components[1])), components[3])).mask;
+				const query = new Query(world, ALL(NOT(ANY(components[0], components[1])), components[3])).mask;
 				expect(Query.match([1], query)).to.equal(false);
 				expect(Query.match([8], query)).to.equal(true);
 				expect(Query.match([9, 0], query)).to.equal(false);
@@ -103,7 +111,6 @@ export = (): void => {
 			it("complex query #3", () => {
 				const query = new Query(
 					world,
-					entity,
 					ALL(ANY(components[0], components[3]), ANY(components[2], NOT(components[4]))),
 				).mask;
 				expect(Query.match([1], query)).to.equal(true);
