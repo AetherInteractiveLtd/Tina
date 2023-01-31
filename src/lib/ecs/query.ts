@@ -4,8 +4,8 @@ import { AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
 export type RawQuery =
-	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent> }
-	| { op: typeof NOT; dt: RawQuery | AnyComponent };
+    | { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent> }
+    | { op: typeof NOT; dt: RawQuery | AnyComponent };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
@@ -30,11 +30,11 @@ type QueryMask = Group | Not | MLeaf;
  * @param components The components or query to match to.
  */
 export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
-	if (components.size() === 0) {
-		throw error("ALL must have at least one component");
-	}
+    if (components.size() === 0) {
+        throw error("ALL must have at least one component");
+    }
 
-	return { op: ALL, dt: components };
+    return { op: ALL, dt: components };
 }
 
 /**
@@ -55,11 +55,11 @@ export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
  * @param components The components or query to match to.
  */
 export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
-	if (components.size() === 0) {
-		throw error("ANY must have at least one component");
-	}
+    if (components.size() === 0) {
+        throw error("ANY must have at least one component");
+    }
 
-	return { op: ANY, dt: components };
+    return { op: ANY, dt: components };
 }
 
 /**
@@ -80,7 +80,10 @@ export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
  * @param components The components or query to match to.
  */
 export function NOT(components: RawQuery | AnyComponent): RawQuery {
-	return { op: NOT, dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components) };
+    return {
+        op: NOT,
+        dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components),
+    };
 }
 
 /**
@@ -108,153 +111,148 @@ export function NOT(components: RawQuery | AnyComponent): RawQuery {
  * @note Order of iteration is not guaranteed.
  */
 export class Query {
-	public archetypes: Array<Archetype>;
-	public mask: QueryMask;
-	/** The world that the query belongs to. */
-	public readonly world: World;
+    /** The world that the query belongs to. */
+    public readonly world: World;
 
-	/** A local entity class that is reused throughout a query. */
-	// private entityContainerForQuery: EntityContainerInternal;
+    public archetypes: Array<Archetype>;
+    public mask: QueryMask;
 
-	private matchingComponents: Array<AnyComponent> = new Array<AnyComponent>();
+    constructor(world: World, query?: RawQuery) {
+        this.archetypes = [];
+        this.mask = query ? this.createQuery(query) : { op: ALL, dt: [] };
+        this.world = world;
+    }
 
-	constructor(world: World, query?: RawQuery) {
-		this.archetypes = new Array<Archetype>();
-		this.mask = query ? this.createQuery(query) : { op: ALL, dt: new Array<number>() };
-		this.world = world;
-		// this.entityContainerForQuery = entityContainer;
-	}
+    /**
+     * Traverses the query mask, and returns true if the archetype mask
+     * matches the given query.
+     *
+     * This function should not be used directly, and instead is used
+     * internally by {@link World.createQuery}.
+     *
+     * @param target The archetype mask to match to.
+     * @param mask The query mask to match with.
+     * @returns True if the archetype mask matches the query mask.
+     */
+    public static match(target: Array<number>, mask: QueryMask): boolean {
+        if (typeOf((mask.dt as Array<number>)[0]) === "number") {
+            return Query.partial(target, mask as MLeaf);
+        }
 
-	/**
-	 * Creates a decision tree from a given query.
-	 * @param raw The raw data to create the decision tree from.
-	 */
-	private createQuery = (raw: RawQuery): QueryMask => {
-		if (raw.op === NOT) {
-			return { op: raw.op, dt: this.createQuery(raw.dt as RawQuery) } as QueryMask;
-		}
+        if (mask.op === NOT) {
+            return !Query.match(target, mask.dt as QueryMask);
+        }
 
-		const numbers: Array<number> = [];
-		const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: new Array<number>() }] as [MLeaf];
-		for (const i of raw.dt as Array<RawQuery>) {
-			if ("componentId" in i) {
-				const componentId = (i as unknown as AnyComponentInternal).componentId;
-				if (componentId !== undefined) {
-					numbers.push(componentId);
-				} else {
-					// TODO: Better error message
-					throw error(`A Component has not been initialized properly.`);
-				}
-			} else {
-				ret.push(this.createQuery(i));
-			}
-		}
+        if (mask.op === ALL) {
+            for (const query of (mask as Group).dt) {
+                if (!Query.match(target, query)) {
+                    return false;
+                }
+            }
 
-		ret[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
-		for (const i of numbers) {
-			ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
-		}
+            return true;
+        }
 
-		return { op: raw.op, dt: ret } as QueryMask;
-	};
+        for (const query of (mask as Group).dt) {
+            if (Query.match(target, query)) {
+                return true;
+            }
+        }
 
-	/**
-	 * Runs a callback for each entity that matches the given query.
-	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over.
-	 *
-	 * #### Usage Example:
-	 * ```ts
-	 * query.forEach((entity) => {
-	 * 	// ...
-	 * });
-	 * ```
-	 *
-	 * Once the iteration is complete, any deferred changes made during the
-	 * query (such as {@link Entity.removeComponent}) will be applied.
-	 *
-	 * @param callback The callback to run for each entity.
-	 */
-	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		if (this.archetypes.size() === 0) {
-			return;
-		}
+        return false;
+    }
 
-		for (let i = 0; i < this.archetypes.size(); i++) {
-			const entities = this.archetypes[i].entities;
-			for (let j = entities.size(); j > 0; j--) {
-				if (!callback(entities[j - 1])) {
-					break;
-				}
-			}
-		}
+    /**
+     * Runs a callback for each entity that matches the given query.
+     *
+     * If the callback returns `false`, the iteration will stop, and no other
+     * entities in this query will be iterated over.
+     *
+     * #### Usage Example:
+     * ```ts
+     * query.forEach((entity) => {
+     * 	// ...
+     * });
+     * ```
+     *
+     * Once the iteration is complete, any deferred changes made during the
+     * query (such as {@link Entity.removeComponent}) will be applied.
+     *
+     * @param callback The callback to run for each entity.
+     */
+    public forEach(callback: (entityId: EntityId) => boolean | void): void {
+        if (this.archetypes.size() === 0) {
+            return;
+        }
 
-		this.world.flush();
-	}
+        for (let i = 0; i < this.archetypes.size(); i++) {
+            const entities = this.archetypes[i].entities;
+            for (let j = entities.size(); j > 0; j--) {
+                if (!callback(entities[j - 1])) {
+                    break;
+                }
+            }
+        }
 
-	/**
-	 * Traverses the query mask, and returns true if the archetype mask
-	 * matches the given query.
-	 *
-	 * This function should not be used directly, and instead is used
-	 * internally by {@link World.createQuery}.
-	 *
-	 * @param target The archetype mask to match to.
-	 * @param mask The query mask to match with.
-	 * @returns True if the archetype mask matches the query mask.
-	 */
-	public static match(target: Array<number>, mask: QueryMask): boolean {
-		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
-			return Query.partial(target, mask as MLeaf);
-		}
+        this.world.flush();
+    }
 
-		if (mask.op === NOT) {
-			return !Query.match(target, mask.dt as QueryMask);
-		}
+    /**
+     * Called when a leaf node is reached in the query mask.
+     *
+     * @param target The current remaining mask.
+     * @param mask The leaf node to match with.
+     * @returns True if the mask matches the query mask.
+     */
+    private static partial(target: Array<number>, mask: MLeaf): boolean {
+        if (mask.op === ALL) {
+            for (let i = 0; i < mask.dt.size(); i++) {
+                if ((target[i] & mask.dt[i]) < mask.dt[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-		if (mask.op === ALL) {
-			for (const query of (mask as Group).dt) {
-				if (!Query.match(target, query)) {
-					return false;
-				}
-			}
+        for (let i = 0; i < mask.dt.size(); i++) {
+            if ((target[i] & mask.dt[i]) > 0) {
+                return true;
+            }
+        }
 
-			return true;
-		}
+        return false;
+    }
 
-		for (const query of (mask as Group).dt) {
-			if (Query.match(target, query)) {
-				return true;
-			}
-		}
+    /**
+     * Creates a decision tree from a given query.
+     * @param raw The raw data to create the decision tree from.
+     */
+    private createQuery = (raw: RawQuery): QueryMask => {
+        if (raw.op === NOT) {
+            return { op: raw.op, dt: this.createQuery(raw.dt as RawQuery) } as QueryMask;
+        }
 
-		return false;
-	}
+        const numbers: Array<number> = [];
+        const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: [] }] as [MLeaf];
+        for (const i of raw.dt as Array<RawQuery>) {
+            if ("componentId" in i) {
+                const componentId = (i as unknown as AnyComponentInternal).componentId;
+                if (componentId !== undefined) {
+                    numbers.push(componentId);
+                } else {
+                    // TODO: Better error message
+                    throw error(`A Component has not been initialized properly.`);
+                }
+            } else {
+                ret.push(this.createQuery(i));
+            }
+        }
 
-	/**
-	 * Called when a leaf node is reached in the query mask.
-	 *
-	 * @param target The current remaining mask.
-	 * @param mask The leaf node to match with.
-	 * @returns True if the mask matches the query mask.
-	 */
-	private static partial(target: Array<number>, mask: MLeaf): boolean {
-		if (mask.op === ALL) {
-			for (let i = 0; i < mask.dt.size(); i++) {
-				if ((target[i] & mask.dt[i]) < mask.dt[i]) {
-					return false;
-				}
-			}
-			return true;
-		}
+        ret[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
+        for (const i of numbers) {
+            ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
+        }
 
-		for (let i = 0; i < mask.dt.size(); i++) {
-			if ((target[i] & mask.dt[i]) > 0) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+        return { op: raw.op, dt: ret } as QueryMask;
+    };
 }
