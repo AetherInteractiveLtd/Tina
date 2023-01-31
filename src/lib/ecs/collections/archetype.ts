@@ -1,4 +1,4 @@
-import { EntityId } from "../../types/ecs";
+import { ComponentId, EntityId } from "../../types/ecs";
 import { SparseSet } from "./sparse-set";
 
 /**
@@ -7,11 +7,11 @@ import { SparseSet } from "./sparse-set";
  */
 export class Archetype {
 	public change: Array<Archetype>;
-	public mask: Array<number>;
+	public mask: Array<ComponentId>;
 	public readonly entities: Array<EntityId>;
 	public readonly sparseSet: SparseSet;
 
-	constructor(mask: Array<number>) {
+	constructor(mask: Array<ComponentId>) {
 		this.change = [];
 		this.mask = mask;
 		this.sparseSet = new SparseSet();

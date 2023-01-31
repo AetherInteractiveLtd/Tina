@@ -1,6 +1,6 @@
 import { HttpService } from "@rbxts/services";
 
-import { EntityId } from "../types/ecs";
+import { ComponentId, EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
@@ -339,7 +339,7 @@ export class World {
 	 * @param componentId The id of the component to add.
 	 * @returns
 	 */
-	private archetypeChange(arch: Archetype, componentId: number): Archetype {
+	private archetypeChange(arch: Archetype, componentId: ComponentId): Archetype {
 		if (!arch.change[componentId]) {
 			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
 			arch.change[componentId] = this.getArchetype(arch.mask);
@@ -347,6 +347,10 @@ export class World {
 		}
 		return arch.change[componentId];
 	}
+
+	// private generateHashForMask(mask: Array<number>): string {
+	// 	return mask.sort().join(",");
+	// }
 
 	/**
 	 * Gets the archetype with the given mask.
@@ -357,17 +361,18 @@ export class World {
 	 * @param mask The mask of the archetype to get.
 	 * @returns The archetype with the given mask.
 	 */
-	private getArchetype(mask: Array<number>): Archetype {
-		if (!this.entityManager.archetypes.has(mask.join(","))) {
-			const arch = new Archetype(slice(mask));
-			this.entityManager.archetypes.set(mask.join(","), arch);
+	private getArchetype(mask: Array<ComponentId>): Archetype {
+		const hash = mask.join(",");
+		if (!this.entityManager.archetypes.has(hash)) {
+			const arch = new Archetype(slice(mask)); // does this mask need to be ordered?
+			this.entityManager.archetypes.set(hash, arch);
 			this.queries.forEach(query => {
 				if (Query.match(mask, query.mask)) {
 					query.archetypes.push(arch);
 				}
 			});
 		}
-		return this.entityManager.archetypes.get(mask.join(","))!;
+		return this.entityManager.archetypes.get(hash)!;
 	}
 
 	/**
@@ -376,7 +381,7 @@ export class World {
 	 * @param componentId
 	 * @returns
 	 */
-	private hasComponentInternal(mask: Array<number>, componentId: number): boolean {
+	private hasComponentInternal(mask: Array<ComponentId>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
 }

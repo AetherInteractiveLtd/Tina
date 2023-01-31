@@ -3,7 +3,7 @@
 import Sift, { None } from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
-import { EntityId } from "../types/ecs";
+import { ComponentId, EntityId } from "../types/ecs";
 import { Immutable } from "../types/readonly";
 import { getNextComponentId } from "./entity-manager";
 
@@ -13,7 +13,7 @@ export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
 export type ComponentInstance<T extends Tree<Type> = Tree<Type>> = Immutable<{
-	readonly componentId: number;
+	readonly componentId: ComponentId;
 	readonly data: T;
 }>;
 
@@ -21,13 +21,14 @@ export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Arr
 
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
-type ComponentId = { readonly componentId: number };
+type ComponentIdField = { readonly componentId: ComponentId };
 
 export type Component<T extends Tree<Type>> = {
-	update<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
+	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
+	// get<U extends keyof T>(entityId: EntityId, key: U): T[U] extends Array<infer K> ? K : never;
 };
 
-export type ComponentInternal<T extends Tree<Type>> = Component<T> & ComponentId & ComponentArray<T>;
+export type ComponentInternal<T extends Tree<Type>> = Component<T> & ComponentIdField & ComponentArray<T>;
 
 export const ComponentTypes = {
 	number: [0],
@@ -39,7 +40,7 @@ export type TagComponent = {
 	[index: string]: never;
 };
 
-export type TagComponentInternal = ComponentId & {
+export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
 };
 
@@ -49,16 +50,20 @@ export type TagComponentInternal = ComponentId & {
  */
 export function createComponent<T extends Tree<Type>>(schema: T): Component<T>;
 export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): Component<T> {
-	const componentData = createComponentArray(schema, 1000);
+	const componentData = createComponentArray(schema, 10000);
 	return Sift.Dictionary.merge(componentData, {
 		componentId: getNextComponentId(),
 
-		update<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
+		set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
 			// eslint-disable-next-line roblox-ts/no-array-pairs
 			for (const [key, value] of pairs(data)) {
 				componentData[key as never][entityId as never] = value as never;
 			}
 		},
+
+		// get<U extends keyof T>(entityId: EntityId, key: U): T[U] extends Array<infer K> ? K : never {
+		// 	return componentData[key as never][entityId as never];
+		// },
 	});
 }
 

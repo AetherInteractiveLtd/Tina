@@ -47,7 +47,7 @@ export = (): void => {
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
-			component.update(entity, {
+			component.set(entity, {
 				x: 1,
 			});
 			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
