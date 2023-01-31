@@ -57,7 +57,7 @@ export = (): void => {
                 x: 1,
             });
             expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
-            print(component);
+
             const component2 = createComponent({
                 x: ComponentTypes.number,
             });
