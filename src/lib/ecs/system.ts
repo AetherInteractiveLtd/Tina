@@ -166,9 +166,34 @@ export class SystemManager {
                         return;
                     }
 
+                    // TODO: Can we infer the name of the system from the class name
+                    const systemName = system.name;
+
                     system.dt = os.clock() - system.lastCalled;
                     system.lastCalled = os.clock();
-                    system.onUpdate(this.world);
+
+                    debug.profilebegin("system: " + systemName);
+                    // system.onUpdate(this.world);
+
+                    const thread = coroutine.create(() => {
+                        system.onUpdate(this.world);
+                    });
+
+                    const [success, result] = coroutine.resume(thread);
+                    if (coroutine.status(thread) !== "dead") {
+                        coroutine.close(thread);
+                        task.spawn(
+                            error,
+                            `System ${systemName} yielded! Yielding in systems is not supported!`,
+                        );
+                    }
+
+                    if (!success) {
+                        task.spawn(
+                            error,
+                            `System: ${systemName} errored! ${result} + \n ${debug.traceback}`,
+                        );
+                    }
                 }
             });
         }
