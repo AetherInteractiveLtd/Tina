@@ -7,47 +7,47 @@
  * The sparse set will grow as needed to accommodate values added.
  */
 export class SparseSet {
-    /** The elements stored in the sparse set. */
-    public dense: Array<number> = [];
-    /** An array that maps the set's items to their indices in the dense. */
-    public sparse: Array<number> = [];
+	/** The elements stored in the sparse set. */
+	public dense: Array<number> = [];
+	/** An array that maps the set's items to their indices in the dense. */
+	public sparse: Array<number> = [];
 
-    /**
-     * Adds the given element to the set.
-     * @param x The element to add.
-     */
-    public add(x: number): void {
-        if (this.has(x)) {
-            return;
-        }
+	/**
+	 * Adds the given element to the set.
+	 * @param x The element to add.
+	 */
+	public add(x: number): void {
+		if (this.has(x)) {
+			return;
+		}
 
-        this.sparse[x] = this.dense.size();
-        this.dense.push(x);
-    }
+		this.sparse[x] = this.dense.size();
+		this.dense.push(x);
+	}
 
-    /**
-     * Checks if the given element is in the set.
-     * @param x The element to check.
-     * @returns `true` if the element is in the set
-     */
-    public has(x: number): boolean {
-        const sparse = this.sparse[x] ?? math.huge;
-        return sparse < this.dense.size() && this.dense[sparse] === x;
-    }
+	/**
+	 * Checks if the given element is in the set.
+	 * @param x The element to check.
+	 * @returns `true` if the element is in the set
+	 */
+	public has(x: number): boolean {
+		const sparse = this.sparse[x] ?? math.huge;
+		return sparse < this.dense.size() && this.dense[sparse] === x;
+	}
 
-    /**
-     * Removes the given element from the set.
-     * @param x The element to remove.
-     */
-    public remove(x: number): void {
-        if (!this.has(x)) {
-            return;
-        }
+	/**
+	 * Removes the given element from the set.
+	 * @param x The element to remove.
+	 */
+	public remove(x: number): void {
+		if (!this.has(x)) {
+			return;
+		}
 
-        const last = this.dense.pop()!;
-        if (x !== last) {
-            this.sparse[last] = this.sparse[x];
-            this.dense[this.sparse[x]] = last;
-        }
-    }
+		const last = this.dense.pop()!;
+		if (x !== last) {
+			this.sparse[last] = this.sparse[x];
+			this.dense[this.sparse[x]] = last;
+		}
+	}
 }

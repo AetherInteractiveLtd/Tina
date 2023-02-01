@@ -8,7 +8,7 @@ let globalEntityId = 0;
 let globalComponentId = 0;
 
 export function getNextComponentId(): number {
-    return globalComponentId++;
+	return globalComponentId++;
 }
 
 /**
@@ -22,107 +22,107 @@ export function getNextComponentId(): number {
  * should sparingly use it after world creation.
  */
 export class EntityManager {
-    /** EntityIds that have been used previously ready to be reused. */
-    private readonly reusableEntityIds: SparseSet = new SparseSet();
+	/** EntityIds that have been used previously ready to be reused. */
+	private readonly reusableEntityIds: SparseSet = new SparseSet();
 
-    private empty: Archetype = new Archetype([]);
-    private entitiesToDestroy: SparseSet = new SparseSet();
-    private size = 0;
+	private empty: Archetype = new Archetype([]);
+	private entitiesToDestroy: SparseSet = new SparseSet();
+	private size = 0;
 
-    public archetypes: Map<string, Archetype> = new Map();
-    public entities: Array<Archetype> = [];
-    public updateTo: Array<Archetype> = [];
+	public archetypes: Map<string, Archetype> = new Map();
+	public entities: Array<Archetype> = [];
+	public updateTo: Array<Archetype> = [];
 
-    /**
-     * @returns True if the entity id is currently in the world.
-     */
-    public alive(entityId: EntityId): boolean {
-        return this.entities[entityId] !== undefined && this.entities[entityId].has(entityId);
-    }
+	/**
+	 * @returns True if the entity id is currently in the world.
+	 */
+	public alive(entityId: EntityId): boolean {
+		return this.entities[entityId] !== undefined && this.entities[entityId].has(entityId);
+	}
 
-    /**
-     * Creates a new entity in the world.
-     *
-     * @returns The id of the next available entity.
-     */
-    public createEntity(): EntityId {
-        if (this.reusableEntityIds.dense.size() > 0) {
-            const entityId = this.reusableEntityIds.dense.pop()!;
-            this.createEntityInternal(entityId);
-            return entityId;
-        }
+	/**
+	 * Creates a new entity in the world.
+	 *
+	 * @returns The id of the next available entity.
+	 */
+	public createEntity(): EntityId {
+		if (this.reusableEntityIds.dense.size() > 0) {
+			const entityId = this.reusableEntityIds.dense.pop()!;
+			this.createEntityInternal(entityId);
+			return entityId;
+		}
 
-        if (this.size === 0) {
-            this.empty.mask = new Array<number>(math.ceil(globalComponentId / 32), 0);
-            this.archetypes.set(this.empty.mask.join(","), this.empty);
-        }
+		if (this.size === 0) {
+			this.empty.mask = new Array<number>(math.ceil(globalComponentId / 32), 0);
+			this.archetypes.set(this.empty.mask.join(","), this.empty);
+		}
 
-        this.createEntityInternal(globalEntityId);
-        return globalEntityId++;
-    }
+		this.createEntityInternal(globalEntityId);
+		return globalEntityId++;
+	}
 
-    /**
-     * Removes any entities from the world that has been marked for removal.
-     * @hidden
-     */
-    public destroyPendingEntities(): void {
-        for (const entityId of this.entitiesToDestroy.dense) {
-            this.entities[entityId].sparseSet.remove(entityId);
-            this.reusableEntityIds.add(entityId);
-            this.size--;
-        }
-        this.entitiesToDestroy.dense.clear();
-    }
+	/**
+	 * Removes any entities from the world that has been marked for removal.
+	 * @hidden
+	 */
+	public destroyPendingEntities(): void {
+		for (const entityId of this.entitiesToDestroy.dense) {
+			this.entities[entityId].sparseSet.remove(entityId);
+			this.reusableEntityIds.add(entityId);
+			this.size--;
+		}
+		this.entitiesToDestroy.dense.clear();
+	}
 
-    /**
-     * @returns The next available entity id.
-     */
-    public getEntityId(): number {
-        return globalEntityId;
-    }
+	/**
+	 * @returns The next available entity id.
+	 */
+	public getEntityId(): number {
+		return globalEntityId;
+	}
 
-    /**
-     * @returns The next available component id.
-     */
-    public getNextComponentId(): number {
-        return globalComponentId++;
-    }
+	/**
+	 * @returns The next available component id.
+	 */
+	public getNextComponentId(): number {
+		return globalComponentId++;
+	}
 
-    /**
-     * @returns The number of entities that are currently alive in the world.
-     */
-    public getNumberOfEntitiesInUse(): number {
-        return this.size;
-    }
+	/**
+	 * @returns The number of entities that are currently alive in the world.
+	 */
+	public getNumberOfEntitiesInUse(): number {
+		return this.size;
+	}
 
-    /**
-     * Removes the given entity from the world, including all its components.
-     * @param entityId The id of the entity to remove.
-     */
-    public removeEntity(entityId: EntityId): void {
-        this.entitiesToDestroy.add(entityId);
-    }
+	/**
+	 * Removes the given entity from the world, including all its components.
+	 * @param entityId The id of the entity to remove.
+	 */
+	public removeEntity(entityId: EntityId): void {
+		this.entitiesToDestroy.add(entityId);
+	}
 
-    /** @hidden */
-    public updatePending(denseArray: Array<number>): void {
-        for (const entityId of denseArray) {
-            if (!this.alive(entityId)) {
-                return;
-            }
+	/** @hidden */
+	public updatePending(denseArray: Array<number>): void {
+		for (const entityId of denseArray) {
+			if (!this.alive(entityId)) {
+				return;
+			}
 
-            this.entities[entityId].sparseSet.remove(entityId);
-            this.entities[entityId] = this.updateTo[entityId];
-            this.entities[entityId].sparseSet.add(entityId);
-        }
-    }
+			this.entities[entityId].sparseSet.remove(entityId);
+			this.entities[entityId] = this.updateTo[entityId];
+			this.entities[entityId].sparseSet.add(entityId);
+		}
+	}
 
-    /**
-     *
-     * @param entityId
-     */
-    private createEntityInternal(entityId: EntityId): void {
-        this.entities[entityId] = this.updateTo[entityId] = this.empty;
-        this.empty.sparseSet.add(entityId);
-        this.size++;
-    }
+	/**
+	 *
+	 * @param entityId
+	 */
+	private createEntityInternal(entityId: EntityId): void {
+		this.entities[entityId] = this.updateTo[entityId] = this.empty;
+		this.empty.sparseSet.add(entityId);
+		this.size++;
+	}
 }
