@@ -12,6 +12,7 @@ import {
 	TagComponent,
 } from "./component";
 import { EntityManager } from "./entity-manager";
+import { ECS, Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
@@ -46,8 +47,11 @@ export interface WorldOptions {
  * ```
  */
 export class World {
+	private changeStorage: Array<[EntityId, AnyComponentInternal]> = [];
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
+	/** A set of any component with a registered observer. */
+	private observers: Map<AnyComponent, Observer> = new Map();
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -97,6 +101,15 @@ export class World {
 
 		this.componentsToUpdate.add(entityId);
 
+		if (this.observers.has(component)) {
+			const observer = this.observers.get(component)!;
+			print(observer);
+			const storage = observer.storage.get(ECS.OnAdded);
+			print(storage);
+			storage?.add(entityId);
+			print(storage);
+		}
+
 		debug.profilebegin("World:addComponent");
 		{
 			const componentId = (component as unknown as AnyComponentInternal).componentId;
@@ -132,6 +145,18 @@ export class World {
 	 * Removes all entities from the world.
 	 */
 	public clear(): void {}
+
+	/**
+	 *
+	 * @param component
+	 * @returns
+	 */
+	public createObserver<C extends AnyComponent>(component: C): Observer {
+		const observer = new Observer(this, component);
+		this.observers.set(component, observer);
+
+		return observer;
+	}
 
 	/**
 	 * Creates a new query to filter entities based on the given components.
@@ -305,6 +330,22 @@ export class World {
 	}
 
 	/**
+	 * Removes a query from the world.
+	 *
+	 * Queries typically do not need to be removed and should last the lifetime
+	 * of the world. However, this method is provided for cases where a query
+	 * needs to be removed.
+	 *
+	 * @param query The query to remove.
+	 */
+	public removeQuery(query: Query): void {
+		const index = this.queries.indexOf(query);
+		if (index !== undefined) {
+			this.queries.remove(index);
+		}
+	}
+
+	/**
 	 * Removes the given tag from an entity.
 	 *
 	 * @param entityId The id of the entity to remove the tag from.
@@ -373,6 +414,7 @@ export class World {
 	 * querying later.
 	 *
 	 * @param mask The mask of the archetype to get.
+	 *
 	 * @returns The archetype with the given mask.
 	 */
 	private getArchetype(mask: Array<ComponentId>): Archetype {
@@ -380,6 +422,7 @@ export class World {
 		if (!this.entityManager.archetypes.has(hash)) {
 			const arch = new Archetype(slice(mask)); // does this mask need to be ordered?
 			this.entityManager.archetypes.set(hash, arch);
+			// TODO: This is currently an O(n) operation to find any matching queries. Look into archetype graphs.
 			for (const query of this.queries) {
 				if (Query.match(mask, query.mask)) {
 					query.archetypes.push(arch);

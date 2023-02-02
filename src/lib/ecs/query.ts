@@ -114,11 +114,10 @@ export class Query {
 	/** The world that the query belongs to. */
 	public readonly world: World;
 
-	public archetypes: Array<Archetype>;
+	public archetypes: Array<Archetype> = [];
 	public mask: QueryMask;
 
 	constructor(world: World, query?: RawQuery) {
-		this.archetypes = [];
 		this.mask = query ? this.createQuery(query) : { op: ALL, dt: [] };
 		this.world = world;
 	}
@@ -132,6 +131,7 @@ export class Query {
 	 *
 	 * @param target The archetype mask to match to.
 	 * @param mask The query mask to match with.
+	 *
 	 * @returns True if the archetype mask matches the query mask.
 	 */
 	public static match(target: Array<number>, mask: QueryMask): boolean {
@@ -202,6 +202,7 @@ export class Query {
 	 *
 	 * @param target The current remaining mask.
 	 * @param mask The leaf node to match with.
+	 *
 	 * @returns True if the mask matches the query mask.
 	 */
 	private static partial(target: Array<number>, mask: MLeaf): boolean {
