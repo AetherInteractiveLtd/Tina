@@ -52,6 +52,8 @@ export class World {
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
 	private observers: Map<AnyComponent, Observer> = new Map();
+	/** Observers that have entities to update. */
+	private observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -103,11 +105,9 @@ export class World {
 
 		if (this.observers.has(component)) {
 			const observer = this.observers.get(component)!;
-			print(observer);
-			const storage = observer.storage.get(ECS.OnAdded);
-			print(storage);
-			storage?.add(entityId);
-			print(storage);
+			if (observer.storage.get(ECS.OnAdded)) {
+				this.observersToUpdate.push([entityId, observer, ECS.OnAdded]);
+			}
 		}
 
 		debug.profilebegin("World:addComponent");
@@ -212,6 +212,7 @@ export class World {
 		{
 			this.entityManager.destroyPendingEntities();
 			this.updatePendingComponents();
+			this.updatePendingObservers();
 		}
 		debug.profileend();
 	}
@@ -311,6 +312,11 @@ export class World {
 		}
 
 		this.componentsToUpdate.add(entityId);
+
+		if (this.observers.has(component)) {
+			const observer = this.observers.get(component)!;
+			observer.storage.get(ECS.OnRemoved)?.add(entityId);
+		}
 
 		debug.profilebegin("World:removeComponent");
 		{
@@ -453,5 +459,11 @@ export class World {
 	private updatePendingComponents(): void {
 		this.entityManager.updatePending(this.componentsToUpdate.dense);
 		this.componentsToUpdate.dense = [];
+	}
+
+	private updatePendingObservers(): void {
+		for (const [entityId, observer, ecsType] of this.observersToUpdate) {
+			observer.storage.get(ecsType)!.add(entityId);
+		}
 	}
 }

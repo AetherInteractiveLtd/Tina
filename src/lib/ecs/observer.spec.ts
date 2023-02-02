@@ -2,9 +2,7 @@
 
 import { ComponentTypes, createComponent } from "./component";
 import { ECS } from "./observer";
-import { World, WorldOptions } from "./world";
-
-const bindableEvent = new Instance("BindableEvent");
+import { World } from "./world";
 
 const world = new World({});
 
@@ -24,7 +22,56 @@ export = (): void => {
 			const id = world.add();
 			world.addComponent(id, component);
 
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
 			world.flush();
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			expect(callCount).to.equal(1);
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			expect(callCount).to.equal(1);
+		});
+
+		it("be called when an entity is removed", () => {
+			let callCount = 0;
+
+			const component = createComponent({
+				x: ComponentTypes.number,
+			});
+
+			const observer = world.createObserver(component).event(ECS.OnRemoved);
+
+			const id = world.add();
+			world.addComponent(id, component);
+
+			world.flush();
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			world.removeComponent(id, component);
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			world.flush();
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			expect(callCount).to.equal(1);
 
 			observer.forEach(_entityId => {
 				callCount += 1;

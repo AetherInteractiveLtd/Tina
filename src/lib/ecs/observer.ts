@@ -1,5 +1,5 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent, AnyComponentInternal } from "./component";
+import { AnyComponent } from "./component";
 import { World } from "./world";
 
 export const enum ECS {
@@ -57,11 +57,8 @@ export class Observer {
 	}
 
 	public forEach(callback: (entityId: EntityId) => void): void {
-		print("forEach");
 		for (const [event, entities] of this.storage) {
-			print(entities);
 			for (const entityId of entities) {
-				print(entityId);
 				for (const component of this.requiredComponents) {
 					if (!this.world.hasComponent(entityId, component)) {
 						continue;
@@ -90,8 +87,9 @@ export class Observer {
 	 * }
 	 * ```
 	 *
-	 * @param component
-	 * @returns
+	 * @param component The component to check for.
+	 *
+	 * @returns The observer instance.
 	 */
 	public with(component: AnyComponent): this {
 		this.requiredComponents.push(component);
