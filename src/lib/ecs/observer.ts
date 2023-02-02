@@ -10,6 +10,15 @@ export const enum ECS {
 }
 
 /**
+ * An observer is a way to listen for specific events on entities, such as
+ * reacting to when a component is added to an entity.
+ *
+ * An observer acts like a query, therefore the entities that match the
+ * observer will only be matched once the observer is called.
+ *
+ * If a system only ran once per second, all entities that match the given
+ * observer will be stored until the system is called, and only flushed once
+ * the observer is iterated over.
  *
  */
 export class Observer {
@@ -56,24 +65,29 @@ export class Observer {
 		return this;
 	}
 
+	/**
+	 * Iterates over all entities that match the observer.
+	 *
+	 * @param callback The callback to run for each entity.
+	 */
 	public forEach(callback: (entityId: EntityId) => void): void {
 		for (const [event, entities] of this.storage) {
 			for (const entityId of entities) {
+				let valid = true;
+
 				for (const component of this.requiredComponents) {
-					if (!this.world.hasComponent(entityId, component)) {
-						continue;
+					if (valid && !this.world.hasComponent(entityId, component)) {
+						valid = false;
 					}
 				}
 
-				callback(entityId);
+				if (valid) {
+					callback(entityId);
+				}
 			}
 
 			this.storage.set(event, new Set());
 		}
-	}
-
-	public has(component: AnyComponent): boolean {
-		return true;
 	}
 
 	/**
@@ -97,16 +111,3 @@ export class Observer {
 		return this;
 	}
 }
-
-// createObserver (Position, Velocity)
-
-// Map -> AnyComponent to PrimaryComponent?
-
-// addComponent(Velocity)
-
-// if (Observer.has(Velocity)) {
-/**
- * Position Velocity
- * Position -> Position
- * Position > Position, Position | Velocity
- */

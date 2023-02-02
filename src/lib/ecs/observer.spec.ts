@@ -79,5 +79,33 @@ export = (): void => {
 
 			expect(callCount).to.equal(1);
 		});
+
+		it("also have a required component", () => {
+			let callCount = 0;
+
+			const component = createComponent({
+				x: ComponentTypes.number,
+			});
+
+			const component2 = createComponent({
+				y: ComponentTypes.number,
+			});
+
+			const observer = world.createObserver(component).with(component2).event(ECS.OnAdded);
+
+			const id = world.add();
+			const id2 = world.add();
+			world.addComponent(id, component);
+			world.addComponent(id2, component);
+			world.addComponent(id2, component2);
+
+			world.flush();
+
+			observer.forEach(_entityId => {
+				callCount += 1;
+			});
+
+			expect(callCount).to.equal(1);
+		});
 	});
 };
