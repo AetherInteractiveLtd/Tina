@@ -4,6 +4,10 @@ import { ComponentTypes, createComponent } from "./component";
 import { ECS } from "./observer";
 import { World } from "./world";
 
+function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
+	return a.join() === b.join();
+}
+
 const world = new World({});
 
 export = (): void => {
@@ -11,7 +15,7 @@ export = (): void => {
 
 	describe("An observer should", () => {
 		it("be called when an entity is added", () => {
-			let callCount = 0;
+			const calledFn: Array<number> = [];
 
 			const component = createComponent({
 				x: ComponentTypes.number,
@@ -23,26 +27,26 @@ export = (): void => {
 			world.addComponent(id, component);
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(1);
 			});
 
 			world.flush();
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(2);
 			});
 
-			expect(callCount).to.equal(1);
+			expect(shallowEquals(calledFn, [2])).to.equal(true);
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(3);
 			});
 
-			expect(callCount).to.equal(1);
+			expect(shallowEquals(calledFn, [2])).to.equal(true);
 		});
 
 		it("be called when an entity is removed", () => {
-			let callCount = 0;
+			const calledFn: Array<number> = [];
 
 			const component = createComponent({
 				x: ComponentTypes.number,
@@ -56,28 +60,28 @@ export = (): void => {
 			world.flush();
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(1);
 			});
 
 			world.removeComponent(id, component);
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(2);
 			});
 
 			world.flush();
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(3);
 			});
 
-			expect(callCount).to.equal(1);
+			expect(shallowEquals(calledFn, [3])).to.equal(true);
 
 			observer.forEach(_entityId => {
-				callCount += 1;
+				calledFn.push(4);
 			});
 
-			expect(callCount).to.equal(1);
+			expect(shallowEquals(calledFn, [3])).to.equal(true);
 		});
 
 		it("also have a required component", () => {
@@ -106,6 +110,41 @@ export = (): void => {
 			});
 
 			expect(callCount).to.equal(1);
+		});
+
+		it("should be called when a components data is changed", () => {
+			const calledFn: Array<number> = [];
+
+			const component = createComponent({
+				x: ComponentTypes.number,
+			});
+
+			const observer = world.createObserver(component).event(ECS.OnSet);
+
+			const id = world.add();
+			world.addComponent(id, component);
+
+			world.flush();
+
+			observer.forEach(_entityId => {
+				calledFn.push(1);
+			});
+
+			component.set(id, { x: 1 });
+
+			observer.forEach(_entityId => {
+				calledFn.push(2);
+			});
+
+			expect(shallowEquals(calledFn, [])).to.equal(true);
+
+			world.flush();
+
+			observer.forEach(_entityId => {
+				calledFn.push(3);
+			});
+
+			expect(shallowEquals(calledFn, [3])).to.equal(true);
 		});
 	});
 };

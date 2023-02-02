@@ -52,8 +52,6 @@ export class World {
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
 	private observers: Map<AnyComponent, Observer> = new Map();
-	/** Observers that have entities to update. */
-	private observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -62,6 +60,8 @@ export class World {
 	public readonly systemManager: SystemManager;
 
 	public id = HttpService.GenerateGUID(false);
+	/** Observers that have entities to update. */
+	public observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 
 	constructor(options: WorldOptions) {
 		this.options = options;
@@ -315,7 +315,9 @@ export class World {
 
 		if (this.observers.has(component)) {
 			const observer = this.observers.get(component)!;
-			observer.storage.get(ECS.OnRemoved)?.add(entityId);
+			if (observer.storage.get(ECS.OnRemoved)) {
+				this.observersToUpdate.push([entityId, observer, ECS.OnRemoved]);
+			}
 		}
 
 		debug.profilebegin("World:removeComponent");

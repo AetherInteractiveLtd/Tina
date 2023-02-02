@@ -1,12 +1,11 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent } from "./component";
+import { AnyComponent, AnyComponentInternal, ComponentInternal } from "./component";
 import { World } from "./world";
 
 export const enum ECS {
 	"OnAdded" = "OnAdded",
 	"OnRemoved" = "OnRemoved",
-	"OnSet" = "OnSet",
-	"Unset" = "Unset",
+	"OnSet" = "OnChanged",
 }
 
 /**
@@ -22,10 +21,10 @@ export const enum ECS {
  *
  */
 export class Observer {
-	private readonly world: World;
-
 	/** A set of components that must match for an entity to be valid. */
 	private requiredComponents: Array<AnyComponent> = [];
+
+	public readonly world: World;
 
 	/** The primary component that the observer is watching. */
 	public primaryComponent: AnyComponent;
@@ -62,6 +61,11 @@ export class Observer {
 	 */
 	public event(eventType: ECS): this {
 		this.storage.set(eventType, new Set());
+
+		if (eventType === ECS.OnSet) {
+			(this.primaryComponent as AnyComponentInternal).observers.push(this);
+		}
+
 		return this;
 	}
 
@@ -72,6 +76,7 @@ export class Observer {
 	 */
 	public forEach(callback: (entityId: EntityId) => void): void {
 		for (const [event, entities] of this.storage) {
+			print(entities);
 			for (const entityId of entities) {
 				let valid = true;
 

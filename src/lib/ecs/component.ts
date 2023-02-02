@@ -4,6 +4,7 @@ import { t } from "@rbxts/t";
 import { ComponentId, EntityId } from "../types/ecs";
 import { Immutable } from "../types/readonly";
 import { getNextComponentId } from "./entity-manager";
+import { ECS, Observer } from "./observer";
 
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
@@ -27,7 +28,9 @@ export type Component<T extends Tree<Type>> = {
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
 	ComponentIdField &
-	ComponentArray<T>;
+	ComponentArray<T> & {
+		observers: Array<Observer>;
+	};
 
 export const ComponentTypes = {
 	number: [0],
@@ -67,10 +70,17 @@ export type TagComponentInternal = ComponentIdField & {
 export function createComponent<T extends Tree<Type>>(schema: T): Component<T>;
 export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): Component<T> {
 	const componentData = createComponentArray(schema, 10000);
+	const observers = new Array<Observer>();
 	return Sift.Dictionary.merge(componentData, {
 		componentId: getNextComponentId(),
 
+		observers: observers,
+
 		set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
+			for (const observer of observers) {
+				observer.world.observersToUpdate.push([entityId, observer, ECS.OnSet]);
+			}
+
 			// eslint-disable-next-line roblox-ts/no-array-pairs
 			for (const [key, value] of pairs(data)) {
 				componentData[key as never][entityId as never] = value as never;
