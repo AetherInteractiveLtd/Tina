@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { GlobalState } from "./states/global";
 import { PlayerState } from "./states/player";
 
@@ -27,3 +28,17 @@ export declare type ValidStateScheme<T extends object> = {
 		? ValidStateScheme<T[K]>
 		: never;
 };
+=======
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Connection } from "../utilities/simple-signal";
+
+export type Observer<T> = (value: T) => void;
+
+export interface INetworkEvent {
+	FireClient(player: Player, ...args: Array<any>): void;
+	FireAllClients(...args: Array<any>): void;
+	FireServer(...args: Array<any>): void;
+	OnServerEvent(callback: (player: Player, ...args: Array<any>) => void): Connection;
+	OnClientEvent(callback: Callback): Connection;
+}
+>>>>>>> 7faf04b (Moved common types to types.d.ts)
