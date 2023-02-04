@@ -1,6 +1,6 @@
 declare namespace Signal {
-	export class Connection {
-		public Disconnect(): void;
+	export interface Connection {
+		Disconnect(): void;
 	}
 }
 
