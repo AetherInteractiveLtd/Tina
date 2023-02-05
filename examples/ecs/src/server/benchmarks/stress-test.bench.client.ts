@@ -1,6 +1,6 @@
 import { RunService } from "@rbxts/services";
 import Sift from "@rbxts/sift";
-import { World } from "@rbxts/tina";
+import { System, World } from "@rbxts/tina";
 import {
 	AnyComponent,
 	Component,
@@ -25,11 +25,12 @@ for (const i of $range(1, 300)) {
 	}) as never;
 }
 
+// 50 archetypes
 const archetypes = [];
 for (const i of $range(0, 49)) {
 	const archetype = {};
 
-	for (const _ of $range(2, math.random(2, 30))) {
+	for (const _ of $range(1, math.random(2, 30))) {
 		const componentId = math.random(1, (components as Array<never>).size());
 		(archetype as Array<never>).push(components[componentId as never] as never) as never;
 	}
@@ -37,20 +38,22 @@ for (const i of $range(0, 49)) {
 	archetypes[i] = archetype;
 }
 
+// 1000 entities
 for (const _ of $range(0, 999)) {
+	const id = world.add();
+
 	const componentsToAdd = {};
 
-	const archetypeId = math.random(1, archetypes.size() - 1);
+	const archetypeId = math.random(1, archetypes.size());
 	// eslint-disable-next-line roblox-ts/no-array-pairs
-	for (const [i, component] of ipairs(archetypes[archetypeId] as Array<never>)) {
-		(component as Component<{ dummyData: Array<number> }>).set(i, {
-			dummyData: math.random(0, 100),
-		}) as never;
-		(componentsToAdd[component] as never) = (component as ComponentInternal<{ dummyData: Array<number> }>)
-			.dummyData[i] as never;
-	}
+	for (const [_, component] of ipairs(archetypes[archetypeId] as Array<never>)) {
+		(component as Component<{ dummyData: Array<number> }>).set(id, {
+			dummyData: math.random(1, 5000),
+		});
 
-	const id = world.add();
+		(componentsToAdd[component] as never) = (component as ComponentInternal<{ dummyData: Array<number> }>)
+			.dummyData[id] as never;
+	}
 
 	for (const [component, data] of pairs(componentsToAdd)) {
 		world.addComponent(id, component as unknown as AnyComponent, {
@@ -60,31 +63,71 @@ for (const _ of $range(0, 999)) {
 }
 
 const contiguousComponents = Sift.Dictionary.values(components);
-const systemComponentsToQuery = {};
 
+const systems: Array<System> = [];
+
+// 200 Systems
 for (const _ of $range(0, 199)) {
-	const numComponentsToQuery = math.random(1, 10);
-	const componentsToQuery = {};
+	class _System extends System {
+		private query!: Query;
 
-	for (const _ of $range(0, numComponentsToQuery)) {
-		(componentsToQuery as Array<never>).push(
-			contiguousComponents[math.random(1, contiguousComponents.size()) as never] as never,
-		) as never;
+		public componentsToQuery: Array<ComponentInternal<{ dummyData: Array<number> }>> = [];
+
+		public configureQueries(world: World): void {
+			const numComponentsToQuery = math.random(1, 10);
+			for (const _ of $range(0, numComponentsToQuery)) {
+				this.componentsToQuery.push(
+					contiguousComponents[math.random(1, contiguousComponents.size()) as never] as never,
+				);
+			}
+
+			this.query = world.createQuery(ALL(...this.componentsToQuery));
+		}
+
+		public onUpdate(world: World): void {
+			const firstComponent = this.componentsToQuery[0];
+
+			this.query.forEach(entityId => {
+				(firstComponent as Component<{ dummyData: Array<number> }>).set(entityId, {
+					dummyData: firstComponent.dummyData[entityId] + 1,
+				});
+			});
+		}
 	}
 
-	(systemComponentsToQuery as Array<AnyComponent>).push(componentsToQuery as never) as never;
+	systems.push(new _System());
 }
+
+function setupSystem(system: System): void {
+	if (!system.onUpdate) {
+		error("System must have an onUpdate method");
+	}
+
+	if (system.configureQueries !== undefined) {
+		system.configureQueries(world);
+	}
+
+	system.lastCalled = os.clock();
+}
+
+for (const system of systems) {
+	setupSystem(system);
+}
+
+// world.systemManager.scheduleSystems(systems);
 
 const worldCreateTime = os.clock() - startTime;
 let results = {};
 startTime = os.clock();
 
-const queries = {};
-// eslint-disable-next-line roblox-ts/no-array-pairs
-for (const [_, componentsToQuery] of ipairs(systemComponentsToQuery as Array<Array<AnyComponent>>)) {
-	const query = world.createQuery(ALL(...componentsToQuery));
-	(queries as never)[componentsToQuery as never] = query as never;
-}
+// const queries = {};
+// // eslint-disable-next-line roblox-ts/no-array-pairs
+// for (const [_, componentsToQuery] of ipairs(systemComponentsToQuery as Array<Array<AnyComponent>>)) {
+// 	const query = world.createQuery(ALL(...componentsToQuery));
+// 	(queries as never)[componentsToQuery as never] = query as never;
+// }
+
+world.start();
 
 RunService.Heartbeat.Connect(() => {
 	let added = 0;
@@ -92,22 +135,56 @@ RunService.Heartbeat.Connect(() => {
 
 	debug.profilebegin("systems");
 	{
-		// eslint-disable-next-line roblox-ts/no-array-pairs
-		for (const [_, componentsToQuery] of ipairs(systemComponentsToQuery as Array<Array<AnyComponent>>)) {
+		// // eslint-disable-next-line roblox-ts/no-array-pairs
+		// for (const [_, componentsToQuery] of ipairs(systemComponentsToQuery as Array<Array<AnyComponent>>)) {
+		// 	debug.profilebegin("system");
+		// 	{
+		// 		const firstComponent = (
+		// 			componentsToQuery as unknown as Array<{ dummyData: Array<number> }>
+		// 		)[0] as ComponentInternal<{
+		// 			dummyData: Array<number>;
+		// 		}>;
+		// 		(queries[componentsToQuery as never] as Query).forEach(entityId => {
+		// 			(firstComponent as Component<{ dummyData: Array<number> }>).set(entityId, {
+		// 				dummyData: firstComponent.dummyData[entityId] + 1,
+		// 			});
+		// 		});
+		// 		added += 1;
+		// 		world.flush();
+		// 	}
+		// 	debug.profileend();
+		// }
+		// world.
+
+		for (const system of systems) {
 			debug.profilebegin("system");
 			{
-				const firstComponent = (
-					componentsToQuery as unknown as Array<{ dummyData: Array<number> }>
-				)[0] as ComponentInternal<{
-					dummyData: Array<number>;
-				}>;
-				(queries[componentsToQuery as never] as Query).forEach(entityId => {
-					(firstComponent as Component<{ dummyData: Array<number> }>).set(entityId, {
-						dummyData: firstComponent.dummyData[entityId] + 1,
-					});
+				if (!system.enabled) {
+					continue;
+				}
+
+				const systemName = system.name;
+
+				system.dt = os.clock() - system.lastCalled;
+				system.lastCalled = os.clock();
+
+				debug.profilebegin("system: " + systemName);
+				// system.onUpdate(this.world);
+
+				const thread = coroutine.create(() => {
+					system.onUpdate(world);
+					added += 1;
 				});
-				added += 1;
-				world.flush();
+
+				const [success, result] = coroutine.resume(thread);
+				if (coroutine.status(thread) !== "dead") {
+					coroutine.close(thread);
+					task.spawn(error, `System ${systemName} yielded! Yielding in systems is not supported!`);
+				}
+
+				if (!success) {
+					task.spawn(error, `System: ${systemName} errored! ${result} + \n ${debug.traceback}`);
+				}
 			}
 			debug.profileend();
 		}
@@ -134,11 +211,11 @@ RunService.Heartbeat.Connect(() => {
 
 		results = undefined as never;
 
-		let n = 0;
+		// let n = 0;
 
-		world.entityManager.archetypes.forEach(() => {
-			n += 1;
-		});
+		// world.entityManager.archetypes.forEach(() => {
+		// 	n += 1;
+		// });
 
 		// for (const _ in pairs(world._entityArchetypeCache) do
 		// 	n += 1
@@ -148,8 +225,8 @@ RunService.Heartbeat.Connect(() => {
 			"%d entities\n%d components\n%d systems\n%d archetypes".format(
 				world.size(),
 				(components as Array<never>).size(),
-				(systemComponentsToQuery as Array<never>).size(),
-				n,
+				systems.size(),
+				world.entityManager.archetypes.size(),
 			),
 		);
 	}
