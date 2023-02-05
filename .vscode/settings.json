@@ -11,5 +11,11 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
-	"C_Cpp.errorSquiggles": "Disabled"
+	"C_Cpp.errorSquiggles": "Disabled",
+	"tsco.addRegionCaptionToRegionEnd": false,
+	"tsco.addRegionIndentation": true,
+	"tsco.organizeOnSave": true,
+	"tsco.useRegions": false,
+	"tsco.treatArrowFunctionPropertiesAsMethods": true,
+	"editor.insertSpaces": false
 }
