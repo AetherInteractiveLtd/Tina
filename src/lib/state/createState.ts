@@ -6,7 +6,6 @@ import { NetworkEvent } from "./network/NetworkEvent";
 import { RemoteNetworkEvent } from "./network/RemoteNetworkEvent";
 import { NetworkBoundary } from "./types";
 import { checkValidSchema } from "./utilities/checkValidSchema";
-import { formatPath } from "./utilities/formatPath";
 import { getOrCreateRemote } from "./utilities/getOrCreateRemote";
 import { GlobalStateConfig, isStateConfig, PlayerStateConfig, StateConfig } from "./utilities/StateConfig";
 
@@ -50,8 +49,7 @@ export function createReplicatedState<T extends {}>(schema: T, options: StateOpt
 	function buildStateTree(property: unknown, path: Array<string> = []): any {
 		/* Build CrossBoundaryState from StateConfig */
 		if (isStateConfig(property)) {
-			const name = formatPath(path);
-			return property.build(name, stateOptions);
+			return property.build(path.join("."), stateOptions);
 		}
 
 		/* property is not a StateConfig, create a nested object */
