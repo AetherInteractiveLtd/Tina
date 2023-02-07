@@ -5,6 +5,19 @@ import { World } from "./world";
 
 export type ExecutionGroup = RBXScriptSignal;
 
+export interface System {
+	/**
+	 * The configureQueries method is optionally called when the system is
+	 * first run. This is typically used to configure the queries that the
+	 * system will use, however, it can also be used to perform any other setup
+	 * logic as required.
+	 *
+	 * @param world The world that this system belongs to. This will be passed
+	 * in automatically.
+	 */
+	configureQueries?(world: World): void;
+}
+
 export abstract class System {
 	/** An optional set of systems that must be executed before this system */
 	public after?: Array<System>;
@@ -13,7 +26,7 @@ export abstract class System {
 	/**
 	 * Whether or not a system should be called.
 	 *
-	 * This should not be called directly. Instead you should use the
+	 * This should not be called directly. Instead, you should use the
 	 * {@link SystemManager.enableSystem} & {@link SystemManager.disableSystem}
 	 * functions respectively.
 	 * @hidden
@@ -23,13 +36,13 @@ export abstract class System {
 	 * The group that this system will be executed on, e.g. Heartbeat,
 	 * RenderStepped, etc.
 	 *
-	 * The only requirements for an execution group is that the group has a
+	 * The only requirement for an execution group is that the group has a
 	 * .Connect method.
 	 */
 	public executionGroup?: ExecutionGroup;
 	/**	The time that the system was last called. */
 	public lastCalled = 0;
-	/** The name of the system, primarily used for debugging purposes. */
+	/** The name of the system is primarily used for debugging purposes. */
 	public name = "System";
 	/**
 	 * The priority order of the system.
@@ -38,24 +51,14 @@ export abstract class System {
 	public priority = 0;
 
 	/**
-	 * The configureQueries method is optionally called when the system is
-	 * first run. This is typically used to configure the queries that the
-	 * system will use, however it can also be used to perform any other setup
-	 * logic as required.
-	 *
-	 * @param world The world that this system belongs to; this will be passed
-	 * in automatically.
-	 */
-	public abstract configureQueries?(world: World): void;
-	/**
 	 * The onUpdate method is called on every execution of this systems
 	 * execution group.
 	 *
 	 * This should not typically be called manually, and instead the system
-	 * should be scheduled according to an exwecution group using the
+	 * should be scheduled according to an execution group using the
 	 * {@link World.scheduleSystem} function.
 	 *
-	 * @param world The world that this system belongs to, this will be
+	 * @param world The world that this system belongs to. This will be
 	 * automatically passed in by the owning world on each system execution.
 	 */
 	public abstract onUpdate(world: World): void;
@@ -68,6 +71,7 @@ export abstract class System {
 export class SystemManager {
 	private executionDefault: ExecutionGroup;
 	private executionGroups: Set<ExecutionGroup> = new Set();
+	// private systemArgs?: Array<unknown>;
 	private systems: Array<System> = [];
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
 	private world: World;
@@ -110,7 +114,7 @@ export class SystemManager {
 	}
 
 	/**
-	 * Call this to schedule an individual system.
+	 * Schedules an individual system.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
 	 * advised to use {@link scheduleSystems} instead, and add multiple systems
@@ -149,6 +153,22 @@ export class SystemManager {
 	}
 
 	/**
+	 * Optional arguments that will be passed to all systems on each update.
+	 *
+	 * `World` will always be the first argument, followed by any arguments
+	 * passed to this function in the order they were passed.
+	 * 
+	 * @note This is currently not implemented.
+
+	 * @param args The arguments to pass to all systems.
+	 */
+	public setArgs(..._args: Array<unknown>): void {
+		throw "Not implemented";
+		// this.systemArgs = args;
+		// TODO: Find a way to pass args to systems while keeping type safety
+	}
+
+	/**
 	 * Starts the system manager.
 	 *
 	 * This will start all systems that have been previously scheduled, and run
@@ -176,7 +196,7 @@ export class SystemManager {
 					// system.onUpdate(this.world);
 
 					const thread = coroutine.create(() => {
-						system.onUpdate(this.world);
+						system.onUpdate(this.world /**, ...this.systemArgs */);
 					});
 
 					const [success, result] = coroutine.resume(thread);
@@ -200,11 +220,11 @@ export class SystemManager {
 	}
 
 	/**
-	 * Unschedules a system from the system manager.
+	 * Unschedule a system from the system manager.
 	 *
-	 * If a system needs to be re-scheduled, it is recommended to instead
-	 * disable it using {@link SystemManager.disableSystem} function, as
-	 * scheduling a system requires the system to be re-sorted.
+	 * If a system needs to be re-scheduled, it is recommended instead to
+	 * disable it using {@link SystemManager.disableSystem}, as scheduling a
+	 * a system requires the system to be re-sorted.
 	 *
 	 * @param system The system to unschedule.
 	 */
@@ -213,11 +233,11 @@ export class SystemManager {
 	}
 
 	/**
-	 * Unschedules a set of systems from the system manager.
+	 * Unschedule a set of systems from the system manager.
 	 *
-	 * If a system needs to be re-scheduled, it is recommended to instead
-	 * disable it using {@link SystemManager.disableSystem} function, as
-	 * scheduling a system requires the system to be re-sorted.
+	 * If a system needs to be re-scheduled, it is recommended instead to
+	 * disable it using {@link SystemManager.disableSystem}, as scheduling a
+	 * a system requires the system to be re-sorted.
 	 *
 	 * @param systems The systems to unschedule.
 	 */
@@ -234,13 +254,18 @@ export class SystemManager {
 		// TODO: look into re-sorting systems. Removing a system could cause a
 		// dependency conflict where a system originally relied on this one.
 		// The other option to save resources could be to force the user to
-		// unschedule any dependent systems themselves, and throw an error if
+		// unschedule any dependent systems themselves and throw an error if
 		// the user doesn't.
+
+		// TODO: Sort systems could take a flag to only sort certain execution
+		// groups. We don't need to re-sort all execution groups if we only
+		// removed a system from one of them.
 	}
 
 	/**
 	 * Orders systems within the same execution group by their dependencies.
 	 * @param unscheduledSystems The systems to order.
+	 *
 	 * @returns The ordered systems.
 	 */
 	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
@@ -272,7 +297,7 @@ export class SystemManager {
 	 */
 	private setupSystem(system: System): void {
 		if (!system.onUpdate) {
-			throw error(`System ${system.name} does not have an onUpdate method`);
+			throw `System ${system.name} does not have an onUpdate method`;
 		}
 
 		if (system.configureQueries !== undefined) {
@@ -316,9 +341,8 @@ export class SystemManager {
 
 			for (const afterSystem of system.after) {
 				if (system.executionGroup !== afterSystem.executionGroup) {
-					throw error(
-						`System ${system.name} and ${afterSystem.name} are in different execution groups`,
-					);
+					const msg = `System ${system.name} and ${afterSystem.name} are in different execution groups`;
+					throw msg;
 				}
 			}
 		}
