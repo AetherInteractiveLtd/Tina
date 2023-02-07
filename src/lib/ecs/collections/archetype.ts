@@ -20,6 +20,7 @@ export class Archetype {
 	/**
 	 * Checks if the archetype contains a given entityId
 	 * @param id The id of the entity to check
+	 *
 	 * @returns	True if the entity is in the archetype
 	 */
 	public has(id: EntityId): boolean {

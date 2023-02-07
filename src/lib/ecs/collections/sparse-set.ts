@@ -28,6 +28,7 @@ export class SparseSet {
 	/**
 	 * Checks if the given element is in the set.
 	 * @param x The element to check.
+	 *
 	 * @returns `true` if the element is in the set
 	 */
 	public has(x: number): boolean {

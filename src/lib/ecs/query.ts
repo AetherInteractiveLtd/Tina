@@ -31,7 +31,7 @@ type QueryMask = Group | Not | MLeaf;
  */
 export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
 	if (components.size() === 0) {
-		throw error("ALL must have at least one component");
+		throw "ALL must have at least one component";
 	}
 
 	return { op: ALL, dt: components };
@@ -56,7 +56,7 @@ export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
  */
 export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
 	if (components.size() === 0) {
-		throw error("ANY must have at least one component");
+		throw "ANY must have at least one component";
 	}
 
 	return { op: ANY, dt: components };
@@ -242,7 +242,7 @@ export class Query {
 					numbers.push(componentId);
 				} else {
 					// TODO: Better error message
-					throw error(`A Component has not been initialized properly.`);
+					throw `A Component has not been initialized properly.`;
 				}
 			} else {
 				ret.push(this.createQuery(i));
