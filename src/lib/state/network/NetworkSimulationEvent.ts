@@ -1,9 +1,9 @@
 import Signal, { Connection } from "../../utilities/simple-signal";
-import { INetworkEvent } from "../types";
+import { NetworkEvent } from "./NetworkEvent";
 
 const SimulatedPlayer = { Name: "NetworkSimulation" } as Player;
 
-export class NetworkSimulationEvent implements INetworkEvent {
+export class NetworkSimulationEvent extends NetworkEvent {
 	private serverSignal = new Signal<[Player, ...Array<unknown>]>();
 	private clientSignal = new Signal<Array<unknown>>();
 
@@ -25,10 +25,5 @@ export class NetworkSimulationEvent implements INetworkEvent {
 
 	public OnClientEvent(callback: (...args: Array<unknown>) => void): Connection {
 		return this.clientSignal.Connect(callback);
-	}
-
-	public Destroy(): void {
-		this.serverSignal.DisconnectAll();
-		this.clientSignal.DisconnectAll();
 	}
 }

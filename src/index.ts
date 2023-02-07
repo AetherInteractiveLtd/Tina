@@ -10,6 +10,7 @@ import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+import { ConvertSchemaToState, createReplicatedState } from "./lib/state/createState";
 import { Users } from "./lib/user";
 import { AbstractUser } from "./lib/user/default";
 import { UserType } from "./lib/user/default/types";
@@ -111,6 +112,15 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[TinaInternalEvents[T]]> {
 		return TinaEvents.addEventListener(event);
+	}
+
+	/**
+	 *
+	 * @param schema
+	 * @returns
+	 */
+	export function createState<T extends {}>(schema: T): ConvertSchemaToState<T> {
+		return createReplicatedState(schema);
 	}
 
 	/**

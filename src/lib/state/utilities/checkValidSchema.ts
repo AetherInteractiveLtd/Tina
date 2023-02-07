@@ -1,4 +1,4 @@
-import { isStateConfig } from "./helper";
+import { isStateConfig } from "./StateConfig";
 
 /**
  * Throws an exception if the passed object doesn't match the expected shape of a State Schema

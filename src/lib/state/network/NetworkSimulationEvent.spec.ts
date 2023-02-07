@@ -4,27 +4,26 @@ import { NetworkSimulationEvent } from "./NetworkSimulationEvent";
 
 export = () => {
 	describe("NetworkSimulationEvent", () => {
-		
 		it("Should fire client listeners", () => {
 			const event = new NetworkSimulationEvent();
-			
+
 			let clientCount = 0;
 			event.OnClientEvent(() => clientCount++);
 			event.FireClient(undefined!);
 
 			expect(clientCount).to.equal(1);
-		})
-		
+		});
+
 		it("Should fire server listeners", () => {
 			const event = new NetworkSimulationEvent();
-			
+
 			let serverCount = 0;
 			event.OnServerEvent(() => serverCount++);
 			event.FireServer(undefined!);
 
 			expect(serverCount).to.equal(1);
-		})
-		
+		});
+
 		it("Should mimic server/client boundary", () => {
 			const event = new NetworkSimulationEvent();
 

@@ -1,5 +1,4 @@
 import { IS_CLIENT } from "../../utilities/globals";
-import { StateConfig } from "../schema/state-config";
 
 function findRemoteClient(name: string, parent: Instance): RemoteEvent {
 	const remote = parent.WaitForChild(name);
@@ -8,6 +7,11 @@ function findRemoteClient(name: string, parent: Instance): RemoteEvent {
 }
 
 function createRemoteServer(name: string, parent: Instance): RemoteEvent {
+	/* Check if it already exists */
+	const child = parent.FindFirstChild(name);
+	if (child && child.IsA("RemoteEvent")) return child;
+
+	/* Doesn't exist so create new */
 	const remote = new Instance("RemoteEvent");
 	remote.Name = name;
 	remote.Parent = parent;
@@ -19,8 +23,4 @@ export function getOrCreateRemote(name: string, parent: Instance): RemoteEvent {
 		return findRemoteClient(name, parent);
 	}
 	return createRemoteServer(name, parent);
-}
-
-export function isStateConfig(value: unknown): value is StateConfig<unknown> {
-	return value instanceof StateConfig;
 }

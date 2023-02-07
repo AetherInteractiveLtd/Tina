@@ -1,4 +1,4 @@
-import Signal, { Connection } from "../utilities/simple-signal";
+import Signal, { Connection } from "./simple-signal";
 
 export class ObservableValue<T> {
 	private signal = new Signal<[T]>();
@@ -10,6 +10,7 @@ export class ObservableValue<T> {
 	}
 
 	public set(value: T): void {
+		if (this.value === value) return;
 		this.value = value;
 		this.signal.Fire(value);
 	}
