@@ -1,11 +1,9 @@
 import { ValueOrSetter } from "../types/global";
 import Signal, { Connection } from "./simple-signal";
 
-function toSetter<T>(v: ValueOrSetter<T>): (value: T) => T {
-	return typeIs(v, "function") ? v : () => v;
-}
+type StrictCallback<TReturnType, TParams extends Array<unknown>> = (...args: TParams) => TReturnType;
 
-function toFunction<T>(v: T | (() => T)): () => T {
+function toFunction<T, TParams extends Array<unknown>>(v: T | StrictCallback<T, TParams>): StrictCallback<T, TParams> {
 	return typeIs(v, "function") ? v : () => v;
 }
 
@@ -19,7 +17,7 @@ export class ObservableValue<T> {
 
 	public set(value: ValueOrSetter<T>): void {
 		const oldValue = this.value;
-		this.value = toSetter(value)(oldValue);
+		this.value = toFunction(value)(oldValue);
 
 		if (this.value !== oldValue) {
 			this.signal.Fire(this.value);
