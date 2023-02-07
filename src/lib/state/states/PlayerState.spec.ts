@@ -51,7 +51,11 @@ export = () => {
 			const serverState = makePlayerState(0, NetworkBoundary.Server);
 
 			let value = 0;
+<<<<<<< HEAD
 			serverState.when(TestPlayer, currentValue => {
+=======
+			serverState.subscribe(TestPlayer, currentValue => {
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 				value = currentValue;
 			});
 

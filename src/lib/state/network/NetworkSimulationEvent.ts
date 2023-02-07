@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import Signal, { Connection } from "../../util/simple-signal";
+=======
+import Signal, { Connection } from "../../utilities/simple-signal";
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 import { NetworkEvent } from "./NetworkEvent";
 
 const SimulatedPlayer = { Name: "NetworkSimulation" } as Player;

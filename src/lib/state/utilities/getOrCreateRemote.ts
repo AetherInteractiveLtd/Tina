@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { IS_CLIENT } from "../../util/globals";
+=======
+import { IS_CLIENT } from "../../utilities/globals";
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 
 function findRemoteClient(name: string, parent: Instance): RemoteEvent {
 	const remote = parent.WaitForChild(name);

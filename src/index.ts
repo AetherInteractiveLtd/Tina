@@ -127,6 +127,9 @@ namespace Tina {
 
 	/**
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 	 *
 	 * @param schema
 	 * @returns
@@ -136,8 +139,11 @@ namespace Tina {
 	}
 
 	/**
+<<<<<<< HEAD
 =======
 >>>>>>> 9baf9e8 (Replicated state (#29))
+=======
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.
 	 * Create a new ECS World.
 	 *

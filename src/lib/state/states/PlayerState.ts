@@ -1,8 +1,13 @@
 import { Players } from "@rbxts/services";
 
+<<<<<<< HEAD
 import { ValueOrSetter } from "../../types/global";
 import { ObservableValue } from "../../util/ObservableValue";
 import { Connection } from "../../util/simple-signal";
+=======
+import { ObservableValue } from "../../utilities/ObservableValue";
+import { Connection } from "../../utilities/simple-signal";
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 import { NetworkEvent } from "../network/NetworkEvent";
 import { NetworkBoundary, Observer, UpdateObject } from "../types";
 
@@ -44,7 +49,11 @@ export class PlayerState<T> {
 
 		/* Connect to value change */
 		if (this.isServer) {
+<<<<<<< HEAD
 			playerValue.when(value => this.remote.fireClient(player, { name: this.name, value }));
+=======
+			playerValue.subscribe(value => this.remote.FireClient(player, { name: this.name, value }));
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 		}
 	}
 
@@ -68,38 +77,103 @@ export class PlayerState<T> {
 		Players.PlayerRemoving.Connect(player => this.onPlayerRemoving(player));
 
 		/* Client pings server on setup to get current value */
+<<<<<<< HEAD
 		this.remote.onServerEvent(player => {
 			const value = this.getPlayerValue(player).getValue();
 			this.remote.fireClient(player, { name: this.name, value });
+=======
+		this.remote.OnServerEvent(player => {
+			const value = this.getPlayerValue(player).getValue();
+			this.remote.FireClient(player, { name: this.name, value });
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 		});
 	}
 
 	private initClient(): void {
 		/* Update value on client */
+<<<<<<< HEAD
 		this.remote.onClientEvent((obj: UpdateObject<T>) => {
+=======
+		this.remote.OnClientEvent((obj: UpdateObject<T>) => {
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 			if (this.name !== obj.name) return;
 			this._set(LocalPlayer, obj.value);
 		});
 
 		/* Ping server to get current value */
+<<<<<<< HEAD
 		this.remote.fireServer();
 	}
 
 	public set(player: Player, value: ValueOrSetter<T>): void {
+=======
+		this.remote.FireServer();
+	}
+
+	public set(player: Player, value: T): void {
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 		assert(this.isServer, ".set() can only be called from the server");
 		this._set(player, value);
 	}
 
+<<<<<<< HEAD
 	private _set(player: Player, value: ValueOrSetter<T>): void {
+=======
+	private _set(player: Player, value: T): void {
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 		const playerValue = this.getPlayerValue(player);
 		playerValue.set(value);
 	}
 
+<<<<<<< HEAD
 	public when(player: Player, observer: Observer<T>): Connection {
 		return this.getPlayerValue(player).when(observer);
+=======
+	public subscribe(player: Player, observer: Observer<T>): Connection {
+		return this.getPlayerValue(player).subscribe(observer);
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
 	}
 
 	public getValue(player: Player): T {
 		return this.getPlayerValue(player).getValue();
 	}
 }
+<<<<<<< HEAD
+=======
+
+// /**
+//  * **CLIENT**
+//  */
+// public subscribe(observer: Observer<T>): Connection;
+// /**
+//  * **SERVER**
+//  * @param player
+//  * @param observer
+//  */
+// public subscribe(player: Player, observer: Observer<T>): Connection;
+
+// /**
+//  * TODO
+//  * @param playerOrCallback
+//  * @param callback
+//  * @returns
+//  */
+// private getSubscribeParams<T>(
+// 	playerOrCallback: Player | Observer<T>,
+// 	callback?: Observer<T>,
+// ): LuaTuple<[Player, Observer<T>]> {
+// 	/* Return the LocalPlayer and the callback */
+// 	if (this.isClient) {
+// 		assert(
+// 			typeIs(playerOrCallback, "function"),
+// 			".subscribe() requires only an observer when called on the Client",
+// 		);
+// 		return $tuple(Players.LocalPlayer, playerOrCallback);
+// 	}
+
+// 	/* Return the passed player and callback */
+// 	assert(typeIs(callback, "function"), "Observer must be a function");
+// 	assert(typeIs(playerOrCallback, "Instance") && playerOrCallback.IsA("Player"));
+// 	return $tuple(playerOrCallback as Player, callback as Observer<T>);
+// }
+>>>>>>> 5ee74d5 (Added createState to Tina namespace)
