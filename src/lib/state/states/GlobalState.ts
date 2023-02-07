@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { ValueOrSetter } from "../../types/global";
 import { ObservableValue } from "../../util/ObservableValue";
 import { Connection } from "../../util/simple-signal";
 =======
+=======
+import { ValueOrSetter } from "../../types/global";
+>>>>>>> 222a4d1 (Add support for function setters for state for nicer syntax)
 import { ObservableValue } from "../../utilities/ObservableValue";
 import { Connection } from "../../utilities/simple-signal";
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
@@ -64,14 +68,19 @@ export class GlobalState<T = unknown> {
 	 * @param value
 	 */
 <<<<<<< HEAD
+<<<<<<< HEAD
 	public set(value: ValueOrSetter<T>): void {
 =======
 	public set(value: T): void {
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
+=======
+	public set(value: ValueOrSetter<T>): void {
+>>>>>>> 222a4d1 (Add support for function setters for state for nicer syntax)
 		assert(this.isServer, ".set() can only be called from the server");
 		this._set(value);
 	}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 	private _set(value: ValueOrSetter<T>): void {
 		this.observable.set(value);
@@ -81,6 +90,9 @@ export class GlobalState<T = unknown> {
 		return this.observable.when(observer);
 =======
 	private _set(value: T): void {
+=======
+	private _set(value: ValueOrSetter<T>): void {
+>>>>>>> 222a4d1 (Add support for function setters for state for nicer syntax)
 		this.observable.set(value);
 	}
 
