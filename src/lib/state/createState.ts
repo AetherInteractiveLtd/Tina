@@ -8,11 +8,10 @@ import { NetworkBoundary } from "./types";
 import { checkValidSchema } from "./utilities/checkValidSchema";
 import { formatPath } from "./utilities/formatPath";
 import { getOrCreateRemote } from "./utilities/getOrCreateRemote";
-import { GlobalStateConfig, isStateConfig, PlayerStateConfig } from "./utilities/StateConfig";
+import { GlobalStateConfig, isStateConfig, PlayerStateConfig, StateConfig } from "./utilities/StateConfig";
 
-type StateConfig = GlobalStateConfig | PlayerStateConfig;
 export type ConvertSchemaToState<T extends {}> = Reconstruct<{
-	[K in keyof T]: T[K] extends StateConfig
+	[K in keyof T]: T[K] extends StateConfig<unknown>
 		? ReturnType<T[K]["build"]>
 		: T[K] extends {}
 		? ConvertSchemaToState<T[K]>
