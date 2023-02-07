@@ -1,3 +1,4 @@
+import { ValueOrSetter } from "../../types/global";
 import { ObservableValue } from "../../utilities/ObservableValue";
 import { Connection } from "../../utilities/simple-signal";
 import { NetworkEvent } from "../network/NetworkEvent";
@@ -41,12 +42,12 @@ export class GlobalState<T = unknown> {
 	 * This method should be called on the **SERVER ONLY**
 	 * @param value
 	 */
-	public set(value: T): void {
+	public set(value: ValueOrSetter<T>): void {
 		assert(this.isServer, ".set() can only be called from the server");
 		this._set(value);
 	}
 
-	private _set(value: T): void {
+	private _set(value: ValueOrSetter<T>): void {
 		this.observable.set(value);
 	}
 

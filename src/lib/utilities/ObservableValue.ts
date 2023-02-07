@@ -1,4 +1,10 @@
+import { ValueOrSetter } from "../types/global";
 import Signal, { Connection } from "./simple-signal";
+
+function toFunction<T>(v: ValueOrSetter<T>): (value: T) => T {
+	if (typeIs(v, "function")) return v;
+	return () => v;
+}
 
 export class ObservableValue<T> {
 	private signal = new Signal<[T]>();
@@ -9,10 +15,13 @@ export class ObservableValue<T> {
 		this.value = typeIs(initialValue, "function") ? initialValue() : initialValue;
 	}
 
-	public set(value: T): void {
-		if (this.value === value) return;
-		this.value = value;
-		this.signal.Fire(value);
+	public set(value: ValueOrSetter<T>): void {
+		const oldValue = this.value;
+		this.value = toFunction(value)(oldValue);
+
+		if (this.value !== oldValue) {
+			this.signal.Fire(this.value);
+		}
 	}
 
 	public getValue(): T {
