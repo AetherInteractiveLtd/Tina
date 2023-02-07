@@ -57,17 +57,16 @@ export class World {
 
 	public readonly entityManager: EntityManager = new EntityManager();
 	public readonly options: WorldOptions;
-	public readonly systemManager: SystemManager;
+	public readonly scheduler: SystemManager;
 
+	// public readonly systemManager: SystemManager;
 	public id = HttpService.GenerateGUID(false);
 	/** Observers that have entities to update. */
 	public observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 
 	constructor(options: WorldOptions) {
 		this.options = options;
-
-		// TODO: require this to be passed in and remove the helper functions on the world class
-		this.systemManager = new SystemManager(this);
+		this.scheduler = new SystemManager(this);
 	}
 
 	/**
@@ -198,9 +197,29 @@ export class World {
 	public destroy(): void {}
 
 	/**
-	 * Removes a scheduled system from the execution queue in the world.
+	 * Disable a system.
+	 *
+	 * As scheduling a system can be a potentially expensive operation,
+	 * this can be used for systems that are expected to be reenabled at a
+	 * later point.
+	 *
+	 * @param system The system that should be disabled.
 	 */
-	public endSystem(/**system: System*/): void {}
+	public disableSystem(system: System): void {
+		this.scheduler.disableSystem(system);
+	}
+
+	/**
+	 * Enabled a system.
+	 *
+	 * This will not error if a system that is already enabled is enabled
+	 * again.
+	 *
+	 * @param system The system that should be enabled.
+	 */
+	public enableSystem(system: System): void {
+		this.scheduler.enableSystem(system);
+	}
 
 	/**
 	 * Flushes any current changes in the world. This is called automatically
@@ -366,10 +385,25 @@ export class World {
 	}
 
 	/**
-	 * Schedule a system to run on the next updates.
+	 * Schedules an individual system.
+	 *
+	 * Calling this function is a potentially expensive operation. It is best
+	 * advised to use {@link World.scheduleSystems} instead, and add multiple
+	 * systems at once - this is to avoid unnecessary sorting of systems.
+	 *
+	 * @param system The system to schedule.
 	 */
 	public scheduleSystem(system: System): void {
-		this.systemManager.scheduleSystem(system);
+		this.scheduler.scheduleSystems([system]);
+	}
+
+	/**
+	 * Schedules a given set of systems at once.
+	 *
+	 * @param systems The systems to schedule.
+	 */
+	public scheduleSystems(systems: Array<System>): void {
+		this.scheduler.scheduleSystems(systems);
 	}
 
 	/**
@@ -386,12 +420,38 @@ export class World {
 	 * systems have been registered.
 	 */
 	public start(): void {
-		this.systemManager.start();
+		this.scheduler.start();
 	}
 
 	/** @returns The name of the world. */
 	public toString(): string {
 		return this.options.name ?? "World";
+	}
+
+	/**
+	 * Unschedule a system from the system manager.
+	 *
+	 * If a system needs to be re-scheduled, it is recommended instead to
+	 * disable it using {@link World.disableSystem}, as scheduling a
+	 * a system requires the system to be re-sorted.
+	 *
+	 * @param system The system to unschedule.
+	 */
+	public unscheduleSystem(system: System): void {
+		this.scheduler.unscheduleSystems([system]);
+	}
+
+	/**
+	 * Unschedule a set of systems from the system manager.
+	 *
+	 * If a system needs to be re-scheduled, it is recommended instead to
+	 * disable it using {@link SystemManager.disableSystem}, as scheduling a
+	 * a system requires the system to be re-sorted.
+	 *
+	 * @param systems The systems to unschedule.
+	 */
+	public unscheduleSystems(systems: Array<System>): void {
+		this.scheduler.unscheduleSystems(systems);
 	}
 
 	/**
