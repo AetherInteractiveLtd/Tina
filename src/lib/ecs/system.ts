@@ -15,7 +15,7 @@ export interface System {
 	 * @param world The world that this system belongs to. This will be passed
 	 * in automatically.
 	 */
-	configureQueries?(world: World): void;
+	configureQueries(world: World): void;
 }
 
 export abstract class System {
