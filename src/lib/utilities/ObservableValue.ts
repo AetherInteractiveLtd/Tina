@@ -28,7 +28,7 @@ export class ObservableValue<T> {
 		return this.value;
 	}
 
-	public subscribe(observer: (value: T) => void): Connection {
+	public when(observer: (value: T) => void): Connection {
 		return this.signal.Connect(observer);
 	}
 

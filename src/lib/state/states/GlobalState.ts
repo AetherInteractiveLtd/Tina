@@ -47,6 +47,7 @@ export class GlobalState<T = unknown> {
 		if (this.isServer) {
 			/* Update all clients when value is changed on server */
 <<<<<<< HEAD
+<<<<<<< HEAD
 			this.observable.when(value => this.remote.fireAllClients({ name, value }));
 
 			/* User has pinged server to get current value (should only be fired when player joins game) */
@@ -54,6 +55,9 @@ export class GlobalState<T = unknown> {
 				this.remote.fireClient(player, { name, value: this.observable.getValue() }),
 =======
 			this.observable.subscribe(value => this.remote.FireAllClients({ name, value }));
+=======
+			this.observable.when(value => this.remote.FireAllClients({ name, value }));
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State)
 
 			/* User has pinged server to get current value (should only be fired when player joins game) */
 			this.remote.OnServerEvent(player =>
@@ -88,6 +92,7 @@ export class GlobalState<T = unknown> {
 
 	public when(observer: Observer<T>): Connection {
 		return this.observable.when(observer);
+<<<<<<< HEAD
 =======
 	private _set(value: T): void {
 =======
@@ -99,6 +104,8 @@ export class GlobalState<T = unknown> {
 	public subscribe(observer: Observer<T>): Connection {
 		return this.observable.subscribe(observer);
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
+=======
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State)
 	}
 
 	public getValue(): T {

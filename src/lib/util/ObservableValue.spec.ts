@@ -20,10 +20,14 @@ export = () => {
 
 			let currentValue: string | undefined;
 <<<<<<< HEAD:src/lib/util/ObservableValue.spec.ts
+<<<<<<< HEAD:src/lib/util/ObservableValue.spec.ts
 			value.when(newValue => {
 =======
 			value.subscribe(newValue => {
 >>>>>>> 222a4d1 (Add support for function setters for state for nicer syntax):src/lib/utilities/ObservableValue.spec.ts
+=======
+			value.when(newValue => {
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State):src/lib/utilities/ObservableValue.spec.ts
 				currentValue = newValue;
 			});
 

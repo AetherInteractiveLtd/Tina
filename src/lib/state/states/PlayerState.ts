@@ -54,10 +54,14 @@ export class PlayerState<T> {
 		/* Connect to value change */
 		if (this.isServer) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 			playerValue.when(value => this.remote.fireClient(player, { name: this.name, value }));
 =======
 			playerValue.subscribe(value => this.remote.FireClient(player, { name: this.name, value }));
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
+=======
+			playerValue.when(value => this.remote.FireClient(player, { name: this.name, value }));
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State)
 		}
 	}
 
@@ -138,12 +142,17 @@ export class PlayerState<T> {
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	public when(player: Player, observer: Observer<T>): Connection {
 		return this.getPlayerValue(player).when(observer);
 =======
 	public subscribe(player: Player, observer: Observer<T>): Connection {
 		return this.getPlayerValue(player).subscribe(observer);
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
+=======
+	public when(player: Player, observer: Observer<T>): Connection {
+		return this.getPlayerValue(player).when(observer);
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State)
 	}
 
 	public getValue(player: Player): T {

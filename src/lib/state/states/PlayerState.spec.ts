@@ -52,10 +52,14 @@ export = () => {
 
 			let value = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
 			serverState.when(TestPlayer, currentValue => {
 =======
 			serverState.subscribe(TestPlayer, currentValue => {
 >>>>>>> 5ee74d5 (Added createState to Tina namespace)
+=======
+			serverState.when(TestPlayer, currentValue => {
+>>>>>>> 2da8b3a (Rename .subscribe to .when on State)
 				value = currentValue;
 			});
 

@@ -265,4 +265,10 @@ export { State } from "./lib/state";
 export { Logger } from "./lib/logger/Logger";
 
 /** Util exports */
+<<<<<<< HEAD
 export { FunctionUtil } from "./lib/util/functions";
+=======
+export { FunctionUtil } from "./lib/utilities/functions";
+/* State exports */
+export { States } from "./lib/state/createState";
+>>>>>>> 2899a3d (Rename .subscribe to .when on State)
