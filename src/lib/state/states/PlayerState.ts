@@ -103,39 +103,3 @@ export class PlayerState<T> {
 		return this.getPlayerValue(player).getValue();
 	}
 }
-
-// /**
-//  * **CLIENT**
-//  */
-// public subscribe(observer: Observer<T>): Connection;
-// /**
-//  * **SERVER**
-//  * @param player
-//  * @param observer
-//  */
-// public subscribe(player: Player, observer: Observer<T>): Connection;
-
-// /**
-//  * TODO
-//  * @param playerOrCallback
-//  * @param callback
-//  * @returns
-//  */
-// private getSubscribeParams<T>(
-// 	playerOrCallback: Player | Observer<T>,
-// 	callback?: Observer<T>,
-// ): LuaTuple<[Player, Observer<T>]> {
-// 	/* Return the LocalPlayer and the callback */
-// 	if (this.isClient) {
-// 		assert(
-// 			typeIs(playerOrCallback, "function"),
-// 			".subscribe() requires only an observer when called on the Client",
-// 		);
-// 		return $tuple(Players.LocalPlayer, playerOrCallback);
-// 	}
-
-// 	/* Return the passed player and callback */
-// 	assert(typeIs(callback, "function"), "Observer must be a function");
-// 	assert(typeIs(playerOrCallback, "Instance") && playerOrCallback.IsA("Player"));
-// 	return $tuple(playerOrCallback as Player, callback as Observer<T>);
-// }
