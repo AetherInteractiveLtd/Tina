@@ -44,7 +44,7 @@ export class PlayerState<T> {
 
 		/* Connect to value change */
 		if (this.isServer) {
-			playerValue.subscribe(value => this.remote.FireClient(player, { name: this.name, value }));
+			playerValue.when(value => this.remote.FireClient(player, { name: this.name, value }));
 		}
 	}
 
@@ -95,8 +95,8 @@ export class PlayerState<T> {
 		playerValue.set(value);
 	}
 
-	public subscribe(player: Player, observer: Observer<T>): Connection {
-		return this.getPlayerValue(player).subscribe(observer);
+	public when(player: Player, observer: Observer<T>): Connection {
+		return this.getPlayerValue(player).when(observer);
 	}
 
 	public getValue(player: Player): T {

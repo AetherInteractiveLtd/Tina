@@ -19,7 +19,7 @@ export = () => {
 			const value = new ObservableValue("Gaming");
 
 			let currentValue: string | undefined;
-			value.subscribe(newValue => {
+			value.when(newValue => {
 				currentValue = newValue;
 			});
 

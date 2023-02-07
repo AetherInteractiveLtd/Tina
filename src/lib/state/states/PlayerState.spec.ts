@@ -51,7 +51,7 @@ export = () => {
 			const serverState = makePlayerState(0, NetworkBoundary.Server);
 
 			let value = 0;
-			serverState.subscribe(TestPlayer, currentValue => {
+			serverState.when(TestPlayer, currentValue => {
 				value = currentValue;
 			});
 

@@ -44,12 +44,12 @@ export = () => {
 			const clientState = makeGlobalState(66, NetworkBoundary.Client);
 
 			let serverValue: number | undefined;
-			serverState.subscribe(v => {
+			serverState.when(v => {
 				serverValue = v;
 			});
 
 			let clientValue: number | undefined;
-			clientState.subscribe(v => {
+			clientState.when(v => {
 				clientValue = v;
 			});
 

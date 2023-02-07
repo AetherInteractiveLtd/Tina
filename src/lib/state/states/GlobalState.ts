@@ -29,7 +29,7 @@ export class GlobalState<T = unknown> {
 
 		if (this.isServer) {
 			/* Update all clients when value is changed on server */
-			this.observable.subscribe(value => this.remote.FireAllClients({ name, value }));
+			this.observable.when(value => this.remote.FireAllClients({ name, value }));
 
 			/* User has pinged server to get current value (should only be fired when player joins game) */
 			this.remote.OnServerEvent(player =>
@@ -51,8 +51,8 @@ export class GlobalState<T = unknown> {
 		this.observable.set(value);
 	}
 
-	public subscribe(observer: Observer<T>): Connection {
-		return this.observable.subscribe(observer);
+	public when(observer: Observer<T>): Connection {
+		return this.observable.when(observer);
 	}
 
 	public getValue(): T {
