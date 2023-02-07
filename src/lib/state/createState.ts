@@ -28,6 +28,7 @@ export interface StateOptions {
 	boundary?: NetworkBoundary;
 }
 
+// TODO: This can be moved when we have a Tina base folder
 const Folder = ReplicatedStorage;
 const Remote = getOrCreateRemote("Tina State", Folder);
 const Event = new RemoteNetworkEvent(Remote);

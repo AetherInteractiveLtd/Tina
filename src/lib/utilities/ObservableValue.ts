@@ -1,9 +1,12 @@
 import { ValueOrSetter } from "../types/global";
 import Signal, { Connection } from "./simple-signal";
 
-function toFunction<T>(v: ValueOrSetter<T>): (value: T) => T {
-	if (typeIs(v, "function")) return v;
-	return () => v;
+function toSetter<T>(v: ValueOrSetter<T>): (value: T) => T {
+	return typeIs(v, "function") ? v : () => v;
+}
+
+function toFunction<T>(v: T | (() => T)): () => T {
+	return typeIs(v, "function") ? v : () => v;
 }
 
 export class ObservableValue<T> {
@@ -11,13 +14,12 @@ export class ObservableValue<T> {
 	private value: T;
 
 	constructor(initialValue: T | (() => T)) {
-		// TODO: Support yielding setters (fetch)
-		this.value = typeIs(initialValue, "function") ? initialValue() : initialValue;
+		this.value = toFunction(initialValue)();
 	}
 
 	public set(value: ValueOrSetter<T>): void {
 		const oldValue = this.value;
-		this.value = toFunction(value)(oldValue);
+		this.value = toSetter(value)(oldValue);
 
 		if (this.value !== oldValue) {
 			this.signal.Fire(this.value);
