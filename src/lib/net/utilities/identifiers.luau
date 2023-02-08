@@ -9,12 +9,10 @@ local Identifiers = {}
 
 local AutoSerde: Folder = nil
 
-
 local isServer = RunService:IsServer()
 local isClient = RunService:IsClient()
 
 function Identifiers._init()
-	if isClient then
 	if isClient then
 		AutoSerde = ReplicatedStorage:WaitForChild("Identifier") :: Folder
 
@@ -36,7 +34,6 @@ function Identifiers._init()
 			end
 		end)
 	elseif isServer then
-	elseif isServer then
 		AutoSerde = Instance.new("Folder")
 		AutoSerde.Name = "Identifier"
 		AutoSerde.Parent = ReplicatedStorage
@@ -49,9 +46,6 @@ function Identifiers.create(): string
 
 	assert(current <= 65536, "Over the identification cap: " .. id)
 
-	if not sendDict[id] and isClient then
-		return Identifiers.await(id)
-	elseif sendDict[id] and isClient then
 	if not sendDict[id] and isClient then
 		return Identifiers.await(id)
 	elseif sendDict[id] and isClient then
@@ -70,13 +64,11 @@ function Identifiers.create(): string
 end
 
 function Identifiers.await(id: string): string
-function Identifiers.await(id: string): string
 	local identifier = sendDict[id] or (if AutoSerde.Parent ~= nil then AutoSerde:GetAttribute(id) else nil)
 
 	if (identifier) then
 		return identifier
 	else
-		task.delay(2, function() warn("[TinaNet]: Infinite yield possible within: ", id) end)
 		task.delay(2, function() warn("[TinaNet]: Infinite yield possible within: ", id) end)
 
 		repeat

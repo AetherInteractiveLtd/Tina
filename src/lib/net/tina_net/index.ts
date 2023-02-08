@@ -1,21 +1,33 @@
+import { Router } from "../classes/router";
 import { RouterDeclaration } from "../classes/router/types";
-import { RouterDeclaration } from "../classes/router/types";
-import { InternalRouter } from "./types";
+import { Exposed, ExposedEndpoints, InternalEndpoints, Internals } from "./types";
 
 export namespace TinaNet {
-	let internalRouter: RouterDeclaration<InternalRouter>;
+	let exposedRouter: RouterDeclaration<ExposedEndpoints>;
+	let internalRouter: RouterDeclaration<InternalEndpoints>;
 
-	export function setRouter(router: typeof internalRouter): void {
-		export function setRouter(router: typeof internalRouter): void {
-			internalRouter = router;
+	export function setRouter<T extends "internal" | "exposed">(
+		routerType: T,
+		routerDesc: T extends "internal" ? InternalEndpoints : ExposedEndpoints,
+	): void {
+		if (routerType === "internal") {
+			internalRouter = new Router(routerDesc as never) as never;
+		} else {
+			exposedRouter = new Router(routerDesc as never) as never;
 		}
+	}
 
-		export function getRouter(): typeof internalRouter {
-			export function getRouter(): typeof internalRouter {
-				return internalRouter;
-			}
+	export function getRouter<T extends "internal" | "exposed">(
+		routerType: T,
+	): T extends "internal" ? typeof internalRouter : typeof exposedRouter {
+		return (routerType === "internal" ? internalRouter : exposedRouter) as never;
+	}
 
-			export function get<T extends keyof InternalRouter, U extends InternalRouter[T]>(route: T | string): U {
-				return internalRouter.dir(route as T) as never;
-			}
-		}
+	export function getExposed<T extends keyof Exposed, U extends ExposedEndpoints[T]>(route: T): U {
+		return exposedRouter.dir(route as T) as never;
+	}
+
+	export function getInternal<T extends keyof Internals, U extends InternalEndpoints[T]>(route: T): U {
+		return internalRouter.dir(route as T) as never;
+	}
+}
