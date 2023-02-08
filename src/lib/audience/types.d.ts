@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 import { DefaultUserDeclaration } from "../user/default/types";
-=======
-import { DefaultUserDeclaration } from "../user/default/types";
->>>>>>> 776117e (endpoints types, renaming, types, structure, etc.)
+import { UserType } from "../user/default/types";
 
 export interface AudienceDeclaration {
 	/**
