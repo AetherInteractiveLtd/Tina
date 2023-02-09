@@ -1,5 +1,6 @@
 import { EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
+import { SparseSet } from "./collections/sparse-set";
 import { AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
@@ -115,6 +116,8 @@ export class Query {
 	public readonly world: World;
 
 	public archetypes: Array<Archetype> = [];
+	public entered: SparseSet = new SparseSet();
+	public exited: SparseSet = new SparseSet();
 	public mask: QueryMask;
 
 	constructor(world: World, query?: RawQuery) {
@@ -181,10 +184,6 @@ export class Query {
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		if (this.archetypes.size() === 0) {
-			return;
-		}
-
 		for (let i = 0; i < this.archetypes.size(); i++) {
 			const entities = this.archetypes[i].entities;
 			for (let j = entities.size(); j > 0; j--) {
@@ -256,4 +255,30 @@ export class Query {
 
 		return { op: raw.op, dt: ret } as QueryMask;
 	};
+
+	// TODO: Once we get archetype graphs, this might be a more efficient way
+	// to do component observers - at the very least it will allow more complex
+	// observation queries. For now, it's just a placeholder - there is no way
+	// to match entities to queries cheaply.
+	private enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
+		for (const entityId of this.entered.dense) {
+			if (!callback(entityId)) {
+				break;
+			}
+		}
+
+		this.world.flush();
+		this.entered = new SparseSet();
+	}
+
+	private exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
+		for (const entityId of this.exited.dense) {
+			if (!callback(entityId)) {
+				break;
+			}
+		}
+
+		this.world.flush();
+		this.exited = new SparseSet();
+	}
 }

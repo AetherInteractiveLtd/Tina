@@ -47,7 +47,9 @@ export interface WorldOptions {
  * ```
  */
 export class World {
-	private changeStorage: Array<[EntityId, AnyComponentInternal]> = [];
+	private readonly entityManager: EntityManager = new EntityManager();
+	private readonly scheduler: SystemManager;
+
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
@@ -55,13 +57,15 @@ export class World {
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
-	public readonly entityManager: EntityManager = new EntityManager();
+	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
-	public readonly scheduler: SystemManager;
 
-	// public readonly systemManager: SystemManager;
+	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
-	/** Observers that have entities to update. */
+	/**
+	 * Observers that have entities to update.
+	 * @hidden
+	 */
 	public observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 
 	constructor(options: WorldOptions) {
@@ -90,6 +94,8 @@ export class World {
 	 * @param component The component to add to the entity, which must have
 	 *     been defined previously with {@link defineComponent}.
 	 * @param data The optional data to initialize the component with.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
 	public addComponent<C extends AnyComponent>(
 		entityId: EntityId,
@@ -131,10 +137,12 @@ export class World {
 	}
 
 	/**
+	 * Adds a tag component to an entity.
 	 *
-	 * @param entityId
-	 * @param tag
-	 * @returns
+	 * @param entityId The id of the entity to add the tag to.
+	 * @param tag The tag component to add to the entity.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
 	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
 		return this.addComponent(entityId, tag as unknown as AnyComponent);
@@ -143,12 +151,17 @@ export class World {
 	/**
 	 * Removes all entities from the world.
 	 */
-	public clear(): void {}
+	public clear(): void {
+		throw "Not implemented";
+	}
 
 	/**
+	 * Creates a new observer for the given component. Observers are used to
+	 * listen for changes to a component.
 	 *
-	 * @param component
-	 * @returns
+	 * @param component The component to observe.
+	 *
+	 * @returns The newly created observer.
 	 */
 	public createObserver<C extends AnyComponent>(component: C): Observer {
 		const observer = new Observer(this, component);
@@ -194,7 +207,9 @@ export class World {
 	/**
 	 * Halts the current execution of the world and destroys the world.
 	 */
-	public destroy(): void {}
+	public destroy(): void {
+		this.scheduler.stop();
+	}
 
 	/**
 	 * Disable a system.
@@ -204,9 +219,13 @@ export class World {
 	 * later point.
 	 *
 	 * @param system The system that should be disabled.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public disableSystem(system: System): void {
+	public disableSystem(system: System): this {
 		this.scheduler.disableSystem(system);
+
+		return this;
 	}
 
 	/**
@@ -216,9 +235,13 @@ export class World {
 	 * again.
 	 *
 	 * @param system The system that should be enabled.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public enableSystem(system: System): void {
+	public enableSystem(system: System): this {
 		this.scheduler.enableSystem(system);
+
+		return this;
 	}
 
 	/**
@@ -237,14 +260,6 @@ export class World {
 	}
 
 	/**
-	 * Returns the component of on the entity of the given type.
-	 * @returns
-	 */
-	public getComponent<C>(entityId: EntityId /**component: ComponentType<C> */): C | undefined {
-		return undefined;
-	}
-
-	/**
 	 * Checks if a given entity is currently in the world.
 	 *
 	 * @param entityId The id of the entity to check.
@@ -255,10 +270,29 @@ export class World {
 	}
 
 	/**
-	 * Returns whether or not the entity has all of the given components.
-	 * @returns
+	 * @returns whether or not the entity has all of the given components.
 	 */
-	public hasAllOf(entityId: EntityId /** ...components: ComponentType<any>[] */): boolean {
+	public hasAllOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+		for (const component of components) {
+			if (!this.hasComponent(entityId, component)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @returns whether or not the entity has at least one of of the given
+	 * components.
+	 */
+	public hasAnyOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+		for (const component of components) {
+			if (this.hasComponent(entityId, component)) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -269,14 +303,6 @@ export class World {
 	public hasComponent<C extends AnyComponent>(entityId: EntityId, component: C): boolean {
 		const componentId = (component as unknown as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
-	}
-
-	/**
-	 * Returns whether or not the entity has any of the given components.
-	 * @returns
-	 */
-	public hasSubsetOf(entityId: EntityId /** ...components: ComponentType<any>[] */): boolean {
-		return false;
 	}
 
 	/**
@@ -292,12 +318,16 @@ export class World {
 	/**
 	 * Pauses the execution of the world.
 	 */
-	public pause(): void {}
+	public pause(): void {
+		throw "Not implemented";
+	}
 
 	/**
 	 * Continues the execution of the world from its current state.
 	 */
-	public play(): void {}
+	public play(): void {
+		throw "Not implemented";
+	}
 
 	/**
 	 * Removes the given entity from the world, including all of its components.
@@ -310,6 +340,7 @@ export class World {
 	 */
 	public remove(entityId: EntityId): this {
 		this.entityManager.removeEntity(entityId);
+
 		return this;
 	}
 
@@ -364,12 +395,16 @@ export class World {
 	 * needs to be removed.
 	 *
 	 * @param query The query to remove.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public removeQuery(query: Query): void {
+	public removeQuery(query: Query): this {
 		const index = this.queries.indexOf(query);
 		if (index !== undefined) {
 			this.queries.remove(index);
 		}
+
+		return this;
 	}
 
 	/**
@@ -392,18 +427,26 @@ export class World {
 	 * systems at once - this is to avoid unnecessary sorting of systems.
 	 *
 	 * @param system The system to schedule.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public scheduleSystem(system: System): void {
+	public scheduleSystem(system: System): this {
 		this.scheduler.scheduleSystems([system]);
+
+		return this;
 	}
 
 	/**
 	 * Schedules a given set of systems at once.
 	 *
 	 * @param systems The systems to schedule.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public scheduleSystems(systems: Array<System>): void {
+	public scheduleSystems(systems: Array<System>): this {
 		this.scheduler.scheduleSystems(systems);
+
+		return this;
 	}
 
 	/**
@@ -436,9 +479,13 @@ export class World {
 	 * a system requires the system to be re-sorted.
 	 *
 	 * @param system The system to unschedule.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public unscheduleSystem(system: System): void {
+	public unscheduleSystem(system: System): this {
 		this.scheduler.unscheduleSystems([system]);
+
+		return this;
 	}
 
 	/**
@@ -449,9 +496,13 @@ export class World {
 	 * a system requires the system to be re-sorted.
 	 *
 	 * @param systems The systems to unschedule.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public unscheduleSystems(systems: Array<System>): void {
+	public unscheduleSystems(systems: Array<System>): this {
 		this.scheduler.unscheduleSystems(systems);
+
+		return this;
 	}
 
 	/**
@@ -470,10 +521,6 @@ export class World {
 		}
 		return arch.change[componentId];
 	}
-
-	// private generateHashForMask(mask: Array<number>): string {
-	// 	return mask.sort().join(",");
-	// }
 
 	/**
 	 * Gets the archetype with the given mask.
@@ -523,6 +570,12 @@ export class World {
 		this.componentsToUpdate.dense = [];
 	}
 
+	/**
+	 * Clears all pending observer updates in the world.
+	 *
+	 * This is called automatically by {@link flush}.
+	 * @hidden
+	 */
 	private updatePendingObservers(): void {
 		for (const [entityId, observer, ecsType] of this.observersToUpdate) {
 			observer.storage.get(ecsType)!.add(entityId);

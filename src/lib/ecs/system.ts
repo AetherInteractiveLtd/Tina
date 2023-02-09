@@ -3,6 +3,7 @@ import { RunService } from "@rbxts/services";
 import { insertionSort } from "../util/array-utils";
 import { World } from "./world";
 
+// TODO: Support tina events
 export type ExecutionGroup = RBXScriptSignal;
 
 export interface System {
@@ -43,6 +44,7 @@ export abstract class System {
 	/**	The time that the system was last called. */
 	public lastCalled = 0;
 	/** The name of the system is primarily used for debugging purposes. */
+	// TODO: Can we infer this from the parent class name?
 	public name = "System";
 	/**
 	 * The priority order of the system.
@@ -70,6 +72,7 @@ export abstract class System {
  */
 export class SystemManager {
 	private executionDefault: ExecutionGroup;
+	private executionGroupSignals: Map<ExecutionGroup, RBXScriptConnection> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
 	// private systemArgs?: Array<unknown>;
 	private systems: Array<System> = [];
@@ -93,7 +96,7 @@ export class SystemManager {
 	public disableSystem(system: System): void {
 		system.enabled = false;
 
-		// Should we also be disabling dependent systems here?
+		// TODO: Should we also be disabling dependent systems here?
 	}
 
 	/**
@@ -107,9 +110,8 @@ export class SystemManager {
 	public enableSystem(system: System): void {
 		system.enabled = true;
 
-		// Should we also be enabling systems that depend here? Likely just
+		// TODO: Should we also be enabling systems that depend here? Likely just
 		// issue a warning to the dev that it hasn't been enabled.
-
 		// do we include dev-only logging for things like this?
 	}
 
@@ -163,9 +165,10 @@ export class SystemManager {
 	 * @param args The arguments to pass to all systems.
 	 */
 	public setArgs(..._args: Array<unknown>): void {
-		throw "Not implemented";
-		// this.systemArgs = args;
 		// TODO: Find a way to pass args to systems while keeping type safety
+		throw "Not implemented";
+
+		// this.systemArgs = args;
 	}
 
 	/**
@@ -180,13 +183,12 @@ export class SystemManager {
 		}
 
 		for (const executionGroup of this.executionGroups) {
-			executionGroup.Connect(() => {
+			const disconnect = executionGroup.Connect(() => {
 				for (const system of this.systemsByExecutionGroup.get(executionGroup) ?? []) {
 					if (!system.enabled) {
 						return;
 					}
 
-					// TODO: Can we infer the name of the system from the class name
 					const systemName = system.name;
 
 					system.dt = os.clock() - system.lastCalled;
@@ -216,6 +218,17 @@ export class SystemManager {
 					}
 				}
 			});
+
+			this.executionGroupSignals.set(executionGroup, disconnect);
+		}
+	}
+
+	/**
+	 * Stops all systems from being executed.
+	 */
+	public stop(): void {
+		for (const [_, signal] of this.executionGroupSignals) {
+			signal.Disconnect();
 		}
 	}
 
@@ -331,6 +344,7 @@ export class SystemManager {
 	 *
 	 * If the current requirements cannot be met, this function will throw an
 	 * error and halt execution.
+	 *
 	 * @param systems The systems to validate.
 	 */
 	private validateSystems(systems: Array<System>): void {

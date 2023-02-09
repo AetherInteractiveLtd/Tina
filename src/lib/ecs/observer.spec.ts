@@ -18,7 +18,7 @@ export = (): void => {
 			const calledFn: Array<number> = [];
 
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 
 			const observer = world.createObserver(component).event(ECS.OnAdded);
@@ -49,7 +49,7 @@ export = (): void => {
 			const calledFn: Array<number> = [];
 
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 
 			const observer = world.createObserver(component).event(ECS.OnRemoved);
@@ -88,11 +88,11 @@ export = (): void => {
 			let callCount = 0;
 
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 
 			const component2 = createComponent({
-				y: ComponentTypes.number,
+				y: ComponentTypes.Number,
 			});
 
 			const observer = world.createObserver(component).with(component2).event(ECS.OnAdded);
@@ -116,10 +116,10 @@ export = (): void => {
 			const calledFn: Array<number> = [];
 
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 
-			const observer = world.createObserver(component).event(ECS.OnSet);
+			const observer = world.createObserver(component).event(ECS.OnChanged);
 
 			const id = world.add();
 			world.addComponent(id, component);

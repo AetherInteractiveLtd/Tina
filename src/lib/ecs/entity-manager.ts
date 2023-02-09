@@ -7,6 +7,17 @@ import type { World } from "./world";
 let globalEntityId = 0;
 let globalComponentId = 0;
 
+export function reset(): void {
+	globalEntityId = 0;
+	globalComponentId = 0;
+}
+
+/** EntityIds that have been used previously ready to be reused. */
+const reusableEntityIds: SparseSet = new SparseSet();
+
+/**
+ * @returns the next available component id.
+ */
 export function getNextComponentId(): number {
 	return globalComponentId++;
 }
@@ -17,16 +28,13 @@ export function getNextComponentId(): number {
  * This class is created internally by the {@link World} class, and should not
  * be accessed directly.
  *
- * //TODO: Remove the weird coupling between this and the world class;
- * we can take the system manager helpers out of the world class as the user
- * should sparingly use it after world creation.
+ * //TODO: Remove the weird coupling between this and the world class.
  */
 export class EntityManager {
-	/** EntityIds that have been used previously ready to be reused. */
-	private readonly reusableEntityIds: SparseSet = new SparseSet();
-
 	private empty: Archetype = new Archetype([]);
+	/** Entities that are pending removal. */
 	private entitiesToDestroy: SparseSet = new SparseSet();
+	/** The amount of entities currently alive in the world. */
 	private size = 0;
 
 	public archetypes: Map<string, Archetype> = new Map();
@@ -46,8 +54,8 @@ export class EntityManager {
 	 * @returns The id of the next available entity.
 	 */
 	public createEntity(): EntityId {
-		if (this.reusableEntityIds.dense.size() > 0) {
-			const entityId = this.reusableEntityIds.dense.pop()!;
+		if (reusableEntityIds.dense.size() > 0) {
+			const entityId = reusableEntityIds.dense.pop()!;
 			this.createEntityInternal(entityId);
 			return entityId;
 		}
@@ -68,7 +76,7 @@ export class EntityManager {
 	public destroyPendingEntities(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			this.entities[entityId].sparseSet.remove(entityId);
-			this.reusableEntityIds.add(entityId);
+			reusableEntityIds.add(entityId);
 			this.size--;
 		}
 		this.entitiesToDestroy.dense.clear();
@@ -79,13 +87,6 @@ export class EntityManager {
 	 */
 	public getEntityId(): number {
 		return globalEntityId;
-	}
-
-	/**
-	 * @returns The next available component id.
-	 */
-	public getNextComponentId(): number {
-		return globalComponentId++;
 	}
 
 	/**
@@ -117,8 +118,8 @@ export class EntityManager {
 	}
 
 	/**
-	 *
-	 * @param entityId
+	 * Internal method for creating an entity.
+	 * @param entityId The id of the entity to create.
 	 */
 	private createEntityInternal(entityId: EntityId): void {
 		this.entities[entityId] = this.updateTo[entityId] = this.empty;

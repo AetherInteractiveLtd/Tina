@@ -19,14 +19,14 @@ export = (): void => {
 	describe("a component should", () => {
 		it("be able to be created", () => {
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 			expect(component).to.be.ok();
 		});
 
 		it("be able to be given to an entity", () => {
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
 			world.addComponent(entity, component);
@@ -36,7 +36,7 @@ export = (): void => {
 
 		it("be able to be removed from an entity", () => {
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
 			world.addComponent(entity, component);
@@ -48,7 +48,7 @@ export = (): void => {
 
 		it("be able to update its data", () => {
 			const component = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
 			world.addComponent(entity, component);
@@ -59,7 +59,7 @@ export = (): void => {
 			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
 
 			const component2 = createComponent({
-				x: ComponentTypes.number,
+				x: ComponentTypes.Number,
 			});
 			const entity2 = world.add();
 			world.addComponent(entity2, component2, {

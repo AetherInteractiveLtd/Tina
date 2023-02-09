@@ -4,7 +4,7 @@
  * when the universe of possible values is very large but used very sparingly
  * and the set is iterated often or cleared often.
  *
- * The sparse set will grow as needed to accommodate values added.
+ * The sparse set will grow as needed to accommodate any values added.
  */
 export class SparseSet {
 	/** The elements stored in the sparse set. */

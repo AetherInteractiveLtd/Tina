@@ -11,18 +11,11 @@ export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
-export type ComponentInstance<T extends Tree<Type> = Tree<Type>> = Immutable<{
-	readonly componentId: ComponentId;
-	readonly data: T;
-}>;
-
 export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Array<U> : T;
 
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
-type ComponentIdField = { readonly componentId: ComponentId };
-
-export type Component<T extends Tree<Type>> = {
+export type Component<T extends Tree<Type>> = Immutable<ComponentData<T>> & {
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
@@ -32,18 +25,55 @@ export type ComponentInternal<T extends Tree<Type>> = Component<T> &
 		observers: Array<Observer>;
 	};
 
-export const ComponentTypes = {
-	number: [0],
-	string: [""],
-	boolean: [false],
-};
-
 export type TagComponent = {
 	[index: string]: never;
 };
 
 export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
+};
+
+export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
+
+export type Type = ArrayConstructor | Array<unknown>;
+
+export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
+	? T
+	: T extends ArrayConstructor
+	? Array<typeof ComponentTypes>
+	: T extends Exclude<Type, Array<unknown>>
+	? InstanceType<T>
+	: {
+			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
+	  };
+
+type ComponentIdField = { readonly componentId: ComponentId };
+
+function Custom<T>(init: () => T): [() => T];
+function Custom<T>(): Array<T>;
+function Custom<T>(init?: () => T): Array<() => T> {
+	return init ? [init] : [];
+}
+
+/**
+ * Types that can be used as component properties. These are the types that can
+ * will support built-in serialization.
+ *
+ * TODO: Support custom serialization (and serialization of any type).
+ * If you want to use a custom type, you can use the `Custom` function to create
+ * a component that uses a custom type, and then provide a custom serializer.
+ */
+export const ComponentTypes = {
+	Custom,
+	Boolean: [false],
+	CFrame: [new CFrame()],
+	Color3: [new Color3()],
+	Number: [0],
+	String: [""],
+	Vector2: [new Vector2()],
+	Vector2int16: [new Vector2int16()],
+	Vector3: [new Vector3()],
+	Vector3int16: [new Vector3int16()],
 };
 
 /**
@@ -60,8 +90,12 @@ export type TagComponentInternal = ComponentIdField & {
  *
  * Components are singletons, and should be created once per component type.
  * Components also persist between worlds, therefore you do not need more than
- * one component per world. EntityIds are also global, therefore the index of
- * a given entity will always match the index of the component data.
+ * one component per world. EntityIds are global, therefore the index of a
+ * given entity will always match the index of the component data.
+ *
+ * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
+ * this to be configurable? It should also be possible to resize the array if
+ * required (although this would not be desirable).
  *
  * @param schema The properties of the component.
  *
@@ -69,16 +103,21 @@ export type TagComponentInternal = ComponentIdField & {
  */
 export function createComponent<T extends Tree<Type>>(schema: T): Component<T>;
 export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): Component<T> {
-	const componentData = createComponentArray(schema, 10000);
+	const componentData = createComponentArray<T>(schema as T, 10000);
 	const observers = new Array<Observer>();
 	return Sift.Dictionary.merge(componentData, {
 		componentId: getNextComponentId(),
 
 		observers: observers,
 
+		// TODO: This currently does not use the component schema properly,
+		// nested objects are not supported.
 		set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
+			// TODO: Look into removing this check to improve performance.
+			// It would be beneficial to just use the component data directly
+			// rather than going through this function.
 			for (const observer of observers) {
-				observer.world.observersToUpdate.push([entityId, observer, ECS.OnSet]);
+				observer.world.observersToUpdate.push([entityId, observer, ECS.OnChanged]);
 			}
 
 			// eslint-disable-next-line roblox-ts/no-array-pairs
@@ -86,7 +125,7 @@ export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): 
 				componentData[key as never][entityId as never] = value as never;
 			}
 		},
-	});
+	}) as ComponentInternal<T>;
 }
 
 /**
@@ -110,44 +149,36 @@ export function createTag(): TagComponent {
 }
 
 /**
+ * Creates an array of the given size, and fills it with the given default
+ * value.
  *
- * @param def
- * @param max
- * @returns
+ * @param defaultValue The default value to fill the array with.
+ * @param arraySize The size of the array to create (the total number of
+ * allowed entities).
+ *
+ * @returns The pre-allocated array.
  */
-function createComponentArray<T extends Tree<Type>>(def: T, max: number): ComponentArray<T> {
-	if (type(def) === "function") {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return new (def as any)(max);
+function createComponentArray<T extends Tree<Type>>(
+	defaultValue: T,
+	arraySize: number,
+): ComponentArray<T> {
+	if (typeOf(defaultValue) === "function") {
+		return new (defaultValue as ArrayConstructor)(arraySize) as ComponentArray<T>;
 	}
 
-	if (t.array(t.any)(def) === true) {
-		if ((def as Array<T>).size() > 0) {
-			// return [...new Array<T>(max)].map(def[0 as never]) as never;
-			return new Array<T>(max, (def as Array<T>)[0 as never]) as never;
+	if (t.array(t.any)(defaultValue) === true) {
+		if ((defaultValue as Array<T>).size() > 0) {
+			return new Array<T>(arraySize, (defaultValue as Array<T>)[0]) as ComponentArray<T>;
 		}
-		return new Array<T>(max) as never;
+
+		return new Array<T>(arraySize) as ComponentArray<T>;
 	}
 
-	const ret: ComponentArray = {};
+	const result: ComponentArray = {};
 
-	// eslint-disable-next-line roblox-ts/no-array-pairs
-	for (const [key, value] of pairs(def)) {
-		ret[key as never] = createComponentArray(value as never, max);
+	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
+		result[key] = createComponentArray(value, arraySize);
 	}
-	return ret as never;
+
+	return result as never;
 }
-
-export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
-
-export type Type = ArrayConstructor | Array<unknown>;
-
-export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
-	? T
-	: T extends ArrayConstructor
-	? Array<typeof ComponentTypes>
-	: T extends Exclude<Type, Array<unknown>>
-	? InstanceType<T>
-	: {
-			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
-	  };

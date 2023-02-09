@@ -1,11 +1,14 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent, AnyComponentInternal, ComponentInternal } from "./component";
+import { AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
+/**
+ * ECS events that can be observed.
+ */
 export const enum ECS {
 	"OnAdded" = "OnAdded",
 	"OnRemoved" = "OnRemoved",
-	"OnSet" = "OnChanged",
+	"OnChanged" = "OnChanged",
 }
 
 /**
@@ -19,11 +22,15 @@ export const enum ECS {
  * observer will be stored until the system is called, and only flushed once
  * the observer is iterated over.
  *
+ * @note Do not create an observer directly, instead use the
+ * {@link World.createObserver} method, otherwise any changes will not be
+ * registered.
  */
 export class Observer {
 	/** A set of components that must match for an entity to be valid. */
 	private requiredComponents: Array<AnyComponent> = [];
 
+	/** The world this observer belongs to. */
 	public readonly world: World;
 
 	/** The primary component that the observer is watching. */
@@ -62,7 +69,7 @@ export class Observer {
 	public event(eventType: ECS): this {
 		this.storage.set(eventType, new Set());
 
-		if (eventType === ECS.OnSet) {
+		if (eventType === ECS.OnChanged) {
 			(this.primaryComponent as AnyComponentInternal).observers.push(this);
 		}
 
