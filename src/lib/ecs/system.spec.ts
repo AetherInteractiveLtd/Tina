@@ -13,6 +13,7 @@ const bindableEvent = new Instance("BindableEvent");
 const world = {} as World;
 (world.options as WorldOptions) = {};
 world.options.defaultExecutionGroup = bindableEvent.Event;
+world.flush = (): void => {};
 
 let manager = {} as SystemManager;
 

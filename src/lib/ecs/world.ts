@@ -245,9 +245,14 @@ export class World {
 	}
 
 	/**
-	 * Flushes any current changes in the world. This is called automatically
-	 * whenever a query or a system has finished executing, and should not
-	 * typically be called manually.
+	 * Flushes any pending entity removal, or deferred component changes in the
+	 * world.
+	 *
+	 * *This is called automatically whenever a system has finished executing,
+	 * and should not typically be called manually.*
+	 *
+	 * If you are not using the inbuilt scheduler, you should call this method
+	 * at a regular interval to ensure that any pending changes are applied.
 	 */
 	public flush(): void {
 		debug.profilebegin("World:flush");

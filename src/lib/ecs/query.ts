@@ -192,8 +192,6 @@ export class Query {
 				}
 			}
 		}
-
-		this.world.flush();
 	}
 
 	/**

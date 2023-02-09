@@ -152,6 +152,7 @@ export class SystemManager {
 
 			this.sortSystems();
 		}
+		debug.profileend();
 	}
 
 	/**
@@ -184,7 +185,7 @@ export class SystemManager {
 
 		for (const executionGroup of this.executionGroups) {
 			const disconnect = executionGroup.Connect(() => {
-				for (const system of this.systemsByExecutionGroup.get(executionGroup) ?? []) {
+				for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
 					if (!system.enabled) {
 						return;
 					}
@@ -199,6 +200,7 @@ export class SystemManager {
 
 					const thread = coroutine.create(() => {
 						system.onUpdate(this.world /**, ...this.systemArgs */);
+						this.world.flush();
 					});
 
 					const [success, result] = coroutine.resume(thread);
@@ -216,6 +218,8 @@ export class SystemManager {
 							`System: ${systemName} errored! ${result} + \n ${debug.traceback}`,
 						);
 					}
+
+					debug.profileend();
 				}
 			});
 
@@ -336,6 +340,7 @@ export class SystemManager {
 				this.systemsByExecutionGroup.set(group, this.orderSystemsByExecutionGroup(systems));
 			}
 		}
+		debug.profileend();
 	}
 
 	/**
