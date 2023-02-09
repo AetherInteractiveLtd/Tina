@@ -83,7 +83,6 @@ export class Observer {
 	 */
 	public forEach(callback: (entityId: EntityId) => void): void {
 		for (const [event, entities] of this.storage) {
-			print(entities);
 			for (const entityId of entities) {
 				let valid = true;
 

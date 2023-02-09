@@ -1,11 +1,13 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { internal_resetGlobalState } from "./entity-manager";
 import { World } from "./world";
 
 let world: World;
 
 export = (): void => {
 	beforeEach(() => {
+		internal_resetGlobalState();
 		world = new World({});
 	});
 

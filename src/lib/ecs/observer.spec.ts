@@ -1,6 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { ComponentTypes, createComponent } from "./component";
+import { internal_resetGlobalState } from "./entity-manager";
 import { ECS } from "./observer";
 import { World } from "./world";
 
@@ -8,10 +9,13 @@ function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
 	return a.join() === b.join();
 }
 
-const world = new World({});
+let world = new World({});
 
 export = (): void => {
-	beforeEach(() => {});
+	beforeEach(() => {
+		internal_resetGlobalState();
+		world = new World({});
+	});
 
 	describe("An observer should", () => {
 		it("be called when an entity is added", () => {

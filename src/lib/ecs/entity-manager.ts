@@ -7,13 +7,14 @@ import type { World } from "./world";
 let globalEntityId = 0;
 let globalComponentId = 0;
 
-export function reset(): void {
+/** EntityIds that have been used previously ready to be reused. */
+let reusableEntityIds: SparseSet = new SparseSet();
+
+export function internal_resetGlobalState(): void {
 	globalEntityId = 0;
 	globalComponentId = 0;
+	reusableEntityIds = new SparseSet();
 }
-
-/** EntityIds that have been used previously ready to be reused. */
-const reusableEntityIds: SparseSet = new SparseSet();
 
 /**
  * @returns the next available component id.
