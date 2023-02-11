@@ -105,10 +105,13 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	public when<T extends keyof Events>(token: T): EventListener<ArrayOrNever<Events[T]>>;
 
 	// Implementation
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	public when(token: any = "_default"): unknown {
 		const hasEvent = this.events.has(token);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const event = new EventListener<any>();
 		if (!hasEvent) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const eventsArray: Array<EventListener<any>> = [];
 			eventsArray.push(event);
 			this.events.set(token, eventsArray);
