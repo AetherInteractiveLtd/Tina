@@ -47,6 +47,7 @@ export class Scope {
 		output.push({
 			level: severity,
 			text: `[${this.name}]: ${stringToPrint}`,
+			// TODO: we probably want to do some cool RichText stuff here?
 		});
 	}
 

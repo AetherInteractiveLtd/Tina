@@ -6,9 +6,6 @@ interface Events {
 	_default: [dt: number];
 }
 
-/**
- *
- */
 export class Process extends EventEmitter<Events> {
 	public static processes = new Map<string, Process>();
 
@@ -20,6 +17,7 @@ export class Process extends EventEmitter<Events> {
 
 	constructor(name: string, ticker: ProcessScheduler) {
 		super();
+
 		this.name = name;
 		this.ticker = ticker;
 

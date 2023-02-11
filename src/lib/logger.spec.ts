@@ -12,8 +12,8 @@ export = (): void => {
 		public testBinds(): void {
 			this.when("event")
 				.do(print) // Binding outputting functions is fine as well
-				.do(function () {})
-				.do(() => {}); // Both ways work the same, demonstration
+				.do(function () { })
+				.do(() => { }); // Both ways work the same, demonstration
 		}
 
 		public testEmits(): void {

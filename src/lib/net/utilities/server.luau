@@ -2,6 +2,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Identifiers = require(script.Parent.identifiers)
+
 type Contents = { [string | number]: any } | { any }
 
 type InitialPacket = {
@@ -22,8 +24,23 @@ local Server = {}
 local Queue: { InitialPacket }  = {}
 local Listeners: { Listener } = {}
 
-local function runListener(listener: Listener, ...: { Player | Contents })
-    task.spawn(listener, ...)
+local freeThread = nil
+
+local function acquireRunnerThreadAndCallEventHandler(fn, ...)
+	local acquired_runner_thread = freeThread
+	freeThread = nil
+
+	fn(...)
+
+	freeThread = acquired_runner_thread
+end
+
+local function runEventHandlerInFreeThread(...)
+	acquireRunnerThreadAndCallEventHandler(...)
+
+	while true do
+		acquireRunnerThreadAndCallEventHandler(coroutine.yield())
+	end
 end
 
 function Server._init(): nil
@@ -43,10 +60,18 @@ function Server._init(): nil
         Queue = {} -- Frees everything
     end)
 
-    TinaRemote.OnServerEvent:Connect(function(player: Player, packets: { Packet })
+    TinaRemote.OnServerEvent:Connect(function(player, packets: { Packet })
         for _, packet: Packet in packets do
-            for _, listener: Listener in Listeners[packet.id] do
-                runListener(listener, player, packet.contents)
+            if not Listeners[packet.id] then
+                warn(string.format("[Tina:Net]: Callback expected got nil, id=[%s]", Identifiers.fromCompressed(packet.id)))
+            else
+                for _, listener: Listener in Listeners[packet.id] do
+                    if not freeThread then
+                        freeThread = coroutine.create(runEventHandlerInFreeThread)
+                    end
+
+                    task.spawn(freeThread, listener, player, packet.contents)
+                end
             end
         end
     end)

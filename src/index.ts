@@ -2,15 +2,18 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import { Scope } from "./lib/logger";
 /* Networking namespace */
+import { EventListener } from "./lib/events";
+import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
+import { Scope } from "./lib/logger";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
-/* User abstraction class */
-import { User } from "./lib/user/user";
+import { Users } from "./lib/user";
+import { AbstractUser } from "./lib/user/default";
+import { UserType } from "./lib/user/default/types";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -20,6 +23,9 @@ export enum Protocol {
 }
 
 namespace Tina {
+	const isClient = RunService.IsClient();
+	const isServer = RunService.IsServer();
+
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
 	 *
@@ -29,9 +35,16 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
+		/**
+		 * Processes initialisation.
+		 */
 		{
-			/** Networking start up for  */
-			Server._init();
+			if (isServer) {
+				Server._init();
+			} else if (isClient) {
+				Client._init();
+			}
+
 			Identifiers._init();
 		}
 
@@ -39,24 +52,6 @@ namespace Tina {
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
-	}
-
-	/**
-	 * Starts up the client networking, meaning event connections. This should be used **ONCE** on the client, recommended to be under an intialiser file for the client.
-	 *
-	 * Usage example:
-	 * ```ts
-	 * import Tina from "@rbxts/tina"
-	 * Tina.startNet();
-	 * ```
-	 *
-	 * @client
-	 */
-	export function startNet(): void {
-		if (RunService.IsClient()) {
-			Client._init();
-			Identifiers._init();
-		}
 	}
 
 	/**
@@ -84,8 +79,8 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => User): void {
-		User.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
+		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		Logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
@@ -97,6 +92,12 @@ namespace Tina {
 		return new TinaCore();
 	}
 
+	/**
+	 * Used to add new processes to the processor.
+	 *
+	 * @param name process name to add.
+	 * @returns a Process object.
+	 */
 	export function process(name: string): Process {
 		if (Process.processes.has(name)) {
 			return Process.processes.get(name)!;
@@ -108,11 +109,23 @@ namespace Tina {
 	export const Logger = new Scope("unnamed");
 
 	/**
+	 * Used to connect to Tina's internal events, such as when a user is registed, etc.
+	 *
+	 * @param event event name (defined internally specially for Tina)
+	 * @returns an EventListener object.
+	 */
+	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[TinaInternalEvents[T]]> {
+		return TinaEvents.addEventListener(event);
+	}
+
+	/**
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.
 	 *
 	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
 	 */
-	export namespace Mirror {}
+	export namespace Mirror {
+		export const User = AbstractUser;
+	}
 }
 
 /** Export Tina itself */
@@ -122,7 +135,7 @@ export default Tina;
 export { COND } from "./lib/conditions";
 
 /** Export EventEmitter Library */
-export { EventEmitter } from "./lib/events";
+export { EventEmitter, EventListener } from "./lib/events";
 
 /** Export Network Library */
 export { Network } from "./lib/net";
@@ -130,5 +143,11 @@ export { Network } from "./lib/net";
 /** Audience Utility */
 export { Audience } from "./lib/audience/audience";
 
-/** User abstract class */
-export { User } from "./lib/user/user";
+/** Users namespace */
+export { Users } from "./lib/user";
+
+/** Container export */
+export { Container } from "./lib/container";
+
+/** Util exports */
+export { FunctionUtil } from "./lib/utilities/functions";
