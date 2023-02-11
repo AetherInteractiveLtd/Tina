@@ -10,7 +10,7 @@ export enum EAction {
 declare type CondFunc = [Condition, EAction.COND];
 declare type StepFunc = [Callback, EAction.DO];
 
-export class EventListener<T extends unknown[]> {
+export class EventListener<T extends Array<unknown>> {
 	protected readonly listeners: Array<CondFunc | StepFunc> = [];
 	protected readonly yieldThreads: Array<thread> = [];
 
@@ -42,14 +42,14 @@ export class EventListener<T extends unknown[]> {
 	/**
 	 * Yields current thread until resumption (emit call).
 	 */
-	public await(): LuaTuple<unknown[]> {
+	public await(): LuaTuple<Array<unknown>> {
 		this.yieldThreads.push(coroutine.running());
 
 		return coroutine.yield();
 	}
 
 	/** @hidden */
-	public async call<T extends unknown[]>(...args: T): Promise<void> {
+	public call<T extends Array<unknown>>(...args: T): void {
 		this._call(0, true, ...args);
 
 		if (this.yieldThreads.size() > 0) {
@@ -57,7 +57,7 @@ export class EventListener<T extends unknown[]> {
 		}
 	}
 
-	private _call<T extends unknown[]>(iteration: number, conditionPassed?: boolean, ...args: T) {
+	private _call<T extends Array<unknown>>(iteration: number, conditionPassed?: boolean, ...args: T): void {
 		if (iteration >= this.listeners.size()) return;
 
 		const [handlerOrCondition, action] = this.listeners[iteration];
@@ -98,7 +98,7 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 */
 
 	// Use default
-	public when<T extends keyof Events>(
+	public when(
 		token: Events extends Default ? void : "Token required when _default is not defined",
 	): typeof token extends void ? EventListener<Events extends Default ? Events["_default"] : never> : never;
 
@@ -128,7 +128,7 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 * @param args of type T which are the parameters passed to the function definition.
 	 * @returns a promise.
 	 */
-	public async emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(token: T, ...args: S): Promise<void> {
+	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(token: T, ...args: S): void {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 

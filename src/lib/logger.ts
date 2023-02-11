@@ -13,26 +13,34 @@ interface IOutputObject {
 	text: string;
 }
 
-const output: IOutputObject[] = [];
+const output: Array<IOutputObject> = [];
 
-class Scope {
-	name = "unnamed";
+export class Scope {
+	public name = "unnamed";
+
+	public setName(name: string): void {
+		this.name = name;
+	}
 
 	constructor(scopeName: string, printToFile = false) {
 		this.name = scopeName;
+		if (printToFile) {
+			this.warn("Printing to File is not yet Supported. printToFile ignored.");
+		}
 	}
 
-	static scope(scopeName: string, printToFile = false) {
+	public static scope(scopeName: string, printToFile = false): Scope {
 		return new this(scopeName, printToFile);
 	}
 
-	static getOutput() {
+	/** @hidden */
+	public static getOutput(): Array<IOutputObject> {
 		return output;
 	}
 
-	log(severity: ESeverityLevels, ...toPrint: unknown[]) {
+	public log(severity: ESeverityLevels, ...toPrint: Array<unknown>): void {
 		let stringToPrint = "";
-		(toPrint as defined[]).forEach((value) => {
+		(toPrint as Array<defined>).forEach(value => {
 			stringToPrint = `${stringToPrint} ${tostring(value)} `;
 		});
 
@@ -41,28 +49,31 @@ class Scope {
 			text: `[${this.name}]: ${stringToPrint}`,
 		});
 	}
-	info(...args: unknown[]) {
+
+	public info(...args: Array<unknown>): void {
 		this.log(0, ...args);
 	}
-	debug(...args: unknown[]) {
+
+	public debug(...args: Array<unknown>): void {
 		const traceback = debug.traceback();
 
-		const splitStrings: string[] = string.split(traceback, "\n");
+		const splitStrings: Array<string> = string.split(traceback, "\n");
 		for (const v of splitStrings) {
 			this.log(-1, v);
 		}
 
 		this.log(1, ...args);
 	}
-	warn(...args: unknown[]) {
+
+	public warn(...args: Array<unknown>): void {
 		this.log(2, ...args);
 	}
-	error(...args: unknown[]) {
+
+	public error(...args: Array<unknown>): void {
 		this.log(3, ...args);
 	}
-	fatal(...args: unknown[]) {
+
+	public fatal(...args: Array<unknown>): void {
 		this.log(4, ...args);
 	}
 }
-
-export = new Scope("gamenamehere", false); // temporary args

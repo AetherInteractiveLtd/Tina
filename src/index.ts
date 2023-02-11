@@ -2,7 +2,7 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import logger from "./lib/logger";
+import { Scope } from "./lib/logger";
 /* Networking namespace */
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
@@ -34,6 +34,8 @@ namespace Tina {
 			Server._init();
 			Identifiers._init();
 		}
+
+		Logger.setName(name);
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
@@ -85,7 +87,7 @@ namespace Tina {
 	export function setUserClass(userClass: new (ref: Player | number) => User): void {
 		User.changeUserClass(userClass); // Changes internally the way user is defined and constructed
 
-		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
+		Logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -102,6 +104,8 @@ namespace Tina {
 
 		return new Process(name, Scheduler);
 	}
+
+	export const Logger = new Scope("unnamed");
 
 	/**
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.

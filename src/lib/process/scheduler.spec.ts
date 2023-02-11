@@ -3,7 +3,7 @@
 import { Process } from "./process";
 import Scheduler, { ProcessScheduler } from "./scheduler";
 
-export = () => {
+export = (): void => {
 	describe("Scheduler", () => {
 		it("should exist", () => {
 			expect(Scheduler).to.be.ok();
@@ -58,9 +58,13 @@ export = () => {
 
 			let called = false;
 			process1.when().do(() => ticker.removeProcess(process1));
-			process2.when().do(() => (called = true));
+			process2.when().do(() => {
+				called = true;
+			});
+
 			process1.resume();
 			process2.resume();
+
 			task.wait(0.5);
 
 			const hasProcess = ticker.hasProcess(process1.name);
