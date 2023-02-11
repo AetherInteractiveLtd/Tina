@@ -4,8 +4,8 @@ import { TinaNet } from "../../net/tina_net";
 import { EventListener } from "..";
 
 export interface TinaInternalEvents {
-	"user:added": never;
-	"user:removing": never;
+	"user:added": [never];
+	"user:removing": [never];
 }
 
 export namespace TinaEvents {
@@ -18,9 +18,7 @@ export namespace TinaEvents {
 	 * @param to Tina event
 	 * @returns and EventListener
 	 */
-	export function addEventListener<T extends keyof TinaInternalEvents>(
-		to: T,
-	): EventListener<[TinaInternalEvents[T]]> {
+	export function addEventListener<T extends keyof TinaInternalEvents>(to: T): EventListener<TinaInternalEvents[T]> {
 		const isServer = RunService.IsServer();
 
 		if (isServer) {
