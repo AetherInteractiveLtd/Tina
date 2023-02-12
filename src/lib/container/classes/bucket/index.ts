@@ -1,6 +1,6 @@
 import { DataStoreService } from "@rbxts/services";
 
-import { TableUtil } from "../../../utilities/tables";
+import { TableUtil } from "../../../util/tables";
 import { Autosave, Data, registerIssue } from "../../data_actions";
 import { DataSaved, Template } from "../../types";
 import { Item } from "../item";

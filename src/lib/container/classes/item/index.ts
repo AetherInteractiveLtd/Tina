@@ -1,6 +1,6 @@
 import { EventEmitter } from "../../../events";
 import logger from "../../../logger";
-import { TableUtil } from "../../../utilities/tables";
+import { TableUtil } from "../../../util/tables";
 import { Data } from "../../data_actions";
 import { Metadata, Template } from "../../types";
 import { BucketType } from "../bucket/types";

@@ -154,4 +154,4 @@ export { Users } from "./lib/user";
 export { Container } from "./lib/container";
 
 /** Util exports */
-export { FunctionUtil } from "./lib/utilities/functions";
+export { FunctionUtil } from "./lib/util/functions";
