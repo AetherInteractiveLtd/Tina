@@ -27,11 +27,11 @@ export class ProcessScheduler {
 		if (deltaTime >= this.timeBetweenTicks) {
 			// Adjust lastTick to based on timeBetweenTicks to keep interval relatively stable
 			this.lastTick = currentTick - (deltaTime % this.timeBetweenTicks);
-			this.update();
+			this.update(deltaTime);
 		}
 	}
 
-	private update(): void {
+	private update(dt: number): void {
 		// Update has started
 		this.updating = true;
 
@@ -47,7 +47,7 @@ export class ProcessScheduler {
 			// Run active processes
 			if (process.isSuspended) continue;
 			try {
-				void process.call();
+				process.emit("_default", dt);
 			} catch (error) {
 				// TODO: log any errors properly.
 			}

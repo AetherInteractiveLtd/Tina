@@ -1,6 +1,6 @@
 import { EventEmitter } from "../../../events";
-import logger from "../../../logger";
 import { TableUtil } from "../../../utilities/tables";
+import TinaLogger from "../../../utilities/TinaLogger";
 import { Data } from "../../data_actions";
 import { Metadata, Template } from "../../types";
 import { BucketType } from "../bucket/types";
@@ -39,7 +39,7 @@ export class Item<T extends Template> extends EventEmitter<ItemEvents<T>> implem
 		const userIdIndex = this.userIds.indexOf(userId);
 
 		if (userIdIndex === undefined) {
-			logger.info("The user id provided doesnt exists on the array, can't delete something isn't there.");
+			TinaLogger.info("The user id provided doesnt exists on the array, can't delete something isn't there.");
 		} else {
 			this.userIds.remove(userIdIndex);
 		}

@@ -48,7 +48,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	}
 
 	/** @hidden */
-	public async call<T extends Array<unknown>>(...args: T): Promise<void> {
+	public call<T extends Array<unknown>>(...args: T): void {
 		this._call(0, true, ...args);
 
 		if (this.yieldThreads.size() > 0) {
@@ -81,7 +81,12 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	}
 }
 
-export abstract class EventEmitter<Events extends {}> {
+type ArrayOrNever<T> = T extends Array<unknown> ? T : never;
+interface Default {
+	_default: Array<unknown>;
+}
+
+export abstract class EventEmitter<Events extends Default | {}> {
 	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
 
 	/**
@@ -90,13 +95,24 @@ export abstract class EventEmitter<Events extends {}> {
 	 * @param token as string, should be the event to connect to.
 	 * @returns an EventListener of type T which are the parameters passed to the function.
 	 */
-	public when<T extends keyof Events, S extends Parameters<Events[T]>>(token: T): EventListener<S> {
+
+	// Use default
+	public when(
+		token: Events extends Default ? void : "Token required when _default is not defined",
+	): typeof token extends void ? EventListener<Events extends Default ? Events["_default"] : never> : never;
+
+	// Use key
+	public when<T extends keyof Events>(token: T): EventListener<ArrayOrNever<Events[T]>>;
+
+	// Implementation
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public when(token: any = "_default"): unknown {
 		const hasEvent = this.events.has(token);
-		const event = new EventListener<S>();
-
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const event = new EventListener<any>();
 		if (!hasEvent) {
-			const eventsArray: Array<EventListener<S>> = [];
-
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const eventsArray: Array<EventListener<any>> = [];
 			eventsArray.push(event);
 			this.events.set(token, eventsArray);
 		} else {
@@ -107,13 +123,14 @@ export abstract class EventEmitter<Events extends {}> {
 	}
 
 	/**
+	 * @hidden
 	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
 	 *
 	 * @param token event to emit.
 	 * @param args of type T which are the parameters passed to the function definition.
 	 * @returns a promise.
 	 */
-	protected async emit<T extends keyof Events, S extends Parameters<Events[T]>>(token: T, ...args: S): Promise<void> {
+	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(token: T, ...args: S): void {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 
