@@ -102,7 +102,7 @@ export function NOT(components: RawQuery | AnyComponent): RawQuery {
  * import { World, ALL, ANY, NOT } from "@rbxts/tina";
  * import { Position, Velocity, Acceleration } from "./components";
  *
- * const world = new World();
+ * const world = Tina.createWorld({...});
  * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
  * query.forEach((entity) => {
  * 	// ...

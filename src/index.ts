@@ -2,6 +2,7 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import logger from "./lib/logger";
@@ -104,12 +105,14 @@ namespace Tina {
 	}
 
 	/**
-	 * Used to connect to Tina's internal events, such as when a user is registed, etc.
+	 * Used to connect to Tina's internal events, such as when a user is registered, etc.
 	 *
 	 * @param event event name (defined internally specially for Tina)
 	 * @returns an EventListener object.
 	 */
-	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[TinaInternalEvents[T]]> {
+	export function when<T extends keyof TinaInternalEvents>(
+		event: T,
+	): EventListener<[TinaInternalEvents[T]]> {
 		return TinaEvents.addEventListener(event);
 	}
 
@@ -120,6 +123,24 @@ namespace Tina {
 	 */
 	export namespace Mirror {
 		export const User = AbstractUser;
+	}
+
+	/**
+	 * Create a new ECS World.
+	 *
+	 * The world is the main access point for the ECS functionality, along with
+	 * being responsible for creating and managing entities, components, and
+	 * systems.
+	 *
+	 * Typically there is only a single world, but there is no limit on the number
+	 * of worlds an application can create.
+	 *
+	 * @param options Optional world options to configure the world.
+	 *
+	 * @returns a new ECS World.
+	 */
+	export function createWorld(options?: WorldOptions): World {
+		return new World(options);
 	}
 }
 

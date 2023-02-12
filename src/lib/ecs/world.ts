@@ -1,5 +1,7 @@
 import { HttpService } from "@rbxts/services";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Tina from "../..";
 import { ComponentId, EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
@@ -42,11 +44,10 @@ export interface WorldOptions {
  *
  * #### Usage Example:
  *
- * To create a new world, simply call the constructor:
+ * To create a new world, use the {@link Tina.createWorld} function:
  *
  * ```ts
- * import { World } from "@rbxts/tina";
- * const world = new World({...});
+ * const world = Tina.createWorld({...});
  * ```
  */
 export class World {
@@ -71,8 +72,8 @@ export class World {
 	 */
 	public observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
 
-	constructor(options: WorldOptions) {
-		this.options = options;
+	constructor(options?: WorldOptions) {
+		this.options = options ?? {};
 		this.scheduler = new SystemManager(this);
 	}
 
