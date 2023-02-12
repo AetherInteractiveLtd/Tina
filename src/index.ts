@@ -2,6 +2,7 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+import { Component, TagComponent, Tree, Type } from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
@@ -142,6 +143,49 @@ namespace Tina {
 	export function createWorld(options?: WorldOptions): World {
 		return new World(options);
 	}
+
+	/**
+	 * Creates a component that matches the given schema.
+	 *
+	 * Internally this creates an array for each property in the schema, where the
+	 * index of the array matches an entity id. This allows for fast lookups of
+	 * component data.
+	 *
+	 * The array is pre-allocated to the given size, so it is important to ensure
+	 * that you do not access the component data for an entity that does not exist,
+	 * or that does not have the component. This is because the array could hold
+	 * data for a given entity, despite the fact that the entity would be invalid.
+	 *
+	 * Components are singletons, and should be created once per component type.
+	 * Components also persist between worlds, therefore you do not need more than
+	 * one component per world. EntityIds are global, therefore the index of a
+	 * given entity will always match the index of the component data.
+	 *
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A single component instance.
+	 */
+	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+		return createComponent(schema);
+	}
+
+	/**
+	 * Creates a tag component; a component that has no data.
+	 *
+	 * Tags are useful for marking entities as having a certain property, without
+	 * the overhead of storing any data. For example, you could use a tag component
+	 * to mark an entity as being a player, and then use a system to query for all
+	 * entities that have the player tag.
+	 *
+	 * Tags are singletons, and should be created once per component type. Tags
+	 * also persist between worlds, therefore you do not need more than one Tag per
+	 * world.
+	 *
+	 * @returns A tag component.
+	 */
+	export function createTag(): TagComponent {
+		return createTag();
+	}
 }
 
 /** Export Tina itself */
@@ -160,13 +204,11 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** ECS Library  */
-export { Component } from "./lib/ecs/component";
-export { ComponentTypes, createComponent, GetComponentSchema } from "./lib/ecs/component";
-export { ECS } from "./lib/ecs/observer";
-export { Observer } from "./lib/ecs/observer";
+export { Component, ComponentTypes } from "./lib/ecs/component";
+export { ECS, Observer } from "./lib/ecs/observer";
 export { Query } from "./lib/ecs/query";
 export { System } from "./lib/ecs/system";
-export { World } from "./lib/ecs/world";
+export { type World } from "./lib/ecs/world";
 
 /** Users namespace */
 export { Users } from "./lib/user";
