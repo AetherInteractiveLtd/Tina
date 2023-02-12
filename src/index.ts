@@ -14,6 +14,10 @@ import Scheduler from "./lib/process/scheduler";
 import { Users } from "./lib/user";
 import { AbstractUser } from "./lib/user/default";
 import { UserType } from "./lib/user/default/types";
+/* User abstraction class */
+import { ConsoleActionName } from "./lib/user-interface/console/console-actions";
+import { ClientStore } from "./lib/user-interface/store";
+import { formatFlareTraceback } from "./lib/utilities/string-utils";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -48,8 +52,6 @@ namespace Tina {
 			Identifiers._init();
 		}
 
-		Logger.setName(name);
-
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
 	}
@@ -81,8 +83,6 @@ namespace Tina {
 	 */
 	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
 		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
-
-		Logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -106,7 +106,18 @@ namespace Tina {
 		return new Process(name, Scheduler);
 	}
 
-	export const Logger = new Scope("unnamed");
+	export function flare(eventName: string): void {
+		ClientStore.dispatch({ type: ConsoleActionName.AddFlare, eventName });
+	}
+
+	export function oops(eventName: string): void {
+		const message = formatFlareTraceback(debug.traceback(undefined, 1));
+		ClientStore.dispatch({ type: ConsoleActionName.FireFlare, eventName, message });
+	}
+
+	export function getLogger(): void {
+		return;
+	}
 
 	/**
 	 * Used to connect to Tina's internal events, such as when a user is registed, etc.
