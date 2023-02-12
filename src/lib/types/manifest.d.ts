@@ -6,7 +6,7 @@ export interface Manifest {
 		net: {
 			compression: boolean;
 		};
-		supported_languages: string[];
+		supported_languages: Array<string>;
 		max_fps: number;
 		max_players: number;
 	};

@@ -2,8 +2,8 @@ import TinaCore from ".";
 
 class TinaGame {
 	/** @server */
-	shutdown() {
-		TinaCore;
+	public shutdown(): TinaCore {
+		return new TinaCore();
 	}
 }
 

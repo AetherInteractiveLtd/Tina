@@ -1,12 +1,12 @@
-import { EventListener } from "../events";
+import { EventEmitter } from "../events";
 import Scheduler from "./scheduler";
 
 type ProcessScheduler = typeof Scheduler;
+interface Events {
+	_default: [dt: number];
+}
 
-/**
- *
- */
-export class Process extends EventListener<[]> {
+export class Process extends EventEmitter<Events> {
 	public static processes = new Map<string, Process>();
 
 	public name: string;
@@ -17,6 +17,7 @@ export class Process extends EventListener<[]> {
 
 	constructor(name: string, ticker: ProcessScheduler) {
 		super();
+
 		this.name = name;
 		this.ticker = ticker;
 
@@ -24,12 +25,12 @@ export class Process extends EventListener<[]> {
 		Process.processes.set(name, this);
 	}
 
-	public resume() {
+	public resume(): void {
 		this.isSuspended = false;
 		this.ticker.addProcess(this);
 	}
 
-	public suspend(ticks = 1) {
+	public suspend(ticks = 1): void {
 		this.suspensionTime = ticks;
 		this.isSuspended = true;
 	}
