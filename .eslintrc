@@ -91,6 +91,7 @@
 				"allowEmptyCatch": true
 			}
 		],
+		"no-void": "off",
 		"no-extra-boolean-cast": "off",
 		"no-undef-init": "error",
 		"prefer-const": "off",

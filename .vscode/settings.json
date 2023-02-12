@@ -2,8 +2,11 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"files.eol": "\n",
 	"[typescript]": {
-		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
-		"editor.formatOnSave": true
+		"editor.defaultFormatter": "vscode.typescript-language-features",
+		"editor.formatOnSave": true,
+		"editor.codeActionsOnSave": {
+			"source.fixAll": true
+		}
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
@@ -11,11 +14,4 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
-	"C_Cpp.errorSquiggles": "Disabled",
-	"tsco.addRegionCaptionToRegionEnd": false,
-	"tsco.addRegionIndentation": true,
-	"tsco.organizeOnSave": true,
-	"tsco.useRegions": false,
-	"tsco.treatArrowFunctionPropertiesAsMethods": true,
-	"editor.insertSpaces": false
 }

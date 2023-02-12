@@ -1,4 +1,4 @@
-import { DefaultUser } from "../user/types";
+import { UserType } from "../user/default/types";
 
 export interface AudienceDeclaration {
 	/**
@@ -7,7 +7,7 @@ export interface AudienceDeclaration {
 	 * @param users as never[] (users) or Player[] (players list), denotes the players to be on the audience.
 	 * @returns the same object.
 	 */
-	list(users: (DefaultUser & unknown)[] | Player[]): AudienceDeclaration;
+	list(users: Array<UserType> | Array<Player>): AudienceDeclaration;
 
 	/**
 	 * Returns the listed players in the audience.
@@ -20,7 +20,7 @@ export interface AudienceDeclaration {
 	 *
 	 * @returns a Player[] array.
 	 */
-	get(): Player[];
+	get(): Array<Player>;
 
 	/**
 	 * Cleans the listed players in the audience, used to free memory when no longer neeeded
