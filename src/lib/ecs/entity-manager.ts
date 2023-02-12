@@ -39,8 +39,16 @@ export class EntityManager {
 	private size = 0;
 
 	public archetypes: Map<string, Archetype> = new Map();
+	/**
+	 * The current archetype of a given entity, where the index of the array
+	 * is the entity's id.
+	 */
 	public entities: Array<Archetype> = [];
 	public updateTo: Array<Archetype> = [];
+
+	constructor() {
+		this.entities = table.create(10000);
+	}
 
 	/**
 	 * @returns True if the entity id is currently in the world.

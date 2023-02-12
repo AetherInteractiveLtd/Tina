@@ -131,6 +131,9 @@ export { User } from "./lib/user/user";
 
 /** ECS Library  */
 export { Component } from "./lib/ecs/component";
+export { ComponentTypes, createComponent, GetComponentSchema } from "./lib/ecs/component";
+export { ECS } from "./lib/ecs/observer";
+export { Observer } from "./lib/ecs/observer";
 export { Query } from "./lib/ecs/query";
 export { System } from "./lib/ecs/system";
 export { World } from "./lib/ecs/world";

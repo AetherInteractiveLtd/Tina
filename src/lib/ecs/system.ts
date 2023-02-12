@@ -19,6 +19,9 @@ export interface System {
 	configureQueries(world: World): void;
 }
 
+/**
+ * The system class is the base class for all systems.
+ */
 export abstract class System {
 	/** An optional set of systems that must be executed before this system */
 	public after?: Array<System>;

@@ -7,6 +7,8 @@ import { SparseSet } from "./collections/sparse-set";
 import {
 	AnyComponent,
 	AnyComponentInternal,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	createComponent,
 	GetComponentSchema,
 	OptionalKeys,
 	TagComponent,
@@ -31,8 +33,9 @@ export interface WorldOptions {
 }
 
 /**
- * The world is the container for all the ECS data, which stores all the
- * entities and their components, queries, and run systems.
+ * The world is the main access point for the ECS functionality, along with
+ * being responsible for creating and managing entities, components, and
+ * systems.
  *
  * Typically there is only a single world, but there is no limit on the number
  * of worlds an application can create.
@@ -87,12 +90,13 @@ export class World {
 	}
 
 	/**
-	 * Adds a given component to the entity. If the entity already has the
-	 * given component, then an error is thrown.
+	 * Adds a given component to the entity. If the entity does not exist, then
+	 * an error will be thrown. No error will be thrown if the entity already
+	 * has the component.
 	 *
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
-	 *     been defined previously with {@link defineComponent}.
+	 *     been defined previously with {@link createComponent}.
 	 * @param data The optional data to initialize the component with.
 	 *
 	 * @returns The world instance to allow for method chaining.
@@ -209,10 +213,21 @@ export class World {
 	 */
 	public destroy(): void {
 		this.scheduler.stop();
+
+		// TODO: Remove the need to `defer` this.
+		const entities = this.entityManager.entities;
+		for (let i = 0; i < entities.size(); i++) {
+			if (entities[i] !== undefined) {
+				this.entityManager.removeEntity(i);
+			}
+		}
+
+		this.flush();
 	}
 
 	/**
-	 * Disable a system.
+	 * Disables the given system. This will prevent the system from being
+	 * executed, but will not remove it from the scheduler.
 	 *
 	 * As scheduling a system can be a potentially expensive operation,
 	 * this can be used for systems that are expected to be reenabled at a
@@ -252,7 +267,7 @@ export class World {
 	 * and should not typically be called manually.*
 	 *
 	 * If you are not using the inbuilt scheduler, you should call this method
-	 * at a regular interval to ensure that any pending changes are applied.
+	 * at regular intervals to ensure that any pending changes are applied.
 	 */
 	public flush(): void {
 		debug.profilebegin("World:flush");
@@ -265,17 +280,23 @@ export class World {
 	}
 
 	/**
-	 * Checks if a given entity is currently in the world.
+	 * Checks if a given entity is currently alive in the world.
 	 *
 	 * @param entityId The id of the entity to check.
-	 * @returns
+	 *
+	 * @returns Whether or not the entity is alive.
 	 */
 	public has(entityId: EntityId): boolean {
 		return this.entityManager.alive(entityId);
 	}
 
 	/**
-	 * @returns whether or not the entity has all of the given components.
+	 * Checks if a given entity has all of the given components.
+	 *
+	 * @param entityId The id of the entity to check.
+	 * @param components Any number of components to check against.
+	 *
+	 * @returns Whether or not the entity has all of the given components.
 	 */
 	public hasAllOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
 		for (const component of components) {
@@ -288,6 +309,10 @@ export class World {
 	}
 
 	/**
+	 *
+	 * @param entityId The id of the entity to check.
+	 * @param components Any number of components to check against.
+	 *
 	 * @returns whether or not the entity has at least one of of the given
 	 * components.
 	 */
@@ -302,18 +327,42 @@ export class World {
 	}
 
 	/**
-	 * Returns whether the entity has the given component.
-	 * @returns Whether the entity has the given component.
+	 * Returns whether or not the given entity has the given component.
+	 *
+	 * @param entityId
+	 * @param component
+	 *
+	 * @returns
 	 */
-	public hasComponent<C extends AnyComponent>(entityId: EntityId, component: C): boolean {
+	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
 		const componentId = (component as unknown as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
 	/**
-	 * Returns whether the entity has the given tag.
+	 * Checks if a given entity has none of the given components.
+	 *
 	 * @param entityId The id of the entity to check.
-	 * @param tag The singleton tag component to check for.
+	 * @param components Any number of components to check against.
+	 *
+	 * @returns true if the entity has none of the given components.
+	 */
+	public hasNoneOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+		for (const component of components) {
+			if (this.hasComponent(entityId, component)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns whether or not the given entity has the given tag.
+	 *
+	 * @param entityId The id of the entity to check.
+	 * @param tag The tag to check against.
+	 *
 	 * @returns True if the entity has the tag.
 	 */
 	public hasTag<C extends TagComponent>(entityId: EntityId, tag: C): boolean {
@@ -361,7 +410,7 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public removeComponent<C extends AnyComponent>(entityId: EntityId, component: C): this {
+	public removeComponent(entityId: EntityId, component: AnyComponent): this {
 		if (!this.has(entityId)) {
 			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
 		}
@@ -413,10 +462,10 @@ export class World {
 	}
 
 	/**
-	 * Removes the given tag from an entity.
+	 * Removes the given tag from the given entity.
 	 *
 	 * @param entityId The id of the entity to remove the tag from.
-	 * @param tag The tag component to remove.
+	 * @param tag The component to remove.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
@@ -425,11 +474,12 @@ export class World {
 	}
 
 	/**
-	 * Schedules an individual system.
+	 * Schedules an individual system to be executed in the world.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
 	 * advised to use {@link World.scheduleSystems} instead, and add multiple
-	 * systems at once - this is to avoid unnecessary sorting of systems.
+	 * systems at once - this is to avoid the unnecessary overhead of sorting
+	 * systems.
 	 *
 	 * @param system The system to schedule.
 	 *
@@ -442,13 +492,13 @@ export class World {
 	}
 
 	/**
-	 * Schedules a given set of systems at once.
+	 * Schedules a given set of systems to be executed in the world.
 	 *
 	 * @param systems The systems to schedule.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public scheduleSystems(systems: Array<System>): this {
+	public scheduleSystems(...systems: Array<System>): this {
 		this.scheduler.scheduleSystems(systems);
 
 		return this;
@@ -462,16 +512,23 @@ export class World {
 	}
 
 	/**
-	 * Starts the given world.
+	 * Starts the execution of the world.
 	 *
 	 * This should only be called after all components, and preferably all
 	 * systems have been registered.
+	 *
+	 * @returns The world instance to allow for method chaining.
 	 */
-	public start(): void {
+	public start(): this {
 		this.scheduler.start();
+
+		return this;
 	}
 
-	/** @returns The name of the world. */
+	/**
+	 * @returns The name of the world. This defaults to "World", unless
+	 * specified by the WorldOptions.
+	 */
 	public toString(): string {
 		return this.options.name ?? "World";
 	}
@@ -504,7 +561,7 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public unscheduleSystems(systems: Array<System>): this {
+	public unscheduleSystems(...systems: Array<System>): this {
 		this.scheduler.unscheduleSystems(systems);
 
 		return this;

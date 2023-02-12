@@ -1,4 +1,4 @@
-import { EntityId } from "../types/ecs";
+import { ComponentId, EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import { AnyComponent, AnyComponentInternal } from "./component";
@@ -88,11 +88,11 @@ export function NOT(components: RawQuery | AnyComponent): RawQuery {
 }
 
 /**
- * A query is used to filter entities based on their components.
+ * A query is used to filter entities from the world based on their components.
  *
  * To create a query, use the {@link World.createQuery} method, which takes a
- * list of components, and will return a query that matches all the entities in
- * the given world that have the given components.
+ * set of components, and will return a query that matches all the entities in
+ * the owning world that have the given components.
  *
  * Queries can be created using the helper functions {@link ALL}, {@link ANY},
  * and {@link NOT}, which can be used to create complex queries.
@@ -132,12 +132,12 @@ export class Query {
 	 * This function should not be used directly, and instead is used
 	 * internally by {@link World.createQuery}.
 	 *
-	 * @param target The archetype mask to match to.
-	 * @param mask The query mask to match with.
+	 * @param target The archetype mask to match against.
+	 * @param mask The query mask to match against.
 	 *
-	 * @returns True if the archetype mask matches the query mask.
+	 * @returns True if the query mask matches the archetype mask.
 	 */
-	public static match(target: Array<number>, mask: QueryMask): boolean {
+	public static match(target: Array<ComponentId>, mask: QueryMask): boolean {
 		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
 			return Query.partial(target, mask as MLeaf);
 		}
@@ -166,7 +166,7 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entity that matches the given query.
+	 * Runs a callback for each entity that matches the query.
 	 *
 	 * If the callback returns `false`, the iteration will stop, and no other
 	 * entities in this query will be iterated over.
@@ -177,9 +177,6 @@ export class Query {
 	 * 	// ...
 	 * });
 	 * ```
-	 *
-	 * Once the iteration is complete, any deferred changes made during the
-	 * query (such as {@link Entity.removeComponent}) will be applied.
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
