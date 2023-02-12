@@ -2,9 +2,12 @@ import Sift, { None } from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
-import { Immutable } from "../types/readonly";
 import { getNextComponentId } from "./entity-manager";
 import { ECS, Observer } from "./observer";
+
+type Mutable<T> = {
+	-readonly [P in keyof T]: T[P];
+};
 
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
@@ -15,13 +18,12 @@ export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Arr
 
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
-export type Component<T extends Tree<Type>> = Immutable<ComponentData<T>> & {
+export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
-	ComponentIdField &
-	ComponentArray<T> & {
+	ComponentIdField & {
 		observers: Array<Observer>;
 	};
 
@@ -76,6 +78,12 @@ export const ComponentTypes = {
 	Vector3int16: [new Vector3int16()],
 };
 
+// const test = createComponent({
+// 	x: ComponentTypes.Number,
+// });
+
+// test.x[1] = 1;
+
 /**
  * Creates a component that matches the given schema.
  *
@@ -101,8 +109,7 @@ export const ComponentTypes = {
  *
  * @returns A single component instance.
  */
-export function createComponent<T extends Tree<Type>>(schema: T): Component<T>;
-export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): Component<T> {
+export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
 	const componentData = createComponentArray<T>(schema as T, 10000);
 	const observers = new Array<Observer>();
 	return Sift.Dictionary.merge(componentData, {
@@ -125,7 +132,7 @@ export function createComponent<T extends Tree<Type>>(schema: Tree<Type> = {}): 
 				componentData[key as never][entityId as never] = value as never;
 			}
 		},
-	}) as ComponentInternal<T>;
+	}) as unknown as ComponentInternal<T>;
 }
 
 /**
