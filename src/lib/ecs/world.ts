@@ -191,12 +191,12 @@ export class World {
 	 *
 	 * @returns A new {@link Query}.
 	 */
-	public createQuery(...raw: Array<RawQuery>): Query {
+	public createQuery(arg: RawQuery, ...raw: Array<RawQuery>): Query {
 		let query: Query;
 
 		debug.profilebegin("World:createQuery");
 		{
-			query = new Query(this, ALL(...raw));
+			query = new Query(this, ALL(arg, ...raw));
 			for (const [_, archetype] of this.entityManager.archetypes) {
 				if (Query.match(archetype.mask, query.mask)) {
 					query.archetypes.push(archetype);

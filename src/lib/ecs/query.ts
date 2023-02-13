@@ -181,12 +181,25 @@ export class Query {
 	 * @param callback The callback to run for each entity.
 	 */
 	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		for (let i = 0; i < this.archetypes.size(); i++) {
-			const entities = this.archetypes[i].entities;
-			for (let j = entities.size(); j > 0; j--) {
-				if (!callback(entities[j - 1])) {
-					break;
+		for (const archetype of this.archetypes) {
+			for (const entityId of archetype.entities) {
+				if (!callback(entityId)) {
+					return;
 				}
+			}
+		}
+	}
+
+	/**
+	 * Runs a callback for each entity that matches the query.
+	 *
+	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
+	 * that is supported.
+	 */
+	public *iterate(): Generator<EntityId> {
+		for (const archetype of this.archetypes) {
+			for (const entityId of archetype.entities) {
+				yield entityId;
 			}
 		}
 	}
@@ -201,7 +214,7 @@ export class Query {
 	 */
 	private static partial(target: Array<number>, mask: MLeaf): boolean {
 		if (mask.op === ALL) {
-			for (let i = 0; i < mask.dt.size(); i++) {
+			for (const i of $range(0, mask.dt.size() - 1)) {
 				if ((target[i] & mask.dt[i]) < mask.dt[i]) {
 					return false;
 				}
@@ -209,7 +222,7 @@ export class Query {
 			return true;
 		}
 
-		for (let i = 0; i < mask.dt.size(); i++) {
+		for (const i of $range(0, mask.dt.size() - 1)) {
 			if ((target[i] & mask.dt[i]) > 0) {
 				return true;
 			}
