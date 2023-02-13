@@ -7,23 +7,23 @@ export class NetworkSimulationEvent extends NetworkEvent {
 	private serverSignal = new Signal<[Player, ...Array<unknown>]>();
 	private clientSignal = new Signal<Array<unknown>>();
 
-	public FireClient(_player: Player, ...args: Array<unknown>): void {
+	public fireClient(_player: Player, ...args: Array<unknown>): void {
 		this.clientSignal.Fire(...args);
 	}
 
-	public FireAllClients(...args: Array<unknown>): void {
+	public fireAllClients(...args: Array<unknown>): void {
 		this.clientSignal.Fire(...args);
 	}
 
-	public FireServer(...args: Array<unknown>): void {
+	public fireServer(...args: Array<unknown>): void {
 		this.serverSignal.Fire(SimulatedPlayer, ...args);
 	}
 
-	public OnServerEvent(callback: (player: Player, ...args: Array<unknown>) => void): Connection {
+	public onServerEvent(callback: (player: Player, ...args: Array<unknown>) => void): Connection {
 		return this.serverSignal.Connect(callback);
 	}
 
-	public OnClientEvent(callback: (...args: Array<unknown>) => void): Connection {
+	public onClientEvent(callback: (...args: Array<unknown>) => void): Connection {
 		return this.clientSignal.Connect(callback);
 	}
 }

@@ -12,23 +12,23 @@ export class RemoteNetworkEvent extends NetworkEvent {
 		this.instance = remote;
 	}
 
-	public FireClient(player: Player, ...args: Array<unknown>): void {
+	public fireClient(player: Player, ...args: Array<unknown>): void {
 		this.instance.FireClient(player, ...args);
 	}
 
-	public FireAllClients(...args: Array<unknown>): void {
+	public fireAllClients(...args: Array<unknown>): void {
 		this.instance.FireAllClients(...args);
 	}
 
-	public FireServer(...args: Array<unknown>): void {
+	public fireServer(...args: Array<unknown>): void {
 		this.instance.FireServer(...args);
 	}
 
-	public OnServerEvent(callback: (player: Player, ...args: Array<unknown>) => void): Connection {
+	public onServerEvent(callback: (player: Player, ...args: Array<unknown>) => void): Connection {
 		return this.instance.OnServerEvent.Connect(callback);
 	}
 
-	public OnClientEvent(callback: Callback): Connection {
+	public onClientEvent(callback: Callback): Connection {
 		return this.instance.OnClientEvent.Connect(callback);
 	}
 }

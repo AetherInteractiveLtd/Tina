@@ -44,7 +44,7 @@ export class PlayerState<T> {
 
 		/* Connect to value change */
 		if (this.isServer) {
-			playerValue.when(value => this.remote.FireClient(player, { name: this.name, value }));
+			playerValue.when(value => this.remote.fireClient(player, { name: this.name, value }));
 		}
 	}
 
@@ -68,21 +68,21 @@ export class PlayerState<T> {
 		Players.PlayerRemoving.Connect(player => this.onPlayerRemoving(player));
 
 		/* Client pings server on setup to get current value */
-		this.remote.OnServerEvent(player => {
+		this.remote.onServerEvent(player => {
 			const value = this.getPlayerValue(player).getValue();
-			this.remote.FireClient(player, { name: this.name, value });
+			this.remote.fireClient(player, { name: this.name, value });
 		});
 	}
 
 	private initClient(): void {
 		/* Update value on client */
-		this.remote.OnClientEvent((obj: UpdateObject<T>) => {
+		this.remote.onClientEvent((obj: UpdateObject<T>) => {
 			if (this.name !== obj.name) return;
 			this._set(LocalPlayer, obj.value);
 		});
 
 		/* Ping server to get current value */
-		this.remote.FireServer();
+		this.remote.fireServer();
 	}
 
 	public set(player: Player, value: ValueOrSetter<T>): void {

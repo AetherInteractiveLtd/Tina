@@ -20,20 +20,20 @@ export class GlobalState<T = unknown> {
 
 		if (this.isClient) {
 			/* Update value on client */
-			this.remote.OnClientEvent((obj: UpdateObject<T>) => {
+			this.remote.onClientEvent((obj: UpdateObject<T>) => {
 				if (obj.name !== name) return;
 				this._set(obj.value);
 			});
-			this.remote.FireServer();
+			this.remote.fireServer();
 		}
 
 		if (this.isServer) {
 			/* Update all clients when value is changed on server */
-			this.observable.when(value => this.remote.FireAllClients({ name, value }));
+			this.observable.when(value => this.remote.fireAllClients({ name, value }));
 
 			/* User has pinged server to get current value (should only be fired when player joins game) */
-			this.remote.OnServerEvent(player =>
-				this.remote.FireClient(player, { name, value: this.observable.getValue() }),
+			this.remote.onServerEvent(player =>
+				this.remote.fireClient(player, { name, value: this.observable.getValue() }),
 			);
 		}
 	}
