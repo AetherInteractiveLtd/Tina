@@ -217,7 +217,7 @@ export class World {
 
 		// TODO: Remove the need to `defer` this.
 		const entities = this.entityManager.entities;
-		for (let i = 0; i < entities.size(); i++) {
+		for (const i of $range(0, entities.size() - 1)) {
 			if (entities[i] !== undefined) {
 				this.entityManager.removeEntity(i);
 			}
@@ -310,6 +310,8 @@ export class World {
 	}
 
 	/**
+	 * Returns whether or not the given entity has at least one of the given
+	 * components.
 	 *
 	 * @param entityId The id of the entity to check.
 	 * @param components Any number of components to check against.
@@ -330,10 +332,10 @@ export class World {
 	/**
 	 * Returns whether or not the given entity has the given component.
 	 *
-	 * @param entityId
-	 * @param component
+	 * @param entityId The id of the entity to check.
+	 * @param component The component to check against.
 	 *
-	 * @returns
+	 * @returns true if the entity has the given component.
 	 */
 	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
 		const componentId = (component as unknown as AnyComponentInternal).componentId;
