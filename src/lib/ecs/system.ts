@@ -113,6 +113,8 @@ export class SystemManager {
 	private executionDefault: ExecutionGroup;
 	private executionGroupSignals: Map<ExecutionGroup, RBXScriptConnection> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
+	/** Whether or not the system manager has began execution. */
+	private started = false;
 	// private systemArgs?: Array<unknown>;
 	private systems: Array<System> = [];
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
@@ -163,8 +165,8 @@ export class SystemManager {
 	 *
 	 * @param system The system to schedule.
 	 */
-	public scheduleSystem(system: System): void {
-		this.scheduleSystems([system]);
+	public scheduleSystem(system: System): Promise<void> {
+		return this.scheduleSystems([system]);
 	}
 
 	/**
@@ -172,7 +174,7 @@ export class SystemManager {
 	 *
 	 * @param systems The systems to schedule.
 	 */
-	public scheduleSystems(systems: Array<System>): void {
+	public async scheduleSystems(systems: Array<System>): Promise<void> {
 		debug.profilebegin("SystemManager:scheduleSystems");
 		{
 			for (const system of systems) {
@@ -190,6 +192,19 @@ export class SystemManager {
 			}
 
 			this.sortSystems();
+
+			/**
+			 * If the system manager has already started, we go through the
+			 * system lifecycle individually for each system rather than as a
+			 * batch.
+			 */
+			if (this.started) {
+				for (const system of systems) {
+					this.start([system]).catch(err => {
+						throw err;
+					});
+				}
+			}
 		}
 		debug.profileend();
 	}
@@ -216,32 +231,36 @@ export class SystemManager {
 	 *
 	 * This will run through the system lifecycle.
 	 *
-	 * Prepare -> Initialize -> Setup -> Execute
+	 * Prepare (Async) -> Initialize -> Setup -> Execute
 	 *
 	 * Prepare will be called on all systems in parallel, and is the only step
 	 * that is allowed to be asynchronous.
 	 *
 	 * @return A promise that will resolve once all systems have been prepared.
 	 */
-	public async start(): Promise<void> {
+	public async start(systems: Array<System> = this.systems): Promise<void> {
 		const promises: Array<Promise<void>> = [];
-		for (const system of this.systems) {
+		for (const system of systems) {
 			promises.push(this.prepareSystem(system));
 		}
 
-		await Promise.all(promises).catch(err => {
-			warn(`Error while preparing systems: ${err}`);
-		});
+		return Promise.allSettled(promises)
+			.andThen(() => {
+				for (const system of systems) {
+					this.initializeSystem(system);
+				}
 
-		for (const system of this.systems) {
-			this.initializeSystem(system);
-		}
+				for (const system of systems) {
+					this.setupSystem(system);
+				}
 
-		for (const system of this.systems) {
-			this.setupSystem(system);
-		}
+				this.executeSystems();
 
-		this.executeSystems();
+				this.started = true;
+			})
+			.catch(err => {
+				throw `Error while preparing systems: ${err}`;
+			});
 	}
 
 	/**
@@ -283,6 +302,10 @@ export class SystemManager {
 				system.executionGroup ?? this.executionDefault,
 			);
 			systemInExecutionGroup?.remove(systemInExecutionGroup.indexOf(system));
+
+			if (system.cleanup !== undefined) {
+				system.cleanup();
+			}
 		}
 
 		// TODO: look into re-sorting systems. Removing a system could cause a

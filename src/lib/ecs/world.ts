@@ -484,12 +484,10 @@ export class World {
 	 *
 	 * @param system The system to schedule.
 	 *
-	 * @returns The world instance to allow for method chaining.
+	 * @returns A promise that resolves when the system has been scheduled.
 	 */
-	public scheduleSystem(system: System): this {
-		this.scheduler.scheduleSystems([system]);
-
-		return this;
+	public scheduleSystem(system: System): Promise<void> {
+		return this.scheduler.scheduleSystems([system]);
 	}
 
 	/**
@@ -499,10 +497,8 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public scheduleSystems(...systems: Array<System>): this {
-		this.scheduler.scheduleSystems(systems);
-
-		return this;
+	public async scheduleSystems(...systems: Array<System>): Promise<void> {
+		return this.scheduler.scheduleSystems(systems);
 	}
 
 	/**
