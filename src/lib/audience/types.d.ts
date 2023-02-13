@@ -1,39 +1,29 @@
+<<<<<<< HEAD
+import { DefaultUserDeclaration } from "../user/default/types";
+=======
 import { UserType } from "../user/default/types";
+>>>>>>> 776117e (endpoints types, renaming, types, structure, etc.)
 
 export interface AudienceDeclaration {
 	/**
-	 * Lists the given users to the audience.
+	 * Lists the given users/players to an audience.
 	 *
-	 * @param users as never[] (users) or Player[] (players list), denotes the players to be on the audience.
-	 * @returns the same object.
+	 * @param users a list of users or players.
 	 */
-	list(users: Array<UserType> | Array<Player>): AudienceDeclaration;
+	list(users: Array<DefaultUserDeclaration> | Array<Player>): AudienceDeclaration;
 
 	/**
-	 * Returns the listed players in the audience.
-	 *
-	 * @example
-	 * ```
-	 * const audience = new Audience().list(...);
-	 * Event.roundStart("mapName", audience.getListed());
-	 * ```
-	 *
-	 * @returns a Player[] array.
+	 * Returns the listed players.
 	 */
 	get(): Array<Player>;
 
 	/**
-	 * Cleans the listed players in the audience, used to free memory when no longer neeeded
-	 * or to cleanup the table for new players.
-	 *
-	 * @example
-	 * ```
-	 * const audience = new Audience().list(...);
-	 * ... // Rounds ends
-	 * audience.cleanList();
-	 * ```
-	 *
-	 * @returns the same object.
+	 * Returns whether the list of users is empty or not.
+	 */
+	isEmpty(): boolean;
+
+	/**
+	 * Cleans/empties the audience list.
 	 */
 	clean(): AudienceDeclaration;
 }

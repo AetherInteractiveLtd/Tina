@@ -1,16 +1,15 @@
 import { COND } from "../conditions";
 import { Condition } from "../conditions/types";
+import { CondFunc, EventNode } from "./types";
 
 export enum EAction {
 	COND = "c",
 	DO = "d",
 }
 
-declare type CondFunc = [Condition, EAction.COND];
-declare type StepFunc = [Callback, EAction.DO];
-
 export class EventListener<T extends Array<unknown> = Array<unknown>> {
-	protected readonly listeners: Array<CondFunc | StepFunc> = [];
+	private _head!: EventNode;
+
 	protected readonly yieldThreads: Array<thread> = [];
 
 	/**
@@ -22,7 +21,10 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever this function returned.
 	 */
 	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
-		this.listeners.push([func, EAction.DO]);
+		this._head = {
+			value: [func, EAction.DO],
+			_next: this._head,
+		};
 
 		return this as unknown as EventListener<[X]>;
 	}
@@ -33,7 +35,10 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
 	public condition(condition: Condition<T>): EventListener<T> {
-		this.listeners.push([condition as Condition, EAction.COND]);
+		this._head = {
+			value: [condition, EAction.COND] as CondFunc,
+			_next: this._head,
+		};
 
 		return this as unknown as EventListener<T>;
 	}
@@ -48,35 +53,32 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	}
 
 	/** @hidden */
-	public call<T extends Array<unknown>>(...args: T): void {
-		this._call(0, true, ...args);
+	public async call<T extends Array<unknown>>(...args: T): Promise<void> {
+		let item = this._head;
+
+		let lastArgument = args;
+		let lastCondition = true;
+
+		while (item !== undefined) {
+			const [handler, _type] = item.value;
+
+			if (_type === EAction.DO) {
+				if (lastCondition === true) {
+					try {
+						lastArgument = handler(...lastArgument) as T;
+					} catch (e) {
+						warn(`[Tina:Event]: There has been an error, more information. ${e}`);
+					}
+				}
+			} else {
+				lastCondition = COND.eval(handler, ...lastArgument);
+			}
+
+			item = item._next;
+		}
 
 		if (this.yieldThreads.size() > 0) {
 			for (const thread of this.yieldThreads) coroutine.resume(thread);
-		}
-	}
-
-	private _call<T extends Array<unknown>>(iteration: number, conditionPassed?: boolean, ...args: T): void {
-		if (iteration >= this.listeners.size()) return;
-
-		const [handlerOrCondition, action] = this.listeners[iteration];
-
-		switch (action) {
-			case EAction.COND:
-				this._call(iteration + 1, COND.eval<T>(handlerOrCondition, ...args), ...args);
-
-				break;
-
-			case EAction.DO:
-				if (conditionPassed) {
-					try {
-						this._call(iteration + 1, conditionPassed, handlerOrCondition(...args));
-					} catch (e) {
-						warn(e);
-					}
-				}
-
-				break;
 		}
 	}
 }

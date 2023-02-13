@@ -6,14 +6,14 @@ import TinaGame from "./lib/core/game";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import { Scope } from "./lib/logger";
+import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { Users } from "./lib/user";
-import { AbstractUser } from "./lib/user/default";
-import { UserType } from "./lib/user/default/types";
+import { DefaultUserDeclaration } from "./lib/user/default/types";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -35,9 +35,6 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
-		/**
-		 * Processes initialisation.
-		 */
 		{
 			if (isServer) {
 				Server._init();
@@ -79,8 +76,8 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
-		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
+		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		Logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
@@ -114,17 +111,10 @@ namespace Tina {
 	 * @param event event name (defined internally specially for Tina)
 	 * @returns an EventListener object.
 	 */
-	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[TinaInternalEvents[T]]> {
+	export function when<T extends keyof TinaInternalEvents>(
+		event: T,
+	): EventListener<[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]> {
 		return TinaEvents.addEventListener(event);
-	}
-
-	/**
-	 * `Tina.Mirror` defines any built-in classes that can be replaced.
-	 *
-	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
-	 */
-	export namespace Mirror {
-		export const User = AbstractUser;
 	}
 }
 
@@ -144,7 +134,7 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** Users namespace */
-export { Users } from "./lib/user";
+export { User, Users } from "./lib/user";
 
 /** Container export */
 export { Container } from "./lib/container";

@@ -1,11 +1,13 @@
 import { RunService } from "@rbxts/services";
 
 import { TinaNet } from "../../net/tina_net";
+import { Exposed } from "../../net/tina_net/types";
+import { DefaultUserDeclaration } from "../../user/default/types";
 import { EventListener } from "..";
 
 export interface TinaInternalEvents {
-	"user:added": [never];
-	"user:removing": [never];
+	"user:added": [user: DefaultUserDeclaration];
+	"user:removing": [user: DefaultUserDeclaration];
 }
 
 export namespace TinaEvents {
@@ -18,7 +20,9 @@ export namespace TinaEvents {
 	 * @param to Tina event
 	 * @returns and EventListener
 	 */
-	export function addEventListener<T extends keyof TinaInternalEvents>(to: T): EventListener<TinaInternalEvents[T]> {
+	export function addEventListener<T extends keyof TinaInternalEvents | keyof Exposed>(
+		to: T,
+	): EventListener<[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]> {
 		const isServer = RunService.IsServer();
 
 		if (isServer) {
@@ -31,9 +35,9 @@ export namespace TinaEvents {
 				events.get(to as string)!.push(event);
 			}
 
-			return event;
+			return event as never;
 		} else {
-			return TinaNet.get(to).when();
+			return TinaNet.getExposed(to).when() as never;
 		}
 	}
 
