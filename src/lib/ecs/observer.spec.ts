@@ -9,12 +9,12 @@ function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
 	return a.join() === b.join();
 }
 
-let world = new World({});
+let world = new (World as any)() as World;
 
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-		world = new World({});
+		world = world = new (World as any)() as World;
 	});
 
 	describe("An observer should", () => {

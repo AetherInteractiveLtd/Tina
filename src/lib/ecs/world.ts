@@ -520,8 +520,10 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public start(): this {
-		this.scheduler.start();
+	public async start(): Promise<this> {
+		await this.scheduler.start().catch(err => {
+			throw err;
+		});
 
 		return this;
 	}

@@ -15,7 +15,7 @@ let world: World;
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-		world = new World({});
+		world = new (World as any)() as World;
 	});
 
 	describe("a component should", () => {

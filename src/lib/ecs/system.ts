@@ -8,15 +8,51 @@ export type ExecutionGroup = RBXScriptSignal;
 
 export interface System {
 	/**
+	 * An optional hook that can be used to clean up the system. This is useful
+	 * for cleaning up any external context that was created during the
+	 * system's lifecycle, or for cleaning up queries that were created.
+	 *
+	 * @note The cleanup method will only be called if the system is
+	 * unscheduled from the world, or if the world is destroyed. You do not
+	 * typically need to use this method.
+	 */
+	cleanup(): void;
+	/**
 	 * The configureQueries method is optionally called when the system is
-	 * first run. This is typically used to configure the queries that the
-	 * system will use, however, it can also be used to perform any other setup
-	 * logic as required.
+	 * first run. This is a good place to setup any queries that the system
+	 * will use.
 	 *
 	 * @param world The world that this system belongs to. This will be passed
 	 * in automatically.
 	 */
 	configureQueries(world: World): void;
+	/**
+	 * An optional hook that can be used to initialize the system. Here we
+	 * could setup initial entities with components, or perform any other setup
+	 * logic.
+	 *
+	 * This is useful as this will be called on the start of the world, but
+	 * before the first update. This means we can do any initial setup while
+	 * ensuring that the first update has all the data required.
+	 *
+	 * @param world The world that this system belongs to. This will be passed
+	 * in automatically.
+	 */
+	initialize(world: World): void;
+	/**
+	 * The prepare method is optionally called when the system is first run.
+	 * If this method returns a promise, the system will not be scheduled until
+	 * the promise resolves.
+	 *
+	 * This hooks into the world lifecycle, and the world creation will not
+	 * be completed until this method resolves.
+	 *
+	 * This is typically used to perform any asynchronous setup logic such as
+	 * loading external data or setting up external context useful for the
+	 * system. The world is not accessible at this point, so you should not
+	 * attempt to use it.
+	 */
+	prepare(): Promise<void>;
 }
 
 /**
@@ -178,56 +214,34 @@ export class SystemManager {
 	/**
 	 * Starts the system manager.
 	 *
-	 * This will start all systems that have been previously scheduled, and run
-	 * them on their respective execution groups.
+	 * This will run through the system lifecycle.
+	 *
+	 * Prepare -> Initialize -> Setup -> Execute
+	 *
+	 * Prepare will be called on all systems in parallel, and is the only step
+	 * that is allowed to be asynchronous.
+	 *
+	 * @return A promise that will resolve once all systems have been prepared.
 	 */
-	public start(): void {
+	public async start(): Promise<void> {
+		const promises: Array<Promise<void>> = [];
+		for (const system of this.systems) {
+			promises.push(this.prepareSystem(system));
+		}
+
+		await Promise.all(promises).catch(err => {
+			warn(`Error while preparing systems: ${err}`);
+		});
+
+		for (const system of this.systems) {
+			this.initializeSystem(system);
+		}
+
 		for (const system of this.systems) {
 			this.setupSystem(system);
 		}
 
-		for (const executionGroup of this.executionGroups) {
-			const disconnect = executionGroup.Connect(() => {
-				for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
-					if (!system.enabled) {
-						return;
-					}
-
-					const systemName = system.name;
-
-					system.dt = os.clock() - system.lastCalled;
-					system.lastCalled = os.clock();
-
-					debug.profilebegin("system: " + systemName);
-					// system.onUpdate(this.world);
-
-					const thread = coroutine.create(() => {
-						system.onUpdate(this.world /**, ...this.systemArgs */);
-						this.world.flush();
-					});
-
-					const [success, result] = coroutine.resume(thread);
-					if (coroutine.status(thread) !== "dead") {
-						coroutine.close(thread);
-						task.spawn(
-							error,
-							`System ${systemName} yielded! Yielding in systems is not supported!`,
-						);
-					}
-
-					if (!success) {
-						task.spawn(
-							error,
-							`System: ${systemName} errored! ${result} + \n ${debug.traceback}`,
-						);
-					}
-
-					debug.profileend();
-				}
-			});
-
-			this.executionGroupSignals.set(executionGroup, disconnect);
-		}
+		this.executeSystems();
 	}
 
 	/**
@@ -283,7 +297,79 @@ export class SystemManager {
 	}
 
 	/**
+	 * A helper function that will ensure that a system does not yield.
+	 *
+	 * @param system The system to check for yielding.
+	 * @param callback The system function to call.
+	 */
+	private ensureNoAsync(system: System, callback: () => void): void {
+		const thread = coroutine.create(callback);
+		const [success, result] = coroutine.resume(thread);
+		if (coroutine.status(thread) !== "dead") {
+			coroutine.close(thread);
+			task.spawn(
+				error,
+				`System ${system.name} yielded! Yielding in systems is not supported!`,
+			);
+		}
+
+		if (!success) {
+			task.spawn(error, `System: ${system.name} errored! ${result} + \n ${debug.traceback}`);
+		}
+	}
+
+	/**
+	 * Starts the execution of each execution group, and then calls each system
+	 * in the group.
+	 */
+	private executeSystems(): void {
+		for (const executionGroup of this.executionGroups) {
+			const disconnect = executionGroup.Connect(() => {
+				for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
+					if (!system.enabled) {
+						return;
+					}
+
+					system.dt = os.clock() - system.lastCalled;
+					system.lastCalled = os.clock();
+
+					debug.profilebegin("system: " + system.name);
+					{
+						this.ensureNoAsync(system, () => {
+							system.onUpdate(this.world /**, ...this.systemArgs */);
+							this.world.flush();
+						});
+					}
+					debug.profileend();
+				}
+			});
+
+			this.executionGroupSignals.set(executionGroup, disconnect);
+		}
+	}
+
+	/**
+	 * Initializes a given system.
+	 *
+	 * This will call the `initialize` method on the system, if it exists.
+	 * Systems are not required to have an `initialize` method, but if they do
+	 * they must be synchronous.
+	 *
+	 * @param system The system to initialize.
+	 */
+	private initializeSystem(system: System): void {
+		if (!system.initialize) {
+			return;
+		}
+
+		this.ensureNoAsync(system, () => {
+			system.initialize(this.world);
+		});
+	}
+
+	/**
 	 * Orders systems within the same execution group by their dependencies.
+	 *
 	 * @param unscheduledSystems The systems to order.
 	 *
 	 * @returns The ordered systems.
@@ -312,7 +398,23 @@ export class SystemManager {
 	}
 
 	/**
+	 * Calls the prepare method on a given system.
+	 *
+	 * @param system The system to prepare.
+	 *
+	 * @returns The promise returned by the prepare method.
+	 */
+	private async prepareSystem(system: System): Promise<void> {
+		if (!system.prepare) {
+			return;
+		}
+
+		return system.prepare();
+	}
+
+	/**
 	 * Initializes a system.
+	 *
 	 * @param system The system to initialize.
 	 */
 	private setupSystem(system: System): void {
@@ -321,7 +423,9 @@ export class SystemManager {
 		}
 
 		if (system.configureQueries !== undefined) {
-			system.configureQueries(this.world);
+			this.ensureNoAsync(system, () => {
+				system.configureQueries(this.world);
+			});
 		}
 
 		system.lastCalled = os.clock();
