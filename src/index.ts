@@ -5,9 +5,8 @@ import TinaGame from "./lib/core/game";
 /* Networking namespace */
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
-import logger from "./lib/logger";
-import { Exposed } from "./lib/net/tina_net/types";
 import { Scope } from "./lib/logger";
+import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";

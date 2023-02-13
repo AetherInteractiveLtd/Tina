@@ -1,6 +1,5 @@
 import { COND } from "../conditions";
 import { Condition } from "../conditions/types";
-import logger from "../logger";
 import { CondFunc, EventNode } from "./types";
 
 export enum EAction {
@@ -68,7 +67,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 					try {
 						lastArgument = handler(...lastArgument) as T;
 					} catch (e) {
-						logger.warn(`[Tina:Event]: There has been an error, more information. ${e}`);
+						warn(`[Tina:Event]: There has been an error, more information. ${e}`);
 					}
 				}
 			} else {

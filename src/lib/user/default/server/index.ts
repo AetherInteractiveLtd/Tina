@@ -1,6 +1,5 @@
 import { Players, TeleportService } from "@rbxts/services";
 
-import logger from "../../../logger";
 import { FriendPage, ServerUserImplementation } from "./types";
 
 export class ServerUser implements ServerUserImplementation {
@@ -32,10 +31,9 @@ export class ServerUser implements ServerUserImplementation {
 				} while (!friendsPages.IsFinished);
 			}
 		} catch (e) {
-			logger.warn(
+			warn(
 				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s${onlineOnly === true ? " online" : ""
-				} friends. More information: `,
-				e,
+				} friends. More information: ${e}`,
 			);
 		}
 
@@ -62,7 +60,7 @@ export class ServerUser implements ServerUserImplementation {
 				} while (!friendsPages.IsFinished);
 			}
 		} catch (e) {
-			logger.warn(
+			warn(
 				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s friends in server. More information: `,
 				e,
 			);
