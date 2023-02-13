@@ -2,35 +2,33 @@
 
 import { EventEmitter } from "..";
 
-export = () => {
+export = (): void => {
 	interface Events {
-		event: (message: string) => string;
-		testingBind: () => void;
+		event: [message: string];
+		testingBind: [];
 	}
 
 	class Class extends EventEmitter<Events> {
-		testBinds() {
+		public testBinds(): void {
 			this.when("event")
 				.do(print) // Binding outputting functions is fine as well
-				.do(function () {})
-				.do(() => {}); // Both ways work the same, demonstration
+				.do(function () { })
+				.do(() => { }); // Both ways work the same, demonstration
 		}
 
-		testEmits() {
+		public testEmits(): void {
 			this.emit("event", "Emitting premated test passed.");
 		}
 
-		testAsyncEmits() {
-			this.emit("event", "Asynchronous emitting premade test passed.")
-				.andThen(() => print("Asynchronous emitting finished, passed."))
-				.await();
+		public testAsyncEmits(): void {
+			this.emit("event", "Asynchronous emitting premade test passed.");
 		}
 
-		testBinding<X>(key: keyof Events, func: (...args: Array<unknown>) => X) {
+		public testBinding<X>(key: keyof Events, func: (...args: Array<unknown>) => X): void {
 			this.when(key).do(func);
 		}
 
-		testEmitting<T extends keyof Events>(key: keyof Events, ...args: Parameters<Events[T]>) {
+		public testEmitting<T extends keyof Events>(key: keyof Events, ...args: Events[T]): void {
 			this.emit(key, ...args);
 		}
 	}

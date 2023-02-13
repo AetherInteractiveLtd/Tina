@@ -15,18 +15,26 @@ interface IOutputObject {
 
 const output: Array<IOutputObject> = [];
 
-class Scope {
+export class Scope {
 	public name = "unnamed";
+
+	public setName(name: string): void {
+		this.name = name;
+	}
 
 	constructor(scopeName: string, printToFile = false) {
 		this.name = scopeName;
+		if (printToFile) {
+			this.warn("Printing to File is not yet Supported. printToFile ignored.");
+		}
 	}
 
 	public static scope(scopeName: string, printToFile = false): Scope {
 		return new this(scopeName, printToFile);
 	}
 
-	public static getOutput(): typeof output {
+	/** @hidden */
+	public static getOutput(): Array<IOutputObject> {
 		return output;
 	}
 
@@ -39,6 +47,7 @@ class Scope {
 		output.push({
 			level: severity,
 			text: `[${this.name}]: ${stringToPrint}`,
+			// TODO: we probably want to do some cool RichText stuff here?
 		});
 	}
 
@@ -69,5 +78,3 @@ class Scope {
 		this.log(4, ...args);
 	}
 }
-
-export = new Scope("gamenamehere", false); // temporary args
