@@ -141,3 +141,6 @@ export { Container } from "./lib/container";
 
 /** Util exports */
 export { FunctionUtil } from "./lib/utilities/functions";
+
+/** Logger export */
+export { Logger } from "./lib/logger/Logger";
