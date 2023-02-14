@@ -1,10 +1,10 @@
 import { RunService } from "@rbxts/services";
 
+import { EventListener } from "../events";
 import { insertionSort } from "../util/array-utils";
 import { World } from "./world";
 
-// TODO: Support tina events
-export type ExecutionGroup = RBXScriptSignal;
+export type ExecutionGroup = RBXScriptSignal | EventListener<Array<unknown>>;
 
 export interface System {
 	/**
@@ -342,32 +342,47 @@ export class SystemManager {
 	}
 
 	/**
-	 * Starts the execution of each execution group, and then calls each system
-	 * in the group.
+	 * Runs all systems in a given execution group.
+	 *
+	 * @param executionGroup The execution group to run.
+	 */
+	private runSystems(executionGroup: ExecutionGroup): void {
+		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
+			if (!system.enabled) {
+				return;
+			}
+
+			system.dt = os.clock() - system.lastCalled;
+			system.lastCalled = os.clock();
+
+			debug.profilebegin("system: " + system.name);
+			{
+				this.ensureNoAsync(system, () => {
+					system.onUpdate(this.world /**, ...this.systemArgs */);
+					this.world.flush();
+				});
+			}
+			debug.profileend();
+		}
+	}
+
+	/**
+	 * Connects the execution group to the system manager, and runs all systems
+	 * in that execution group.
 	 */
 	private executeSystems(): void {
 		for (const executionGroup of this.executionGroups) {
-			const disconnect = executionGroup.Connect(() => {
-				for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
-					if (!system.enabled) {
-						return;
-					}
+			if (typeIs(executionGroup, "RBXScriptSignal")) {
+				const disconnect = executionGroup.Connect(() => {
+					this.runSystems(executionGroup);
+				});
 
-					system.dt = os.clock() - system.lastCalled;
-					system.lastCalled = os.clock();
-
-					debug.profilebegin("system: " + system.name);
-					{
-						this.ensureNoAsync(system, () => {
-							system.onUpdate(this.world /**, ...this.systemArgs */);
-							this.world.flush();
-						});
-					}
-					debug.profileend();
-				}
-			});
-
-			this.executionGroupSignals.set(executionGroup, disconnect);
+				this.executionGroupSignals.set(executionGroup, disconnect);
+			} else {
+				executionGroup.do(() => {
+					this.runSystems(executionGroup);
+				});
+			}
 		}
 	}
 
