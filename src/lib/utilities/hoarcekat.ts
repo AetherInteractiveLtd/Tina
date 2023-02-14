@@ -9,7 +9,7 @@ function findHoarcekatFrame(): Frame | undefined {
 	return game
 		.FindFirstChild("PluginGuiService")
 		?.FindFirstChild("Hoarcekat")
-		?.FindFirstChild("Hoarcekat")
+		?.FindFirstChild("App")
 		?.FindFirstChild("Preview")
 		?.FindFirstChild("Preview")
 		?.FindFirstChild("Preview") as Frame;

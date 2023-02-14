@@ -1,5 +1,5 @@
-import Roact from "@rbxts/roact";
-import { useBinding, useEffect, useRef, withHooks } from "@rbxts/roact-hooked";
+import Roact, { createRef } from "@rbxts/roact";
+import { useBinding, useEffect, withHooks } from "@rbxts/roact-hooked";
 
 import { UDim2ToAbsolute } from "../../../utilities/ui";
 import Padding from "../../common/padding";
@@ -13,12 +13,13 @@ interface TooltipProps {
 
 const Tooltip = withHooks(({ Message, Position = new UDim2() }: TooltipProps) => {
 	const theme = useTheme();
-	const labelRef = useRef<TextLabel>();
+	const labelRef = createRef<TextLabel>();
 	const [labelPosition, setLabelPosition] = useBinding(Position);
 
 	// Reposition the tooltip within the bounds of the Modal (screen)
 	useEffect(() => {
 		const label = labelRef.getValue()!;
+		if (!label) return;
 		const parent = label.Parent as GuiBase2d;
 
 		const constrainToWindow = (): void => {

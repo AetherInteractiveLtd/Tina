@@ -1,3 +1,5 @@
+/// <reference types="@rbxts/types/plugin" />
+
 import Roact, { Children, Portal } from "@rbxts/roact";
 import { withHooks } from "@rbxts/roact-hooked";
 import { Players, RunService } from "@rbxts/services";
@@ -21,13 +23,15 @@ const HoarcekatModal = withHooks(props => {
 		return <frame />;
 	}
 
-	return (
+	const made = (
 		<Portal target={parent}>
 			<frame Size={UDim2.fromScale(1, 1)} Transparency={1} ZIndex={10000}>
 				{props[Children]}
 			</frame>
 		</Portal>
 	);
+
+	return made;
 });
 
 /**

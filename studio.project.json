@@ -7,17 +7,19 @@
 	"tree": {
 		"$className": "DataModel",
 		"ReplicatedStorage": {
-			"include": {
-				"$path": "include",
-				"node_modules": {
-					"$className": "Folder",
-					"@rbxts": {
-						"$path": "node_modules/@rbxts"
+			"Package": {
+				"$path": "out",
+				"rbxts_include": {
+					"$path": "include",
+		
+					"node_modules": {
+						"$className": "Folder",
+					
+						"@rbxts": {
+							"$path": "node_modules/@rbxts"
+						}
 					}
 				}
-			},
-			"Package": {
-				"$path": "out"
 			}
 		},
 		"ServerScriptService": {
