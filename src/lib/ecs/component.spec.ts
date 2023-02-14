@@ -2,9 +2,8 @@
 
 import {
 	ComponentInternal,
+	ComponentInternalCreation,
 	ComponentTypes,
-	createComponent,
-	createTag,
 	TagComponentInternal,
 } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
@@ -20,14 +19,14 @@ export = (): void => {
 
 	describe("a component should", () => {
 		it("be able to be created", () => {
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 			expect(component).to.be.ok();
 		});
 
 		it("be able to be given to an entity", () => {
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
@@ -37,7 +36,7 @@ export = (): void => {
 		});
 
 		it("be able to be removed from an entity", () => {
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
@@ -49,7 +48,7 @@ export = (): void => {
 		});
 
 		it("be able to update its data", () => {
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 			const entity = world.add();
@@ -60,7 +59,7 @@ export = (): void => {
 			});
 			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
 
-			const component2 = createComponent({
+			const component2 = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 			const entity2 = world.add();
@@ -74,12 +73,12 @@ export = (): void => {
 
 	describe("a tag should", () => {
 		it("be able to be created", () => {
-			const tag = createTag();
+			const tag = ComponentInternalCreation.createTag();
 			expect(tag).to.be.ok();
 		});
 
 		it("be able to be given to an entity", () => {
-			const tag = createTag();
+			const tag = ComponentInternalCreation.createTag();
 			const entity = world.add();
 			world.addTag(entity, tag);
 			world.flush();
@@ -87,7 +86,7 @@ export = (): void => {
 		});
 
 		it("be able to be removed from an entity", () => {
-			const tag = createTag();
+			const tag = ComponentInternalCreation.createTag();
 			const entity = world.add();
 			world.addTag(entity, tag);
 			world.flush();
@@ -97,7 +96,7 @@ export = (): void => {
 		});
 
 		it("not hold any data", () => {
-			const tag = createTag() as TagComponentInternal;
+			const tag = ComponentInternalCreation.createTag() as TagComponentInternal;
 			const entity = world.add();
 			world.addTag(entity, tag);
 			world.flush();

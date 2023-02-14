@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { createComponent, createTag } from "./component";
+import { ComponentInternalCreation } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
 import { ALL, ANY, NOT, Query } from "./query";
 import { World } from "./world";
@@ -133,7 +133,7 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = createComponent({
+				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
 				});
 
@@ -158,7 +158,7 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = createComponent({
+				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
 				});
 
@@ -191,7 +191,7 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = createComponent({
+				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
 				});
 
@@ -223,7 +223,7 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = createComponent({
+				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
 				});
 

@@ -2,7 +2,13 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import { Component, TagComponent, Tree, Type } from "./lib/ecs/component";
+import {
+	Component,
+	ComponentInternalCreation,
+	TagComponent,
+	Tree,
+	Type,
+} from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
@@ -166,7 +172,7 @@ namespace Tina {
 	 * @returns A single component instance.
 	 */
 	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
-		return createComponent(schema);
+		return ComponentInternalCreation.createComponent(schema);
 	}
 
 	/**
@@ -184,7 +190,7 @@ namespace Tina {
 	 * @returns A tag component.
 	 */
 	export function createTag(): TagComponent {
-		return createTag();
+		return ComponentInternalCreation.createTag();
 	}
 }
 

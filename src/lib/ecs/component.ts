@@ -78,81 +78,83 @@ export const ComponentTypes = {
 	Vector3int16: [new Vector3int16()],
 };
 
-// const test = createComponent({
-// 	x: ComponentTypes.Number,
-// });
+export namespace ComponentInternalCreation {
+	// const test = createComponent({
+	// 	x: ComponentTypes.Number,
+	// });
 
-// test.x[1] = 1;
+	// test.x[1] = 1;
 
-/**
- * Creates a component that matches the given schema.
- *
- * Internally this creates an array for each property in the schema, where the
- * index of the array matches an entity id. This allows for fast lookups of
- * component data.
- *
- * The array is pre-allocated to the given size, so it is important to ensure
- * that you do not access the component data for an entity that does not exist,
- * or that does not have the component. This is because the array could hold
- * data for a given entity, despite the fact that the entity would be invalid.
- *
- * Components are singletons, and should be created once per component type.
- * Components also persist between worlds, therefore you do not need more than
- * one component per world. EntityIds are global, therefore the index of a
- * given entity will always match the index of the component data.
- *
- * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
- * this to be configurable? It should also be possible to resize the array if
- * required (although this would not be desirable).
- *
- * @param schema The properties of the component.
- *
- * @returns A single component instance.
- */
-export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
-	const componentData = createComponentArray<T>(schema as T, 10000);
-	const observers = new Array<Observer>();
-	return Sift.Dictionary.merge(componentData, {
-		componentId: getNextComponentId(),
+	/**
+	 * Creates a component that matches the given schema.
+	 *
+	 * Internally this creates an array for each property in the schema, where the
+	 * index of the array matches an entity id. This allows for fast lookups of
+	 * component data.
+	 *
+	 * The array is pre-allocated to the given size, so it is important to ensure
+	 * that you do not access the component data for an entity that does not exist,
+	 * or that does not have the component. This is because the array could hold
+	 * data for a given entity, despite the fact that the entity would be invalid.
+	 *
+	 * Components are singletons, and should be created once per component type.
+	 * Components also persist between worlds, therefore you do not need more than
+	 * one component per world. EntityIds are global, therefore the index of a
+	 * given entity will always match the index of the component data.
+	 *
+	 * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
+	 * this to be configurable? It should also be possible to resize the array if
+	 * required (although this would not be desirable).
+	 *
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A single component instance.
+	 */
+	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+		const componentData = createComponentArray<T>(schema as T, 10000);
+		const observers = new Array<Observer>();
+		return Sift.Dictionary.merge(componentData, {
+			componentId: getNextComponentId(),
 
-		observers: observers,
+			observers: observers,
 
-		// TODO: This currently does not use the component schema properly,
-		// nested objects are not supported.
-		set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
-			// TODO: Look into removing this check to improve performance.
-			// It would be beneficial to just use the component data directly
-			// rather than going through this function.
-			for (const observer of observers) {
-				observer.world.observersToUpdate.push([entityId, observer, ECS.OnChanged]);
-			}
+			// TODO: This currently does not use the component schema properly,
+			// nested objects are not supported.
+			set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
+				// TODO: Look into removing this check to improve performance.
+				// It would be beneficial to just use the component data directly
+				// rather than going through this function.
+				for (const observer of observers) {
+					observer.world.observersToUpdate.push([entityId, observer, ECS.OnChanged]);
+				}
 
-			// eslint-disable-next-line roblox-ts/no-array-pairs
-			for (const [key, value] of pairs(data)) {
-				componentData[key as never][entityId as never] = value as never;
-			}
-		},
-	}) as unknown as ComponentInternal<T>;
-}
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key, value] of pairs(data)) {
+					componentData[key as never][entityId as never] = value as never;
+				}
+			},
+		}) as ComponentInternal<T>;
+	}
 
-/**
- * Creates a tag component; a component that has no data.
- *
- * Tags are useful for marking entities as having a certain property, without
- * the overhead of storing any data. For example, you could use a tag component
- * to mark an entity as being a player, and then use a system to query for all
- * entities that have the player tag.
- *
- * Tags are singletons, and should be created once per component type. Tags
- * also persist between worlds, therefore you do not need more than one Tag per
- * world.
- *
- * @returns A tag component.
- */
-export function createTag(): TagComponent {
-	return {
-		componentId: getNextComponentId(),
-	} as TagComponentInternal;
+	/**
+	 * Creates a tag component; a component that has no data.
+	 *
+	 * Tags are useful for marking entities as having a certain property, without
+	 * the overhead of storing any data. For example, you could use a tag component
+	 * to mark an entity as being a player, and then use a system to query for all
+	 * entities that have the player tag.
+	 *
+	 * Tags are singletons, and should be created once per component type. Tags
+	 * also persist between worlds, therefore you do not need more than one Tag per
+	 * world.
+	 *
+	 * @returns A tag component.
+	 */
+	export function createTag(): TagComponent {
+		return {
+			componentId: getNextComponentId(),
+		} as TagComponentInternal;
+	}
 }
 
 /**

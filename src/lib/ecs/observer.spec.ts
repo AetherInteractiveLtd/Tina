@@ -1,6 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { ComponentTypes, createComponent } from "./component";
+import { ComponentInternalCreation, ComponentTypes } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
 import { ECS } from "./observer";
 import { World } from "./world";
@@ -21,7 +21,7 @@ export = (): void => {
 		it("be called when an entity is added", () => {
 			const calledFn: Array<number> = [];
 
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 
@@ -52,7 +52,7 @@ export = (): void => {
 		it("be called when an entity is removed", () => {
 			const calledFn: Array<number> = [];
 
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 
@@ -91,11 +91,11 @@ export = (): void => {
 		it("also have a required component", () => {
 			let callCount = 0;
 
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 
-			const component2 = createComponent({
+			const component2 = ComponentInternalCreation.createComponent({
 				y: ComponentTypes.Number,
 			});
 
@@ -119,7 +119,7 @@ export = (): void => {
 		it("should be called when a components data is changed", () => {
 			const calledFn: Array<number> = [];
 
-			const component = createComponent({
+			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
 

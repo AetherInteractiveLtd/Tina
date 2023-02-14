@@ -10,7 +10,6 @@ import {
 	AnyComponent,
 	AnyComponentInternal,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	createComponent,
 	GetComponentSchema,
 	OptionalKeys,
 	TagComponent,
@@ -97,7 +96,7 @@ export class World {
 	 *
 	 * @param entityId The id of the entity to add the component to.
 	 * @param component The component to add to the entity, which must have
-	 *     been defined previously with {@link createComponent}.
+	 *     been defined previously with {@link Tina.createComponent}.
 	 * @param data The optional data to initialize the component with.
 	 *
 	 * @returns The world instance to allow for method chaining.
