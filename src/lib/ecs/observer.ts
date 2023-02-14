@@ -6,8 +6,6 @@ import { World } from "./world";
  * ECS events that can be observed.
  */
 export const enum ECS {
-	"OnAdded" = "OnAdded",
-	"OnRemoved" = "OnRemoved",
 	"OnChanged" = "OnChanged",
 }
 

@@ -18,105 +18,7 @@ export = (): void => {
 	});
 
 	describe("An observer should", () => {
-		it("be called when an entity is added", () => {
-			const calledFn: Array<number> = [];
-
-			const component = ComponentInternalCreation.createComponent({
-				x: ComponentTypes.Number,
-			});
-
-			const observer = world.createObserver(component).event(ECS.OnAdded);
-
-			const id = world.add();
-			world.addComponent(id, component);
-
-			observer.forEach(_entityId => {
-				calledFn.push(1);
-			});
-
-			world.flush();
-
-			observer.forEach(_entityId => {
-				calledFn.push(2);
-			});
-
-			expect(shallowEquals(calledFn, [2])).to.equal(true);
-
-			observer.forEach(_entityId => {
-				calledFn.push(3);
-			});
-
-			expect(shallowEquals(calledFn, [2])).to.equal(true);
-		});
-
-		it("be called when an entity is removed", () => {
-			const calledFn: Array<number> = [];
-
-			const component = ComponentInternalCreation.createComponent({
-				x: ComponentTypes.Number,
-			});
-
-			const observer = world.createObserver(component).event(ECS.OnRemoved);
-
-			const id = world.add();
-			world.addComponent(id, component);
-
-			world.flush();
-
-			observer.forEach(_entityId => {
-				calledFn.push(1);
-			});
-
-			world.removeComponent(id, component);
-
-			observer.forEach(_entityId => {
-				calledFn.push(2);
-			});
-
-			world.flush();
-
-			observer.forEach(_entityId => {
-				calledFn.push(3);
-			});
-
-			expect(shallowEquals(calledFn, [3])).to.equal(true);
-
-			observer.forEach(_entityId => {
-				calledFn.push(4);
-			});
-
-			expect(shallowEquals(calledFn, [3])).to.equal(true);
-		});
-
-		it("also have a required component", () => {
-			let callCount = 0;
-
-			const component = ComponentInternalCreation.createComponent({
-				x: ComponentTypes.Number,
-			});
-
-			const component2 = ComponentInternalCreation.createComponent({
-				y: ComponentTypes.Number,
-			});
-
-			const observer = world.createObserver(component).with(component2).event(ECS.OnAdded);
-
-			const id = world.add();
-			const id2 = world.add();
-			world.addComponent(id, component);
-			world.addComponent(id2, component);
-			world.addComponent(id2, component2);
-
-			world.flush();
-
-			observer.forEach(_entityId => {
-				callCount += 1;
-			});
-
-			expect(callCount).to.equal(1);
-		});
-
-		it("should be called when a components data is changed", () => {
+		it("be called when a components data is changed", () => {
 			const calledFn: Array<number> = [];
 
 			const component = ComponentInternalCreation.createComponent({
@@ -150,5 +52,37 @@ export = (): void => {
 
 			expect(shallowEquals(calledFn, [3])).to.equal(true);
 		});
-	});
+
+		it("be able to have a required component", () => {
+			const calledFn: Array<number> = [];
+
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+	
+			const component2 = ComponentInternalCreation.createComponent({
+				y: ComponentTypes.Number,
+			});
+	
+			const observer = world.createObserver(component).with(component2).event(ECS.OnChanged);
+
+			const id = world.add();
+			const id2 = world.add();
+			world.addComponent(id, component);
+			world.addComponent(id2, component).addComponent(id2, component2);
+
+			world.flush();
+
+			component.set(id, { x: 1 });
+			component.set(id2, { x: 1 });
+
+			world.flush();
+
+			observer.forEach(entityId => {
+				calledFn.push(entityId);
+			});
+
+			expect(shallowEquals(calledFn, [id2])).to.equal(true);
+		});
+	});	
 };

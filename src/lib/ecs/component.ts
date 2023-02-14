@@ -133,7 +133,7 @@ export namespace ComponentInternalCreation {
 					componentData[key as never][entityId as never] = value as never;
 				}
 			},
-		}) as ComponentInternal<T>;
+		}) as unknown as ComponentInternal<T>;
 	}
 
 	/**

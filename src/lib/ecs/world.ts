@@ -112,13 +112,6 @@ export class World {
 
 		this.componentsToUpdate.add(entityId);
 
-		if (this.observers.has(component)) {
-			const observer = this.observers.get(component)!;
-			if (observer.storage.get(ECS.OnAdded)) {
-				this.observersToUpdate.push([entityId, observer, ECS.OnAdded]);
-			}
-		}
-
 		debug.profilebegin("World:addComponent");
 		{
 			const componentId = (component as unknown as AnyComponentInternal).componentId;
@@ -419,13 +412,6 @@ export class World {
 		}
 
 		this.componentsToUpdate.add(entityId);
-
-		if (this.observers.has(component)) {
-			const observer = this.observers.get(component)!;
-			if (observer.storage.get(ECS.OnRemoved)) {
-				this.observersToUpdate.push([entityId, observer, ECS.OnRemoved]);
-			}
-		}
 
 		debug.profilebegin("World:removeComponent");
 		{
