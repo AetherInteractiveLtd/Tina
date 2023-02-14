@@ -45,6 +45,10 @@ class Scope {
 	public getMessages(): Array<string> {
 		return [...this.messages];
 	}
+
+	public scope(scopeName: string): Scope {
+		return Logger.scope(this.name + ":" + scopeName);
+	}
 }
 
 export namespace Logger {
