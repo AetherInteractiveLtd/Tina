@@ -2,7 +2,7 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"files.eol": "\n",
 	"[typescript]": {
-		"editor.defaultFormatter": "vscode.typescript-language-features",
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
 		"editor.formatOnSave": true,
 		"editor.codeActionsOnSave": {
 			"source.fixAll": true
