@@ -1,5 +1,5 @@
 import { EventListener } from "../../../../events";
-import { UserType } from "../../../../user/default/types";
+import { DefaultUserDeclaration } from "../../../../user/default/types";
 
 export interface GETServerObjectImplementation<R, S> {
 	/**
@@ -13,7 +13,7 @@ export interface GETServerObjectImplementation<R, S> {
 	 * @server
 	 * @param func should describe the listener function to add as a callback for the reply, the return type is the expected type at the receiving end.
 	 */
-	reply(func: (user: UserType, value: R) => S): void;
+	reply(func: (user: DefaultUserDeclaration, value: R) => S): void;
 }
 
 export interface GETClientObjectImplementation<S, R> {

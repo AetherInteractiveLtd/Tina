@@ -1,3 +1,4 @@
+import { DefaultUserDeclaration } from "../user/default/types";
 import { GetEndpoint } from "./classes/methods/get";
 import { GETDeclaration } from "./classes/methods/get/types";
 import { PostEndpoint } from "./classes/methods/post";
@@ -53,12 +54,14 @@ export namespace Network {
 		endpoints: T,
 	): RouterDeclaration<T> {
 		{
-			TinaNet.setRouter(
-				new Router({
-					"user:added": Network.Method.UPDATE<never>(),
-					"user:removing": Network.Method.UPDATE<never>(),
-				} as never),
-			);
+			TinaNet.setRouter("exposed", {
+				"user:added": Network.Method.UPDATE<never>(),
+				"user:removing": Network.Method.UPDATE<never>(),
+			});
+
+			TinaNet.setRouter("internal", {
+				"user:get": Network.Method.GET<undefined, never>(),
+			});
 		}
 
 		return new Router(endpoints);
