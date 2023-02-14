@@ -1,5 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { createComponent, createTag } from "./component";
+import { internal_resetGlobalState } from "./entity-manager";
 import { ALL, ANY, NOT, Query } from "./query";
 import { World } from "./world";
 
@@ -17,7 +19,7 @@ function createMockComponent(id: number): MockComponent {
 	return {
 		componentData: [],
 		componentId: id,
-		set(): void {},
+		set(): void { },
 	};
 }
 
@@ -125,5 +127,129 @@ export = (): void => {
 				expect(Query.match([29, 16], query)).to.equal(true);
 			});
 		});
+
+		describe("enteredQuery", () => {
+			it("allow for entities to enter the query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(ALL(component));
+
+				tempWorld.addComponent(id, component);
+
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				query.enteredQuery((entityId) => {
+					callCount += 1;
+				});
+
+				expect(callCount).to.equal(1);
+			});
+
+			it("not be present on next iteration of query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(ALL(component));
+
+				tempWorld.addComponent(id, component);
+
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				query.enteredQuery((entityId) => {
+					callCount += 1;
+				});
+
+				expect(callCount).to.equal(1);
+
+				query.enteredQuery((entityId) => {
+					callCount += 1;
+				});
+
+				expect(callCount).to.equal(1);
+			});
+		});
+
+		describe("exitedQuery", () => {
+			it("allow for entities to exit the query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(ALL(component));
+
+				tempWorld.addComponent(id, component);
+				tempWorld.flush();
+				tempWorld.removeComponent(id, component);
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				// We need to ensure that the entity is not entered and exited
+				// at the same time
+				query.enteredQuery((entityId) => {
+					callCount += 1;
+				});
+
+				query.exitedQuery((entityId) => {
+					callCount += 10;
+				});
+
+				expect(callCount).to.equal(10);
+			});
+
+			it("not be present on next iteration of query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(ALL(component));
+
+				tempWorld.addComponent(id, component);
+				tempWorld.flush();
+				tempWorld.removeComponent(id, component);
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				query.exitedQuery((entityId) => {
+					callCount += 1;
+				});
+
+				expect(callCount).to.equal(1);
+
+				query.exitedQuery((entityId) => {
+					callCount += 1;
+				});
+
+				expect(callCount).to.equal(1);
+			});
+		});
 	});
-};
+}

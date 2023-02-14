@@ -129,6 +129,7 @@ export class World {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
 					componentId,
+					entityId,
 				);
 			}
 		}
@@ -191,7 +192,7 @@ export class World {
 	 *
 	 * @returns A new {@link Query}.
 	 */
-	public createQuery(arg: RawQuery, ...raw: Array<RawQuery>): Query {
+	public createQuery(arg: RawQuery | AnyComponent, ...raw: Array<RawQuery>): Query {
 		let query: Query;
 
 		debug.profilebegin("World:createQuery");
@@ -436,6 +437,7 @@ export class World {
 				this.entityManager.updateTo[entityId] = this.archetypeChange(
 					this.entityManager.updateTo[entityId],
 					componentId,
+					entityId,
 				);
 			}
 		}
@@ -574,14 +576,32 @@ export class World {
 	 *
 	 * @param arch
 	 * @param componentId The id of the component to add.
+	 *
 	 * @returns
 	 */
-	private archetypeChange(arch: Archetype, componentId: ComponentId): Archetype {
+	private archetypeChange(
+		arch: Archetype,
+		componentId: ComponentId,
+		entityId: EntityId,
+	): Archetype {
 		if (!arch.change[componentId]) {
 			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
-			arch.change[componentId] = this.getArchetype(arch.mask);
+
+			arch.queries.forEach(query => {
+				query.entered.remove(entityId);
+				query.exited.add(entityId);
+			});
+
+			const newArchetype = this.getArchetype(arch.mask);
+			newArchetype.queries.forEach(query => {
+				query.exited.remove(entityId);
+				query.entered.add(entityId);
+			});
+
+			arch.change[componentId] = newArchetype;
 			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
 		}
+
 		return arch.change[componentId];
 	}
 
@@ -598,15 +618,17 @@ export class World {
 	private getArchetype(mask: Array<ComponentId>): Archetype {
 		const hash = mask.join(",");
 		if (!this.entityManager.archetypes.has(hash)) {
-			const arch = new Archetype(slice(mask)); // does this mask need to be ordered?
+			const arch = new Archetype(slice(mask));
 			this.entityManager.archetypes.set(hash, arch);
 			// TODO: This is currently an O(n) operation to find any matching queries. Look into archetype graphs.
 			for (const query of this.queries) {
 				if (Query.match(mask, query.mask)) {
 					query.archetypes.push(arch);
+					arch.queries.push(query);
 				}
 			}
 		}
+
 		return this.entityManager.archetypes.get(hash)!;
 	}
 

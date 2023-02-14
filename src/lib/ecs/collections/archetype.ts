@@ -1,4 +1,5 @@
 import { ComponentId, EntityId } from "../../types/ecs";
+import { Query } from "../query";
 import { SparseSet } from "./sparse-set";
 
 /**
@@ -18,6 +19,8 @@ export class Archetype {
 	public change: Array<Archetype> = [];
 	/** The type of the archetype denoted by all its relevant components. */
 	public mask: Array<ComponentId>;
+	/** All queries that are interested in this archetype. */
+	public queries: Array<Query> = [];
 
 	constructor(mask: Array<ComponentId>) {
 		this.entities = this.sparseSet.dense;

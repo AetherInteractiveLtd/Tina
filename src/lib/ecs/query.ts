@@ -166,6 +166,58 @@ export class Query {
 	}
 
 	/**
+	 * Runs a callback for each entity that has been added to the query since
+	 * the last time this method was called.
+	 *
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.entered.dense` array
+	 * directly instead.
+	 *
+	 * @param callback The callback to run for each entity.
+	 */
+	public enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
+		for (const entityId of this.entered.dense) {
+			if (!callback(entityId)) {
+				break;
+			}
+		}
+
+		this.entered = new SparseSet();
+	}
+
+	/**
+	 * Runs a callback for each entity that has been removed from the query
+	 * since the last time this method was called.
+	 *
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.exited.dense` array
+	 * directly instead.
+	 *
+	 * @param callback The callback to run for each entity.
+	 */
+	public exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
+		for (const entityId of this.exited.dense) {
+			if (!callback(entityId)) {
+				break;
+			}
+		}
+
+		this.exited = new SparseSet();
+	}
+
+	/**
 	 * Runs a callback for each entity that matches the query.
 	 *
 	 * If the callback returns `false`, the iteration will stop, and no other
@@ -263,30 +315,4 @@ export class Query {
 
 		return { op: raw.op, dt: ret } as QueryMask;
 	};
-
-	// TODO: Once we get archetype graphs, this might be a more efficient way
-	// to do component observers - at the very least it will allow more complex
-	// observation queries. For now, it's just a placeholder - there is no way
-	// to match entities to queries cheaply.
-	private enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
-		for (const entityId of this.entered.dense) {
-			if (!callback(entityId)) {
-				break;
-			}
-		}
-
-		this.world.flush();
-		this.entered = new SparseSet();
-	}
-
-	private exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
-		for (const entityId of this.exited.dense) {
-			if (!callback(entityId)) {
-				break;
-			}
-		}
-
-		this.world.flush();
-		this.exited = new SparseSet();
-	}
 }
