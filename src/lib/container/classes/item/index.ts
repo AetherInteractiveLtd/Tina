@@ -6,10 +6,7 @@ import { Metadata, Template } from "../../types";
 import { BucketType } from "../bucket/types";
 import { ItemDeclaration, ItemEvents, ItemImplementation } from "./types";
 
-export class Item<T extends Template>
-	extends EventEmitter<ItemEvents<T>>
-	implements ItemImplementation
-{
+export class Item<T extends Template> extends EventEmitter<ItemEvents<T>> implements ItemImplementation {
 	public key: string;
 	public keyInfo: DataStoreKeyInfo;
 	public data: T;
@@ -42,9 +39,7 @@ export class Item<T extends Template>
 		const userIdIndex = this.userIds.indexOf(userId);
 
 		if (userIdIndex === undefined) {
-			TinaLogger.log(
-				"The user id provided doesnt exists on the array, can't delete something isn't there.",
-			);
+			TinaLogger.log("The user id provided doesnt exists on the array, can't delete something isn't there.");
 		} else {
 			this.userIds.remove(userIdIndex);
 		}
