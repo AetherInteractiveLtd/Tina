@@ -32,8 +32,8 @@ const LEVEL_COLORS = {
 const LEVEL_NAMES = {
 	[0]: "INFO",
 	[1]: "WARN",
-	[2]: "DBUG",
-	[3]: "EROR",
+	[2]: "DEBUG",
+	[3]: "ERROR",
 };
 
 const FUNCTIONAL_LEVEL_COLORS = {

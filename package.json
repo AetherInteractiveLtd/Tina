@@ -46,7 +46,7 @@
   "dependencies": {
     "@eslint/github-action": "^0.1.0",
     "@rbxts/roact": "^1.4.4-ts.0",
-    "@rbxts/rowind-mini": "^1.0.3",
+    "@rbxts/rowind-mini": "^1.0.4",
     "@rbxts/services": "^1.5.1",
     "@rbxts/sift": "^0.0.4",
     "@rbxts/t": "^3.1.0",
