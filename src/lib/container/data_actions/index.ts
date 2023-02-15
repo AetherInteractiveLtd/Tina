@@ -2,12 +2,7 @@ import { DataStoreService, RunService } from "@rbxts/services";
 
 import TinaLogger from "../../util/TinaLogger";
 import { BucketType } from "../classes/bucket/types";
-import {
-	ItemDeclaration,
-	ItemLoaderJob,
-	ItemMethodsDataStore,
-	ItemType,
-} from "../classes/item/types";
+import { ItemDeclaration, ItemLoaderJob, ItemMethodsDataStore, ItemType } from "../classes/item/types";
 import { DataSaved, Template } from "../types";
 
 /** Configuration */
@@ -91,10 +86,7 @@ namespace DataStoreQueue {
 
 				if (cleanup === undefined) {
 					loaderJob.cleanup = RunService.PostSimulation.Connect(() => {
-						if (
-							os.clock() - lastWrite > CALLS_COOLDOWN &&
-							loaderJob.queue.size() === 0
-						) {
+						if (os.clock() - lastWrite > CALLS_COOLDOWN && loaderJob.queue.size() === 0) {
 							loaderJob.cleanup?.Disconnect();
 
 							const loaderJobKept = bucketJobsHolder.get(itemKey);
@@ -169,13 +161,7 @@ export namespace Data {
 			const callback = (
 				data: T | undefined,
 				keyInfo: DataStoreKeyInfo,
-			): LuaTuple<
-				[
-					newValue: object,
-					userIds?: Array<number> | undefined,
-					metadata?: object | undefined,
-				]
-			> => {
+			): LuaTuple<[newValue: object, userIds?: Array<number> | undefined, metadata?: object | undefined]> => {
 				let dataRef = data;
 				let nullishData = false;
 				let corrupted = false;
@@ -191,11 +177,7 @@ export namespace Data {
 					registerIssue(itemKey, "Data me be corrupted. Current data: " + dataRef);
 
 					return [dataRef as T, dataRef!.userIds] as unknown as LuaTuple<
-						[
-							newValue: Template,
-							userIds?: Array<number> | undefined,
-							metadata?: object | undefined,
-						]
+						[newValue: Template, userIds?: Array<number> | undefined, metadata?: object | undefined]
 					>;
 				}
 
@@ -213,11 +195,7 @@ export namespace Data {
 				}
 
 				return [dataRef as T, dataRef!.userIds] as unknown as LuaTuple<
-					[
-						newValue: Template,
-						userIds?: Array<number> | undefined,
-						metadata?: object | undefined,
-					]
+					[newValue: Template, userIds?: Array<number> | undefined, metadata?: object | undefined]
 				>;
 			};
 
@@ -233,9 +211,7 @@ export namespace Data {
 		} else {
 			registerIssue(
 				itemKey,
-				(message !== undefined
-					? message
-					: "Unexpected error, not enough information.") as string,
+				(message !== undefined ? message : "Unexpected error, not enough information.") as string,
 			);
 		}
 	}
@@ -256,12 +232,7 @@ export namespace Data {
 			},
 		})!;
 
-		if (
-			data !== undefined &&
-			type(data) === "table" &&
-			metadata !== undefined &&
-			type(metadata) === "table"
-		) {
+		if (data !== undefined && type(data) === "table" && metadata !== undefined && type(metadata) === "table") {
 			Autosave.remove(item);
 			DataStoreQueue.clean(item.bucketOn.key, item.key);
 		}
@@ -274,28 +245,19 @@ export namespace Data {
 		task.spawn((): void => {
 			if (RunService.IsStudio() === true) {
 				const [success, message] = pcall(() => {
-					return DataStoreService.GetDataStore("_LIVE_DATA_STORE").SetAsync(
-						"__TESTING_KEY",
-						os.time(),
-					);
+					return DataStoreService.GetDataStore("_LIVE_DATA_STORE").SetAsync("__TESTING_KEY", os.time());
 				});
 
 				if (success === true) return;
 
 				const noInternet =
-					success === false &&
-					string.find(message as string, "ConnectFail", 1, true)[0] !== undefined;
+					success === false && string.find(message as string, "ConnectFail", 1, true)[0] !== undefined;
 
 				if (noInternet === true) {
 					TinaLogger.log("[Container]: No internet connection, check your network.");
 				} else if (success === false && string.find(message as string, "403")[0]) {
-					TinaLogger.log(
-						"[Container]: API Services unavailable, please check your settings.",
-					);
-				} else if (
-					success === false &&
-					string.find(message as string, "must publish", 1, true)[0]
-				) {
+					TinaLogger.log("[Container]: API Services unavailable, please check your settings.");
+				} else if (success === false && string.find(message as string, "must publish", 1, true)[0]) {
 					TinaLogger.log("[Container]: Game needs to be published for testing.");
 				}
 
@@ -313,8 +275,7 @@ export namespace Data {
 				while (clockTimestamp - lastAutoSave > iterationSpeed) {
 					lastAutoSave = lastAutoSave + iterationSpeed;
 
-					let item: ItemDeclaration<Template> | undefined =
-						AUTO_SAVING_ITEMS[autoSaveIndex];
+					let item: ItemDeclaration<Template> | undefined = AUTO_SAVING_ITEMS[autoSaveIndex];
 
 					if (clockTimestamp - item.metadata.load_timestamp < AUTO_SAVE_COOLDOWN) {
 						item = undefined;
@@ -328,10 +289,7 @@ export namespace Data {
 
 							item = AUTO_SAVING_ITEMS[autoSaveIndex];
 
-							if (
-								clockTimestamp - item.metadata.load_timestamp <
-								AUTO_SAVE_COOLDOWN
-							) {
+							if (clockTimestamp - item.metadata.load_timestamp < AUTO_SAVE_COOLDOWN) {
 								break;
 							} else {
 								item = undefined;
