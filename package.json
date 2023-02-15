@@ -1,5 +1,5 @@
 {
-  "name": "@rbxts/tina",
+  "name": "tina",
   "version": "1.0.0",
   "description": "",
   "main": "out/init.lua",
@@ -45,7 +45,8 @@
   },
   "dependencies": {
     "@eslint/github-action": "^0.1.0",
-    "@rbxts/rowind-mini": "^1.0.2",
+    "@rbxts/roact": "^1.4.4-ts.0",
+    "@rbxts/rowind-mini": "^1.0.3",
     "@rbxts/services": "^1.5.1",
     "@rbxts/sift": "^0.0.4",
     "@rbxts/t": "^3.1.0",

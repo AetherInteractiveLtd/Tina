@@ -2,7 +2,13 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import { Component, ComponentInternalCreation, TagComponent, Tree, Type } from "./lib/ecs/component";
+import {
+	Component,
+	ComponentInternalCreation,
+	TagComponent,
+	Tree,
+	Type,
+} from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 /* Networking namespace */
 import { EventListener } from "./lib/events";
@@ -14,6 +20,7 @@ import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+import { ConsoleConfig } from "./lib/ui/Console";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
 
@@ -76,10 +83,12 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
+	export function setUserClass(
+		userClass: new (ref: Player | number) => DefaultUserDeclaration,
+	): void {
 		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
-		log.log("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
+		log.debug("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -105,6 +114,10 @@ namespace Tina {
 
 	export const log: Scope = Logger.scope("TINA");
 
+	export function activateConsole(): typeof ConsoleConfig {
+		return ConsoleConfig;
+	}
+
 	/**
 	 * Used to connect to Tina's internal events, such as when a user is registered, etc.
 	 *
@@ -113,7 +126,9 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(
 		event: T,
-	): EventListener<[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]> {
+	): EventListener<
+		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
+	> {
 		return TinaEvents.addEventListener(event);
 	}
 
