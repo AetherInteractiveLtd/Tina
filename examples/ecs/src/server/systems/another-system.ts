@@ -1,9 +1,7 @@
 import { RunService } from "@rbxts/services";
-import { ALL, Query, System, World } from "@rbxts/tina";
+import { ALL, EntityId, Observer, Query, System, World } from "@rbxts/tina";
 import { Position } from "server/components/Position";
 import { Velocity } from "server/components/Velocity";
-
-import { OtherSystem } from "./another-system";
 
 const position = Position.value;
 const velocity = Velocity.value;
@@ -15,21 +13,20 @@ let id = 0;
  *
  * This system updates an entities Position and Velocity every frame.
  */
-export const BasicSystem = new (class BasicSystem extends System {
+export const OtherSystem = new (class OtherSystem extends System {
 	private movementQuery!: Query;
+
+	private positionChanged!: Observer<Position>;
 
 	constructor() {
 		super();
 
-		/*
+		/**
 		 * We can set the execution group of a system to any signal with a
 		 * .connect event. Every time this signal is fired, the `onUpdate`
 		 * method of the system will automatically be called.
 		 */
 		this.executionGroup = RunService.Heartbeat;
-
-		/* We want to ensure that this system runs after the OtherSystem */
-		this.after = [OtherSystem];
 	}
 
 	/**
@@ -47,7 +44,8 @@ export const BasicSystem = new (class BasicSystem extends System {
 			.addComponent(id, Position, { value: new Vector3(0, 0, 0) })
 			.addComponent(id, Velocity, { value: new Vector3(1, 2, 3) });
 
-		this.movementQuery = world.createQuery(ALL(Position, Velocity));
+		this.movementQuery = world.createQuery(ALL(Position));
+		this.positionChanged = world.createObserver(Position);
 	}
 
 	/**
@@ -57,5 +55,22 @@ export const BasicSystem = new (class BasicSystem extends System {
 		this.movementQuery.forEach(entityId => {
 			position[entityId] = position[entityId].add(velocity[entityId]);
 		});
+
+		this.movementQuery.enteredQuery(entityId => this.positionOnAdded(entityId));
+		this.positionChanged.forEach(entityId => this.positionOnChanged(entityId));
+	}
+
+	/**
+	 * This method is called when any entity gains a position component.
+	 */
+	private positionOnAdded(_entityId: EntityId): void {
+		// We could perform some setup logic here.
+	}
+
+	/**
+	 * This method is called when any entity's position component is changed.
+	 */
+	private positionOnChanged(_entityId: EntityId): void {
+		// ...
 	}
 })();

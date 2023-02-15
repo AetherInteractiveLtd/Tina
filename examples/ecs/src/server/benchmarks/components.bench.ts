@@ -1,12 +1,7 @@
 import Sift from "@rbxts/sift";
-import { World } from "@rbxts/tina";
-import {
-	ComponentInternal,
-	ComponentTypes,
-	createComponent,
-	GetComponentSchema,
-} from "@rbxts/tina/out/lib/ecs/component";
-import { getNextComponentId } from "@rbxts/tina/out/lib/ecs/entity-manager";
+import Tina from "@rbxts/tina";
+import { ComponentInternal, ComponentTypes, GetComponentSchema } from "@rbxts/tina/out/lib/ecs/component";
+import { getNextComponentId, internal_resetGlobalState } from "@rbxts/tina/out/lib/ecs/entity-manager";
 import { EntityId } from "@rbxts/tina/out/lib/types/ecs";
 
 interface Profiler {
@@ -26,11 +21,11 @@ function createNewComponent<T extends object>(schema: T): TempComp<T> {
 	const componentData: Map<EntityId, T> = new Map();
 
 	for (const i of $range(0, N)) {
-		if (i % 5 === 0) {
-			componentData.set(i, schema);
-		} else {
-			componentData.set(i, {} as T);
-		}
+		// if (i % 5 === 0) {
+		componentData.set(i, schema);
+		// } else {
+		// 	componentData.set(i, {} as T);
+		// }
 	}
 
 	return Sift.Dictionary.merge(componentData, {
@@ -54,24 +49,24 @@ function createNewComponent<T extends object>(schema: T): TempComp<T> {
 // 	_Position[index][entityId] = value;
 // };
 
-let _Position = createComponent({
-	x: ComponentTypes.number,
-	y: ComponentTypes.number,
-	z: ComponentTypes.number,
+let _Position = Tina.createComponent({
+	x: ComponentTypes.Number,
+	y: ComponentTypes.Number,
+	z: ComponentTypes.Number,
 
-	// notUsed: ComponentTypes.boolean,
-	// notUsed2: ComponentTypes.string,
+	notUsed: ComponentTypes.Boolean,
+	notUsed2: ComponentTypes.String,
 });
 
 let Position = _Position as ComponentInternal<GetComponentSchema<typeof _Position>>;
 
-let _Velocity = createComponent({
-	x: ComponentTypes.number,
-	y: ComponentTypes.number,
-	z: ComponentTypes.number,
+let _Velocity = Tina.createComponent({
+	x: ComponentTypes.Number,
+	y: ComponentTypes.Number,
+	z: ComponentTypes.Number,
 
-	// notUsed: ComponentTypes.boolean,
-	// notUsed2: ComponentTypes.string,
+	notUsed: ComponentTypes.Boolean,
+	notUsed2: ComponentTypes.String,
 });
 
 let Velocity = _Position as ComponentInternal<GetComponentSchema<typeof _Position>>;
@@ -79,38 +74,37 @@ let Velocity = _Position as ComponentInternal<GetComponentSchema<typeof _Positio
 let PositionComponentForEntity: TempComp<{ x: number; y: number; z: number }>;
 let VelocityComponentForEntity: TempComp<{ x: number; y: number; z: number }>;
 
+let world = Tina.createWorld({});
+
 export = {
-	ParameterGenerator: () => {
-		const world = new World({});
-		world.start();
+	ParameterGenerator: (): void => {
+		internal_resetGlobalState();
 
-		_Position = createComponent({
-			x: ComponentTypes.number,
-			y: ComponentTypes.number,
-			z: ComponentTypes.number,
+		world.flush();
 
-			notUsed: ComponentTypes.boolean,
-			notUsed2: ComponentTypes.string,
+		world = Tina.createWorld({});
+
+		_Position = Tina.createComponent({
+			x: ComponentTypes.Number,
+			y: ComponentTypes.Number,
+			z: ComponentTypes.Number,
+
+			notUsed: ComponentTypes.Boolean,
+			notUsed2: ComponentTypes.String,
 		});
 
 		Position = _Position as ComponentInternal<GetComponentSchema<typeof _Position>>;
 
-		_Velocity = createComponent({
-			x: ComponentTypes.number,
-			y: ComponentTypes.number,
-			z: ComponentTypes.number,
+		_Velocity = Tina.createComponent({
+			x: ComponentTypes.Number,
+			y: ComponentTypes.Number,
+			z: ComponentTypes.Number,
 
-			notUsed: ComponentTypes.boolean,
-			notUsed2: ComponentTypes.string,
+			notUsed: ComponentTypes.Boolean,
+			notUsed2: ComponentTypes.String,
 		});
 
 		Velocity = _Velocity as ComponentInternal<GetComponentSchema<typeof _Velocity>>;
-
-		// const _Velocity = createComponent({
-		// 	x: ComponentTypes.number,
-		// 	y: ComponentTypes.number,
-		// 	z: ComponentTypes.number,
-		// });
 
 		PositionComponentForEntity = createNewComponent({
 			x: math.random(0, 100),
@@ -124,17 +118,20 @@ export = {
 			z: math.random(0, 100),
 		});
 
+		void world.start();
+
 		for (const i of $range(0, N)) {
 			const id = world.add();
-			if (i % 5 === 0) {
-				world
-					.addComponent(id, Position, {
-						x: math.random(0, 100),
-						y: math.random(0, 100),
-						z: math.random(0, 100),
-					})
-					.addComponent(id, Velocity, { x: 1, y: 2, z: 3 });
-			}
+
+			// if (i % 5 === 0) {
+			world
+				.addComponent(id, Position, {
+					x: 5, // math.random(0, 100),
+					y: math.random(0, 100),
+					z: math.random(0, 100),
+				})
+				.addComponent(id, Velocity, { x: 1, y: 2, z: 3 });
+			// }
 
 			PositionComponentForEntity[i as never] = {
 				x: math.random(0, 100),
@@ -149,10 +146,10 @@ export = {
 			} as never;
 		}
 
+		world.flush();
+
 		// const positionProxy = new PositionProxy();
 		// const velocityProxy = new VelocityProxy();
-
-		return;
 	},
 
 	Functions: {
@@ -173,7 +170,7 @@ export = {
 			const yVel = Velocity.y;
 			const zVel = Velocity.z;
 
-			for (const i of $range(0, N, 5)) {
+			for (const i of $range(0, N)) {
 				xPos[i] += xVel[i];
 				yPos[i] += yVel[i];
 				zPos[i] += zVel[i];
@@ -181,7 +178,7 @@ export = {
 		},
 
 		ComponentAccessEntity: (Profiler: Profiler): void => {
-			for (const i of $range(0, N, 5)) {
+			for (const i of $range(0, N)) {
 				const position = PositionComponentForEntity.get(i)!;
 				const velocity = VelocityComponentForEntity.get(i)!;
 

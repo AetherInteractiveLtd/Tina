@@ -1,15 +1,7 @@
-import { ComponentTypes, createComponent, GetComponentSchema } from "@rbxts/tina/out/lib/ecs/component";
+import Tina, { ComponentTypes, GetComponentSchema } from "@rbxts/tina";
 
-import { Vector3Proxy } from "./Velocity";
-
-export const Position = createComponent({
-	x: ComponentTypes.number,
-	y: ComponentTypes.number,
-	z: ComponentTypes.number,
+export const Position = Tina.createComponent({
+	value: ComponentTypes.Vector3,
 });
 
-export class PositionProxy extends Vector3Proxy {
-	constructor() {
-		super(Position as unknown as GetComponentSchema<typeof Position>, -1);
-	}
-}
+export type Position = GetComponentSchema<typeof Position>;

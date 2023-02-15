@@ -210,11 +210,12 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** ECS Library  */
-export { Component, ComponentTypes } from "./lib/ecs/component";
+export { Component, ComponentTypes, GetComponentSchema } from "./lib/ecs/component";
 export { Observer } from "./lib/ecs/observer";
-export { Query } from "./lib/ecs/query";
+export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
 export { System } from "./lib/ecs/system";
 export { type World } from "./lib/ecs/world";
+export { ComponentId, EntityId } from "./lib/types/ecs";
 
 /** Users namespace */
 export { Users } from "./lib/user";
