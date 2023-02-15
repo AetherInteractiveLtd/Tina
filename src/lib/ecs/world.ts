@@ -13,9 +13,11 @@ import {
 	GetComponentSchema,
 	OptionalKeys,
 	TagComponent,
+	Tree,
+	Type,
 } from "./component";
 import { EntityManager } from "./entity-manager";
-import { ECS, Observer } from "./observer";
+import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
@@ -56,7 +58,7 @@ export class World {
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
-	private observers: Map<AnyComponent, Observer> = new Map();
+	private observers: Map<AnyComponent, Observer<Tree<Type>>> = new Map();
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -69,7 +71,7 @@ export class World {
 	 * Observers that have entities to update.
 	 * @hidden
 	 */
-	public observersToUpdate: Array<[EntityId, Observer, ECS]> = [];
+	public observersToUpdate: Array<[EntityId, Observer<Tree<Type>>]> = [];
 
 	constructor(options?: WorldOptions) {
 		this.options = options ?? {};
@@ -161,7 +163,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver<C extends AnyComponent>(component: C): Observer {
+	public createObserver<C extends AnyComponent>(component: C): Observer<GetComponentSchema<C>> {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 
@@ -647,8 +649,8 @@ export class World {
 	 * @hidden
 	 */
 	private updatePendingObservers(): void {
-		for (const [entityId, observer, ecsType] of this.observersToUpdate) {
-			observer.storage.get(ecsType)!.add(entityId);
+		for (const [entityId, observer] of this.observersToUpdate) {
+			observer.storage.add(entityId);
 		}
 	}
 }

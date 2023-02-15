@@ -3,7 +3,7 @@ import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
 import { getNextComponentId } from "./entity-manager";
-import { ECS, Observer } from "./observer";
+import { Observer } from "./observer";
 
 type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];
@@ -24,7 +24,7 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
 	ComponentIdField & {
-		observers: Array<Observer>;
+		observers: Array<Observer<T>>;
 	};
 
 export type TagComponent = {
@@ -112,20 +112,28 @@ export namespace ComponentInternalCreation {
 	 */
 	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
 		const componentData = createComponentArray<T>(schema as T, 10000);
-		const observers = new Array<Observer>();
+		const observers = new Array<Observer<T>>();
 		return Sift.Dictionary.merge(componentData, {
 			componentId: getNextComponentId(),
 
 			observers: observers,
 
-			// TODO: This currently does not use the component schema properly,
-			// nested objects are not supported.
+			/**
+			 * Sets the data for the given entity.
+			 *
+			 * The set function is used to update any observers that are
+			 * watching the given component. If there are no observers, then it
+			 * is recommended to use the component data directly.
+			 *
+			 * There is no equality check, so it is recommended to only use this
+			 * function when the data has changed.
+			 *
+			 * @param entityId The entity to update.
+			 * @param data The data to update.
+			 */
 			set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
-				// TODO: Look into removing this check to improve performance.
-				// It would be beneficial to just use the component data directly
-				// rather than going through this function.
 				for (const observer of observers) {
-					observer.world.observersToUpdate.push([entityId, observer, ECS.OnChanged]);
+					observer.world.observersToUpdate.push([entityId, observer]);
 				}
 
 				// eslint-disable-next-line roblox-ts/no-array-pairs
