@@ -26,7 +26,7 @@ let autoSaveIndex = 0;
 
 /** Issues registering, etc. */
 export function registerIssue(itemKey: string, issue: string): void {
-	TinaLogger.warn(
+	TinaLogger.log(
 		"[Container]: There was a problem within the item ([%s]), a more detailed message on the issue here: %s".format(
 			itemKey,
 			issue,
@@ -254,11 +254,11 @@ export namespace Data {
 					success === false && string.find(message as string, "ConnectFail", 1, true)[0] !== undefined;
 
 				if (noInternet === true) {
-					TinaLogger.warn("[Container]: No internet connection, check your network.");
+					TinaLogger.log("[Container]: No internet connection, check your network.");
 				} else if (success === false && string.find(message as string, "403")[0]) {
-					TinaLogger.warn("[Container]: API Services unavailable, please check your settings.");
+					TinaLogger.log("[Container]: API Services unavailable, please check your settings.");
 				} else if (success === false && string.find(message as string, "must publish", 1, true)[0]) {
-					TinaLogger.warn("[Container]: Game needs to be published for testing.");
+					TinaLogger.log("[Container]: Game needs to be published for testing.");
 				}
 
 				Data.servicesAvailable = false;

@@ -1,6 +1,6 @@
 type LoggerFunction = (message: string) => void;
 
-class Scope {
+export class Scope {
 	private handler?: LoggerFunction;
 	private maxMessages: number;
 	private messages: Array<string> = [];
@@ -21,12 +21,13 @@ class Scope {
 		}
 	}
 
-	public log(message: string): this {
-		this.messages.unshift(message);
+	public log(...message: Array<defined>): this {
+		const msg = message.map(v => tostring(v)).join(" ");
+		this.messages.unshift(msg);
 		this.trimMessages();
 
 		/* Pass message into custom handler */
-		this.handler?.(message);
+		this.handler?.(msg);
 
 		return this;
 	}

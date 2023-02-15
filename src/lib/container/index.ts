@@ -12,7 +12,7 @@ export namespace Container {
 		if (buckets.has(bucketKey) === true) {
 			bucket = buckets.get(bucketKey)! as BucketType<T>;
 		} else {
-			if (template === undefined) TinaLogger.error("[Container]: Can't create Bucket without a template");
+			if (template === undefined) TinaLogger.log("[Container]: Can't create Bucket without a template");
 
 			bucket = new Bucket(bucketKey, template!);
 			buckets.set(bucketKey, bucket);

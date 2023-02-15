@@ -5,7 +5,7 @@ import TinaGame from "./lib/core/game";
 /* Networking namespace */
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
-import { Scope } from "./lib/logger";
+import { Logger, Scope } from "./lib/logger/Logger";
 import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
@@ -45,8 +45,6 @@ namespace Tina {
 			Identifiers._init();
 		}
 
-		Logger.setName(name);
-
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
 		return new TinaGame();
 	}
@@ -79,7 +77,7 @@ namespace Tina {
 	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
 		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
-		Logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
+		log.log("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -103,7 +101,7 @@ namespace Tina {
 		return new Process(name, Scheduler);
 	}
 
-	export const Logger = new Scope("unnamed");
+	export const log: Scope = Logger.scope("TINA");
 
 	/**
 	 * Used to connect to Tina's internal events, such as when a user is registed, etc.

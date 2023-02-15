@@ -1,3 +1,3 @@
-import { Scope } from "../logger";
+import { Logger } from "../logger/Logger";
 
-export = new Scope("TinaInternal", false);
+export = Logger.scope("TINA_INTERNAL");
