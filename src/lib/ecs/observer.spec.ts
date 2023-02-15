@@ -2,7 +2,6 @@
 
 import { ComponentInternalCreation, ComponentTypes } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
-import { ECS } from "./observer";
 import { World } from "./world";
 
 function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
@@ -25,7 +24,7 @@ export = (): void => {
 				x: ComponentTypes.Number,
 			});
 
-			const observer = world.createObserver(component).event(ECS.OnChanged);
+			const observer = world.createObserver(component);
 
 			const id = world.add();
 			world.addComponent(id, component);
@@ -64,7 +63,7 @@ export = (): void => {
 				y: ComponentTypes.Number,
 			});
 	
-			const observer = world.createObserver(component).with(component2).event(ECS.OnChanged);
+			const observer = world.createObserver(component).with(component2);
 
 			const id = world.add();
 			const id2 = world.add();
