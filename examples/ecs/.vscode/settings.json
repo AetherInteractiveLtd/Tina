@@ -3,10 +3,7 @@
 	"files.eol": "\n",
 	"[typescript]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
-		"editor.formatOnSave": true,
-		"editor.codeActionsOnSave": {
-			"source.fixAll": true
-		}
+		"editor.formatOnSave": true
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
@@ -14,4 +11,8 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
+	"C_Cpp.errorSquiggles": "Disabled",
+	"cSpell.words": [
+		"rbxts"
+	]
 }

@@ -1,12 +1,15 @@
 import { EventEmitter } from "../../../events";
-import { TableUtil } from "../../../utilities/tables";
-import TinaLogger from "../../../utilities/TinaLogger";
+import { TableUtil } from "../../../util/tables";
+import TinaLogger from "../../../util/TinaLogger";
 import { Data } from "../../data_actions";
 import { Metadata, Template } from "../../types";
 import { BucketType } from "../bucket/types";
 import { ItemDeclaration, ItemEvents, ItemImplementation } from "./types";
 
-export class Item<T extends Template> extends EventEmitter<ItemEvents<T>> implements ItemImplementation {
+export class Item<T extends Template>
+	extends EventEmitter<ItemEvents<T>>
+	implements ItemImplementation
+{
 	public key: string;
 	public keyInfo: DataStoreKeyInfo;
 	public data: T;
@@ -39,7 +42,9 @@ export class Item<T extends Template> extends EventEmitter<ItemEvents<T>> implem
 		const userIdIndex = this.userIds.indexOf(userId);
 
 		if (userIdIndex === undefined) {
-			TinaLogger.log("The user id provided doesnt exists on the array, can't delete something isn't there.");
+			TinaLogger.log(
+				"The user id provided doesnt exists on the array, can't delete something isn't there.",
+			);
 		} else {
 			this.userIds.remove(userIdIndex);
 		}
