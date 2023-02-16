@@ -42,7 +42,7 @@ namespace Tina {
 	 * @param name Name of the game
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
-	export function registerGame(name: string): TinaGame {
+	export function registerGame(_name: string): TinaGame {
 		{
 			if (isServer) {
 				Server._init();

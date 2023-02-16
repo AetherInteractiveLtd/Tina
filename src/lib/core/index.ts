@@ -9,6 +9,6 @@ class TinaCore extends EventEmitter<CoreEvents> {}
 
 const c = new TinaCore();
 
-c.when("player:added").do((player: DefaultUserDeclaration) => {});
+c.when("player:added").do((_player: DefaultUserDeclaration) => {});
 
 export default TinaCore;

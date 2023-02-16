@@ -21,4 +21,5 @@ export interface POSTClientObjectImplementation<T> {
 	send(toSend: T): void;
 }
 
-export declare type POSTDeclaration<T> = POSTServerObjectImplementation<T> & POSTClientObjectImplementation<T>;
+export declare type POSTDeclaration<T> = POSTServerObjectImplementation<T> &
+	POSTClientObjectImplementation<T>;
