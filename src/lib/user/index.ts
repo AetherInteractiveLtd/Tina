@@ -16,7 +16,9 @@ export namespace Users {
 	 * @hidden
 	 * @param userClass the new user-defined User class.
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
+	export function setUserClass(
+		userClass: new (ref: Player | number) => DefaultUserDeclaration,
+	): void {
 		tina_user_class = userClass;
 	}
 

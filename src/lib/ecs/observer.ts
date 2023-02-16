@@ -7,6 +7,7 @@ type ChangeStorage<T extends Tree<Type>> = {
 	new: GetComponentSchema<T> | undefined;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type PickOne<T> = {
 	[P in keyof T]: Record<P, T[P]> & Partial<Record<Exclude<keyof T, P>, undefined>>;
 }[keyof T];

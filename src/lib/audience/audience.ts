@@ -7,7 +7,9 @@ export class Audience implements AudienceDeclaration {
 	public list(audience: Array<DefaultUserDeclaration> | Array<Player>): AudienceDeclaration {
 		for (const viewer of audience) {
 			this.listed.push(
-				typeOf(viewer) === "Instance" ? (viewer as Player) : (viewer as DefaultUserDeclaration).player,
+				typeOf(viewer) === "Instance"
+					? (viewer as Player)
+					: (viewer as DefaultUserDeclaration).player,
 			);
 		}
 

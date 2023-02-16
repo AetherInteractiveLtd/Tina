@@ -2,7 +2,7 @@ export interface ClientUserImplementation {
 	player: Player;
 
 	/**
-	 * Sets a character cframe to the provided CFrame/BasePart's CFrame.
+	 * Sets a character CFrame to the provided CFrame/BasePart's CFrame.
 	 *
 	 * @client
 	 *

@@ -20,7 +20,9 @@ export namespace FunctionUtil {
 
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
-			acquireRunnerThreadAndCallEventHandler(...(coroutine.yield() as unknown as [Callback, Array<unknown>]));
+			acquireRunnerThreadAndCallEventHandler(
+				...(coroutine.yield() as unknown as [Callback, Array<unknown>]),
+			);
 		}
 	}
 

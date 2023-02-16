@@ -57,4 +57,5 @@ export interface GETClientObjectImplementation<S, R> {
 	when(): EventListener<[value: R]>;
 }
 
-export declare type GETDeclaration<S, R> = GETServerObjectImplementation<S, R> & GETClientObjectImplementation<S, R>;
+export declare type GETDeclaration<S, R> = GETServerObjectImplementation<S, R> &
+	GETClientObjectImplementation<S, R>;
