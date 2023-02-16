@@ -91,6 +91,17 @@ export abstract class System {
 	 */
 	public priority = 0;
 
+	constructor(ctor?: Partial<System>) {
+		if (ctor === undefined) {
+			return;
+		}
+
+		this.after = ctor.after;
+		this.executionGroup = ctor.executionGroup;
+		this.name = ctor.name ?? this.name;
+		this.priority = ctor.priority ?? this.priority;
+	}
+
 	/**
 	 * The onUpdate method is called on every execution of this systems
 	 * execution group.
@@ -342,31 +353,6 @@ export class SystemManager {
 	}
 
 	/**
-	 * Runs all systems in a given execution group.
-	 *
-	 * @param executionGroup The execution group to run.
-	 */
-	private runSystems(executionGroup: ExecutionGroup): void {
-		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
-			if (!system.enabled) {
-				return;
-			}
-
-			system.dt = os.clock() - system.lastCalled;
-			system.lastCalled = os.clock();
-
-			debug.profilebegin("system: " + system.name);
-			{
-				this.ensureNoAsync(system, () => {
-					system.onUpdate(this.world /**, ...this.systemArgs */);
-					this.world.flush();
-				});
-			}
-			debug.profileend();
-		}
-	}
-
-	/**
 	 * Connects the execution group to the system manager, and runs all systems
 	 * in that execution group.
 	 */
@@ -448,6 +434,31 @@ export class SystemManager {
 		}
 
 		return system.prepare();
+	}
+
+	/**
+	 * Runs all systems in a given execution group.
+	 *
+	 * @param executionGroup The execution group to run.
+	 */
+	private runSystems(executionGroup: ExecutionGroup): void {
+		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
+			if (!system.enabled) {
+				return;
+			}
+
+			system.dt = os.clock() - system.lastCalled;
+			system.lastCalled = os.clock();
+
+			debug.profilebegin("system: " + system.name);
+			{
+				this.ensureNoAsync(system, () => {
+					system.onUpdate(this.world /**, ...this.systemArgs */);
+					this.world.flush();
+				});
+			}
+			debug.profileend();
+		}
 	}
 
 	/**
