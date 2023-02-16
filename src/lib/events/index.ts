@@ -101,7 +101,9 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	// Use default
 	public when(
 		token: Events extends Default ? void : "Token required when _default is not defined",
-	): typeof token extends void ? EventListener<Events extends Default ? Events["_default"] : never> : never;
+	): typeof token extends void
+		? EventListener<Events extends Default ? Events["_default"] : never>
+		: never;
 
 	// Use key
 	public when<T extends keyof Events>(token: T): EventListener<ArrayOrNever<Events[T]>>;
@@ -132,7 +134,10 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 * @param args of type T which are the parameters passed to the function definition.
 	 * @returns a promise.
 	 */
-	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(token: T, ...args: S): void {
+	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(
+		token: T,
+		...args: S
+	): void {
 		const hasEvent = this.events.has(token);
 		if (!hasEvent) return;
 

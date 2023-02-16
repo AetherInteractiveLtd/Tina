@@ -22,7 +22,9 @@ export namespace TinaEvents {
 	 */
 	export function addEventListener<T extends keyof TinaInternalEvents | keyof Exposed>(
 		to: T,
-	): EventListener<[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]> {
+	): EventListener<
+		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
+	> {
 		const isServer = RunService.IsServer();
 
 		if (isServer) {

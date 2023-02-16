@@ -10,7 +10,9 @@ export class PostEndpoint<T> extends AbstractEndpoint implements POSTDeclaration
 	public when(): EventListener<ServerEvent<T>> {
 		const eventListener: EventListener<ServerEvent<T>> = new EventListener();
 
-		Server.listen(this.id, (player: Player, value: never) => eventListener.call(Users.get(player), value));
+		Server.listen(this.id, (player: Player, value: never) =>
+			eventListener.call(Users.get(player), value),
+		);
 
 		return eventListener;
 	}

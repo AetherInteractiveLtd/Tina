@@ -2,7 +2,13 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import { Component, ComponentInternalCreation, TagComponent, Tree, Type } from "./lib/ecs/component";
+import {
+	Component,
+	ComponentInternalCreation,
+	TagComponent,
+	Tree,
+	Type,
+} from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 /* Networking namespace */
 import { EventListener } from "./lib/events";
@@ -76,7 +82,9 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
+	export function setUserClass(
+		userClass: new (ref: Player | number) => DefaultUserDeclaration,
+	): void {
 		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		log.log("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
@@ -113,7 +121,9 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(
 		event: T,
-	): EventListener<[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]> {
+	): EventListener<
+		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
+	> {
 		return TinaEvents.addEventListener(event);
 	}
 

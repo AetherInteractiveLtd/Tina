@@ -1,4 +1,3 @@
-import { DefaultUserDeclaration } from "../user/default/types";
 import { GetEndpoint } from "./classes/methods/get";
 import { GETDeclaration } from "./classes/methods/get/types";
 import { PostEndpoint } from "./classes/methods/post";
@@ -72,7 +71,9 @@ export namespace Network {
 	 *
 	 * @param repository your repository.
 	 */
-	export function repository<T extends BaseRepository>(repository: T): RepositoryImplementation<T> {
+	export function repository<T extends BaseRepository>(
+		repository: T,
+	): RepositoryImplementation<T> {
 		return new Repository(repository);
 	}
 }
