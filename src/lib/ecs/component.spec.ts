@@ -106,4 +106,23 @@ export = (): void => {
 			}
 		});
 	});
+
+	describe("a flyweight component should", () => {
+		it("be able to be created", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: ComponentTypes.Number,
+			});
+			expect(component).to.be.ok();
+		});
+
+		it("be able to be given to an entity", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: ComponentTypes.Number,
+			});
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+			expect(world.hasComponent(entity, component)).to.equal(true);
+		});
+	});
 };

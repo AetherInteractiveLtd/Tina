@@ -9,6 +9,7 @@ import { SparseSet } from "./collections/sparse-set";
 import {
 	AnyComponent,
 	AnyComponentInternal,
+	AnyFlyweight,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	GetComponentSchema,
 	OptionalKeys,
@@ -103,6 +104,12 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
+	public addComponent<C extends AnyFlyweight>(entityId: EntityId, component: C): this;
+	public addComponent<C extends AnyComponent>(
+		entityId: EntityId,
+		component: C,
+		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+	): this;
 	public addComponent<C extends AnyComponent>(
 		entityId: EntityId,
 		component: C,
@@ -332,7 +339,7 @@ export class World {
 	 *
 	 * @returns true if the entity has the given component.
 	 */
-	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
+	public hasComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): boolean {
 		const componentId = (component as unknown as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}

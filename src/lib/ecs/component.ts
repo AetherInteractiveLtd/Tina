@@ -2,6 +2,7 @@ import Sift, { None } from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
+import { Immutable } from "../types/readonly";
 import { getNextComponentId } from "./entity-manager";
 import { Observer } from "./observer";
 
@@ -11,6 +12,8 @@ type Mutable<T> = {
 
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
+
+export type AnyFlyweight = Flyweight<Tree<Type>>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
@@ -34,6 +37,12 @@ export type TagComponent = {
 export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
 };
+
+export type Flyweight<T extends Tree<Type>> = Immutable<T> & {
+	set<U extends Partial<OptionalKeys<T>>>(data: U): void;
+};
+
+export type FlyweightInternal<T extends Tree<Type>> = Flyweight<T> & ComponentIdField;
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 
@@ -162,6 +171,35 @@ export namespace ComponentInternalCreation {
 		return {
 			componentId: getNextComponentId(),
 		} as TagComponentInternal;
+	}
+
+	/**
+	 *
+	 * @param schema
+	 *
+	 * @returns
+	 */
+	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
+		return Sift.Dictionary.merge(schema, {
+			componentId: getNextComponentId(),
+
+			/**
+			 * Sets the data for the flyweight.
+			 *
+			 * The set function is used to explicitly update the flyweight
+			 * data. This is just a semantic choice to make it clear that the
+			 * flyweight data is being updated, since the data would not
+			 * typically changed that often.
+			 *
+			 * @param data The data to update.
+			 */
+			set<U extends Partial<OptionalKeys<T>>>(data: U): void {
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key, value] of pairs(data)) {
+					schema[key as never] = value as never;
+				}
+			},
+		}) as FlyweightInternal<T>;
 	}
 }
 
