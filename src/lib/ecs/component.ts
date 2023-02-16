@@ -174,10 +174,16 @@ export namespace ComponentInternalCreation {
 	}
 
 	/**
+	 * Creates a flyweight component; a component that holds data that is
+	 * shared between all entities that have the component.
 	 *
-	 * @param schema
+	 * Flyweight components are useful for minimizing memory usage by only
+	 * storing one set of data for a given component. Rather than having an
+	 * array of data for each entity, there is only a single set of data.
 	 *
-	 * @returns
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A flyweight component.
 	 */
 	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
 		return Sift.Dictionary.merge(schema, {
