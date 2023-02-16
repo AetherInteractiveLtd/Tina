@@ -16,7 +16,9 @@ export namespace Users {
 	 * @hidden
 	 * @param userClass the new user-defined User class.
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => DefaultUserDeclaration): void {
+	export function setUserClass(
+		userClass: new (ref: Player | number) => DefaultUserDeclaration,
+	): void {
 		tina_user_class = userClass;
 	}
 
@@ -61,6 +63,15 @@ export namespace Users {
 	}
 
 	/**
+	 * @hidden
+	 */
+	export function setupEvents(): void {
+		TinaNet.getInternal("user:get").reply(user => {
+			return user;
+		});
+	}
+
+	/**
 	 * Events related to user creation
 	 */
 	{
@@ -87,13 +98,6 @@ export namespace Users {
 				}
 
 				return users.delete(player);
-			});
-
-			/**
-			 * User being retrieved
-			 */
-			TinaNet.getInternal("user:get").reply(user => {
-				return user;
 			});
 		}
 	}
