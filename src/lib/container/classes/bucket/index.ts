@@ -30,11 +30,17 @@ export class Bucket<T extends Template> implements BucketImplementation<T> {
 		);
 
 		if (this.template === undefined) {
-			registerIssue(itemKey, "There wasn't a Bucket template provided, please provide a template.");
+			registerIssue(
+				itemKey,
+				"There wasn't a Bucket template provided, please provide a template.",
+			);
 		}
 
 		if (this.items.has(itemKey) === true) {
-			registerIssue(itemKey, "Item was already loaded, you can't load the Item more than one time per session.");
+			registerIssue(
+				itemKey,
+				"Item was already loaded, you can't load the Item more than one time per session.",
+			);
 
 			return;
 		}

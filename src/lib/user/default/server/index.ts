@@ -7,7 +7,9 @@ export class ServerUser implements ServerUserImplementation {
 
 	constructor(private ref: Player | number) {
 		this.player = (
-			typeOf(this.ref) === "number" ? Players.GetPlayerByUserId(this.ref as number) : (this.ref as Player)
+			typeOf(this.ref) === "number"
+				? Players.GetPlayerByUserId(this.ref as number)
+				: (this.ref as Player)
 		)!;
 	}
 
@@ -20,11 +22,11 @@ export class ServerUser implements ServerUserImplementation {
 			if (friendsPages !== undefined) {
 				do {
 					for (const page of friendsPages.GetCurrentPage()) {
-						if (onlineOnly && page.IsOnline) {
-							friends.set(page.Username, page);
-						} else if (onlineOnly === undefined) {
-							friends.set(page.Username, page);
-						}
+						// if (onlineOnly && page.IsOnline) {
+						friends.set(page.Username, page);
+						// } else if (onlineOnly === undefined) {
+						//	friends.set(page.Username, page);
+						// }
 					}
 
 					friendsPages.AdvanceToNextPageAsync();
@@ -32,7 +34,8 @@ export class ServerUser implements ServerUserImplementation {
 			}
 		} catch (e) {
 			warn(
-				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s${onlineOnly === true ? " online" : ""
+				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s${
+					onlineOnly === true ? " online" : ""
 				} friends. More information: ${e}`,
 			);
 		}
@@ -69,7 +72,10 @@ export class ServerUser implements ServerUserImplementation {
 		return friends;
 	}
 
-	public async teleport(placeId: number, options?: TeleportOptions | undefined): Promise<TeleportAsyncResult> {
+	public async teleport(
+		placeId: number,
+		options?: TeleportOptions | undefined,
+	): Promise<TeleportAsyncResult> {
 		return TeleportService.TeleportAsync(placeId, [this.player], options);
 	}
 }

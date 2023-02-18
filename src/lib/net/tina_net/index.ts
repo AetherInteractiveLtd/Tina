@@ -23,11 +23,15 @@ export namespace TinaNet {
 		return (routerType === "internal" ? internalRouter : exposedRouter) as never;
 	}
 
-	export function getExposed<T extends keyof Exposed, U extends ExposedEndpoints[T]>(route: T): U {
+	export function getExposed<T extends keyof Exposed, U extends ExposedEndpoints[T]>(
+		route: T,
+	): U {
 		return exposedRouter.dir(route as T) as never;
 	}
 
-	export function getInternal<T extends keyof Internals, U extends InternalEndpoints[T]>(route: T): U {
+	export function getInternal<T extends keyof Internals, U extends InternalEndpoints[T]>(
+		route: T,
+	): U {
 		return internalRouter.dir(route as T) as never;
 	}
 }

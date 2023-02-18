@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Template = { [x: string]: any };
 
 export type Metadata = {
