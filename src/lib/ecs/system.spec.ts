@@ -36,6 +36,23 @@ export = (): void => {
 		manager = new SystemManager(world);
 	});
 	describe("A system should", () => {
+		it("be able to be created using its constructor", () => {
+			const system = new (class ExampleSystem extends System {
+				constructor() {
+					super({
+						name: "ASystemWithAName",
+						priority: 1000,
+					});					
+				}
+
+				public onUpdate(): void {}
+			})();
+
+			expect(system).to.be.ok();
+			expect(system.name).to.equal("ASystemWithAName");
+			expect(system.priority).to.equal(1000);
+		});
+
 		// FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
