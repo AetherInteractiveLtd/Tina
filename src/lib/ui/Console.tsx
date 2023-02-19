@@ -126,7 +126,7 @@ export class Console extends Roact.Component<
 	public render(): Roact.Element {
 		const flareData: Array<string> = ["B", "Beans", "Woop Woop Fuckers"];
 
-		return this.visible ? (
+		return !this.visible ? (
 			<></>
 		) : (
 			<Div
