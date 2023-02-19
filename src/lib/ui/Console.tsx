@@ -12,6 +12,34 @@ export namespace ConsoleConfig {
 			`${math.floor(rgb.B * 255)})`;
 		return ConsoleConfig;
 	}
+
+	let tree: Roact.Tree;
+	let setVisible: (visible: boolean) => void;
+
+	export function startConsole(parent: Instance): void {
+		tree = Roact.mount(
+			<screengui DisplayOrder={9999}>
+				<Console
+					getSetVisible={(_setVisible): void => {
+						setVisible = _setVisible;
+					}}
+				/>
+			</screengui>,
+			parent,
+		);
+	}
+
+	export function showConsole(): void {
+		setVisible(true);
+	}
+
+	export function hideConsole(): void {
+		setVisible(false);
+	}
+
+	export function deconstructConsole(): void {
+		Roact.unmount(tree);
+	}
 }
 
 function getTimeString(): string {
@@ -79,12 +107,17 @@ function getBounds(text: string, font: Font, size: number, width: number): Vecto
 	return bounds;
 }
 
-export class Console extends Roact.Component<{}, {}> {
+export class Console extends Roact.Component<
+	{ getSetVisible: (setVisible: (visible: boolean) => void) => void },
+	{}
+> {
 	private isResizing = false;
+
+	public visible = true;
 
 	private portionOfScreen = 100;
 
-	constructor(props: {}) {
+	constructor(props: { getSetVisible: (setVisible: (visible: boolean) => void) => void }) {
 		super(props);
 	}
 
@@ -93,9 +126,9 @@ export class Console extends Roact.Component<{}, {}> {
 	public render(): Roact.Element {
 		const flareData: Array<string> = ["B", "Beans", "Woop Woop Fuckers"];
 
-		print(this.portionOfScreen);
-
-		return (
+		return this.visible ? (
+			<></>
+		) : (
 			<Div
 				className={`anchor-0-1 y-100% w-100% h-${
 					this.portionOfScreen * 0.01 * (Workspace.CurrentCamera?.ViewportSize.Y ?? 0) >
@@ -195,12 +228,16 @@ export class Console extends Roact.Component<{}, {}> {
 		});
 
 		Logger.consumeAll((severity, message, source, scopeStack) => {
-			print(severity, message, scopeStack, source);
 			this.consoleMessages.push([
 				severity as 0 | 1 | 2 | 3,
 				writeFormat(severity as 0 | 1 | 2 | 3, scopeStack, message),
 				source,
 			]);
+			this.setState({});
+		});
+
+		this.props.getSetVisible((visible: boolean) => {
+			this.visible = visible;
 			this.setState({});
 		});
 	}

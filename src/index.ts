@@ -1,4 +1,4 @@
-import { RunService } from "@rbxts/services";
+import { Players, RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
@@ -31,6 +31,10 @@ export enum Protocol {
 	NET = "NET",
 }
 
+let hasBeenRegistered = false;
+
+ConsoleConfig.startConsole(Players.GetPlayers()[0].WaitForChild("PlayerGui"));
+
 namespace Tina {
 	const isClient = RunService.IsClient();
 	const isServer = RunService.IsServer();
@@ -44,6 +48,8 @@ namespace Tina {
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
 	export function registerGame(name: string): TinaGame {
+		if (hasBeenRegistered) throw error("e");
+
 		{
 			if (isServer) {
 				Server._init();
@@ -111,6 +117,8 @@ namespace Tina {
 
 		return new Process(name, Scheduler);
 	}
+
+	export function flare(name: string): void {}
 
 	export const log: Scope = Logger.scope("TINA");
 
