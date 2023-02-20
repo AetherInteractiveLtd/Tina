@@ -49,6 +49,6 @@
     "@rbxts/services": "^1.5.1",
     "@rbxts/sift": "^0.0.4",
     "@rbxts/t": "^3.1.0",
-    "roblox-ts": "^2.0.4"
+    "roblox-ts": "^2.1.0"
   }
 }
