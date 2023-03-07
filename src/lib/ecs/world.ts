@@ -186,7 +186,10 @@ export class World {
 	 *
 	 * @returns A new {@link Query}.
 	 */
-	public createQuery(arg: RawQuery | AnyComponent, ...raw: Array<RawQuery>): Query {
+	public createQuery(
+		arg: RawQuery | AnyComponent | TagComponent,
+		...raw: Array<RawQuery>
+	): Query {
 		let query: Query;
 
 		debug.profilebegin("World:createQuery");
