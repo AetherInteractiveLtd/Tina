@@ -9,8 +9,8 @@ type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
-export type AnyComponent = Component<Tree<Type>> | TagComponent;
-export type AnyComponentInternal = ComponentInternal<Tree<Type>> | TagComponentInternal;
+export type AnyComponent = Component<Tree<Type>>;
+export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
