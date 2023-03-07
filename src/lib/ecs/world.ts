@@ -116,7 +116,7 @@ export class World {
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = (component as unknown as AnyComponentInternal).componentId;
+			const componentId = (component as AnyComponentInternal).componentId;
 			if (
 				!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
@@ -145,7 +145,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		return this.addComponent(entityId, tag as unknown as AnyComponent);
+		return this.addComponent(entityId, tag as AnyComponent);
 	}
 
 	/**
@@ -333,7 +333,7 @@ export class World {
 	 * @returns true if the entity has the given component.
 	 */
 	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
-		const componentId = (component as unknown as AnyComponentInternal).componentId;
+		const componentId = (component as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
@@ -364,7 +364,7 @@ export class World {
 	 * @returns True if the entity has the tag.
 	 */
 	public hasTag<C extends TagComponent>(entityId: EntityId, tag: C): boolean {
-		return this.hasComponent(entityId, tag as unknown as AnyComponent);
+		return this.hasComponent(entityId, tag as AnyComponent);
 	}
 
 	/**
@@ -417,7 +417,7 @@ export class World {
 
 		debug.profilebegin("World:removeComponent");
 		{
-			const componentId = (component as unknown as AnyComponentInternal).componentId;
+			const componentId = (component as AnyComponentInternal).componentId;
 			if (
 				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
@@ -462,7 +462,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		return this.removeComponent(entityId, tag as unknown as AnyComponent);
+		return this.removeComponent(entityId, tag as AnyComponent);
 	}
 
 	/**

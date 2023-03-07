@@ -1,5 +1,5 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent, Component, GetComponentSchema, Tree, Type } from "./component";
+import { AnyComponent, GetComponentSchema, Tree, Type } from "./component";
 import { World } from "./world";
 
 type ChangeStorage<T extends Tree<Type>> = {
@@ -33,6 +33,12 @@ type PickOne<T> = {
 export class Observer<T extends Tree<Type>> {
 	/** A set of components that must match for an entity to be valid. */
 	private requiredComponents: Array<AnyComponent> = [];
+	/**
+	 * TODO: It would be nice to get the "old" data when we observe the change.
+	 * How can we do this? We can't just have a copy of the data because it is
+	 * not stored together.
+	 * @hidden */
+	private testStorage: Map<EntityId, ChangeStorage<T>> = new Map();
 
 	/** The world this observer belongs to. */
 	public readonly world: World;
@@ -50,14 +56,7 @@ export class Observer<T extends Tree<Type>> {
 	 */
 	public storage: Set<EntityId> = new Set();
 
-	/**
-	 * TODO: It would be nice to get the "old" data when we observe the change.
-	 * How can we do this? We can't just have a copy of the data because it is
-	 * not stored together.
-	 * @hidden */
-	private testStorage: Map<EntityId, ChangeStorage<T>> = new Map();
-
-	constructor(world: World, component: Component<T>) {
+	constructor(world: World, component: AnyComponent) {
 		this.world = world;
 		this.primaryComponent = component;
 	}
