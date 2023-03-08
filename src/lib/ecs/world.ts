@@ -627,8 +627,6 @@ export class World {
 			query.entered.add(entityId);
 		}
 
-		print(newArchetype.queries);
-
 		this.entityManager.updateTo[entityId] = newArchetype;
 	}
 
