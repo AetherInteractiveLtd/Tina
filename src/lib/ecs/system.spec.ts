@@ -370,6 +370,29 @@ export = (): void => {
 
 			expect(callCount).to.equal(1);
 		});
+
+		it("should not be called more than once if a system is scheduled later", () => {
+			let callCount = 0;
+
+			const system = createSystem();
+			system.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			const system2 = createSystem();
+			system2.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystem(system);
+			manager.scheduleSystem(system2);
+
+			manager.start();
+			
+			bindableEvent.Fire();
+			expect(callCount).to.equal(2);
+
+		});
 	});
 
 	afterAll(() => {

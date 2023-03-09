@@ -202,7 +202,7 @@ export class SystemManager {
 				this.systems.push(system);
 			}
 
-			this.sortSystems();
+			this.sortSystems(systems);
 
 			/**
 			 * If the system manager has already started, we go through the
@@ -483,10 +483,10 @@ export class SystemManager {
 	/**
 	 * Internally sorts all systems by the given set of requirements.
 	 */
-	private sortSystems(): void {
+	private sortSystems(systems: Array<System>): void {
 		debug.profilebegin("SystemManager:sortSystems");
 		{
-			for (const system of this.systems) {
+			for (const system of systems) {
 				this.systemsByExecutionGroup
 					.get(system.executionGroup ?? this.executionDefault)
 					?.push(system);
