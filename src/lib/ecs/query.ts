@@ -183,7 +183,7 @@ export class Query {
 	 */
 	public enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
 		for (const entityId of this.entered.dense) {
-			if (!callback(entityId)) {
+			if (callback(entityId) === false) {
 				break;
 			}
 		}
@@ -209,7 +209,7 @@ export class Query {
 	 */
 	public exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
 		for (const entityId of this.exited.dense) {
-			if (!callback(entityId)) {
+			if (callback(entityId) === false) {
 				break;
 			}
 		}
@@ -235,7 +235,7 @@ export class Query {
 	public forEach(callback: (entityId: EntityId) => boolean | void): void {
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
-				if (!callback(entityId)) {
+				if (callback(entityId) === false) {
 					return;
 				}
 			}
