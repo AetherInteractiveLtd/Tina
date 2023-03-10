@@ -14,7 +14,6 @@ import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import { Logger, Scope } from "./lib/logger/Logger";
-import { Network } from "./lib/net";
 import { TinaNet } from "./lib/net/tina_net";
 import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";

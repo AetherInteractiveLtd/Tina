@@ -80,6 +80,7 @@ export namespace Users {
 				const user = users.get(player);
 
 				if (user !== undefined) {
+					/* empty */
 				}
 
 				return users.delete(player);
