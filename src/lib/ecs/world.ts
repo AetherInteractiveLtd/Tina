@@ -109,29 +109,25 @@ export class World {
 		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
 	): this {
 		if (!this.has(entityId)) {
-			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
 		}
 
 		this.componentsToUpdate.add(entityId);
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = (component as unknown as AnyComponentInternal).componentId;
+			const componentId = (component as AnyComponentInternal).componentId;
 			if (
 				!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
-				this.entityManager.updateTo[entityId] = this.archetypeChange(
-					this.entityManager.updateTo[entityId],
-					componentId,
-					entityId,
-				);
+				this.updateArchetype(entityId, componentId);
+
+				if (data !== undefined) {
+					component.set(entityId, data);
+				}
 			}
 		}
 		debug.profileend();
-
-		if (data !== undefined) {
-			component.set(entityId, data);
-		}
 
 		return this;
 	}
@@ -186,7 +182,10 @@ export class World {
 	 *
 	 * @returns A new {@link Query}.
 	 */
-	public createQuery(arg: RawQuery | AnyComponent, ...raw: Array<RawQuery>): Query {
+	public createQuery(
+		arg: RawQuery | AnyComponent | TagComponent,
+		...raw: Array<RawQuery>
+	): Query {
 		let query: Query;
 
 		debug.profilebegin("World:createQuery");
@@ -333,7 +332,7 @@ export class World {
 	 * @returns true if the entity has the given component.
 	 */
 	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
-		const componentId = (component as unknown as AnyComponentInternal).componentId;
+		const componentId = (component as AnyComponentInternal).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
@@ -410,22 +409,18 @@ export class World {
 	 */
 	public removeComponent(entityId: EntityId, component: AnyComponent): this {
 		if (!this.has(entityId)) {
-			throw error(`Entity ${entityId} does not exist in world ${tostring(this)}`);
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
 		}
 
 		this.componentsToUpdate.add(entityId);
 
 		debug.profilebegin("World:removeComponent");
 		{
-			const componentId = (component as unknown as AnyComponentInternal).componentId;
+			const componentId = (component as AnyComponentInternal).componentId;
 			if (
 				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
-				this.entityManager.updateTo[entityId] = this.archetypeChange(
-					this.entityManager.updateTo[entityId],
-					componentId,
-					entityId,
-				);
+				this.updateArchetype(entityId, componentId);
 			}
 		}
 		debug.profileend();
@@ -566,26 +561,10 @@ export class World {
 	 *
 	 * @returns
 	 */
-	private archetypeChange(
-		arch: Archetype,
-		componentId: ComponentId,
-		entityId: EntityId,
-	): Archetype {
+	private archetypeChange(arch: Archetype, componentId: ComponentId): Archetype {
 		if (!arch.change[componentId]) {
 			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
-
-			arch.queries.forEach(query => {
-				query.entered.remove(entityId);
-				query.exited.add(entityId);
-			});
-
-			const newArchetype = this.getArchetype(arch.mask);
-			newArchetype.queries.forEach(query => {
-				query.exited.remove(entityId);
-				query.entered.add(entityId);
-			});
-
-			arch.change[componentId] = newArchetype;
+			arch.change[componentId] = this.getArchetype(arch.mask);
 			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
 		}
 
@@ -629,6 +608,29 @@ export class World {
 	 */
 	private hasComponentInternal(mask: Array<ComponentId>, componentId: number): boolean {
 		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
+	}
+
+	/**
+	 * Transition an entity from one archetype to another, and update all
+	 * queries accordingly.
+	 *
+	 * @param entityId The id of the entity to transition.
+	 * @param componentId The id of the component to change.
+	 */
+	private updateArchetype(entityId: EntityId, componentId: ComponentId): void {
+		const oldArchetype = this.entityManager.updateTo[entityId];
+		for (const query of oldArchetype.queries) {
+			query.entered.remove(entityId);
+			query.exited.add(entityId);
+		}
+
+		const newArchetype = this.archetypeChange(oldArchetype, componentId);
+		for (const query of newArchetype.queries) {
+			query.exited.remove(entityId);
+			query.entered.add(entityId);
+		}
+
+		this.entityManager.updateTo[entityId] = newArchetype;
 	}
 
 	/**

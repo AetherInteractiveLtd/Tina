@@ -10,7 +10,6 @@ export class SparseSet {
 	/** The elements stored in the sparse set. */
 	public dense: Array<number> = [];
 	/** An array that maps the set's items to their indices in the dense. */
-	// TODO: Should this be preallocated to the universe size?
 	public sparse: Array<number> = [];
 
 	/**

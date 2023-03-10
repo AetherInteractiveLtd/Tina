@@ -23,13 +23,12 @@ interface Identifiers {
 	fromIdentifier: (fullIdentifier: string) => string;
 
 	/**
-	 * Yields current thread waiting for the identifier existance.
+	 * Yields current thread waiting for the identifier existence.
 	 *
 	 * @client
 	 * @client
 	 * @param identifierName identifier to wait for.
 	 */
-	await: (identifierName: string) => string;
 	await: (identifierName: string) => string;
 
 	/**
