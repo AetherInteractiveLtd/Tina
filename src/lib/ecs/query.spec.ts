@@ -128,6 +128,46 @@ export = (): void => {
 			});
 		});
 
+		describe("have a correct size", () => {
+			it("empty", () => {
+				const query = new Query(world, ALL(components[0]));
+				expect(query.size()).to.equal(0);
+			});
+
+			it("multiple entities", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const id1 = tempWorld.add();
+				const id2 = tempWorld.add();
+
+				tempWorld.addComponent(id1, component);
+				tempWorld.addComponent(id2, component);
+
+				tempWorld.flush();
+
+				const query = tempWorld.createQuery(ALL(component));
+				
+				expect(query.size()).to.equal(2);
+
+				tempWorld.removeComponent(id1, component);
+
+				tempWorld.flush();
+
+				expect(query.size()).to.equal(1);
+
+				tempWorld.removeComponent(id2, component);
+
+				tempWorld.flush();
+
+				expect(query.size()).to.equal(0);				
+			});
+		});
+
 		describe("enteredQuery", () => {
 			it("allow for entities to enter the query", () => {
 				internal_resetGlobalState();
