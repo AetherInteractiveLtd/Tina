@@ -257,6 +257,19 @@ export class Query {
 	}
 
 	/**
+	 * @returns the number of entities that currently match the query.
+	 */
+	public size(): number {
+		let size = 0;
+
+		for (const archetype of this.archetypes) {
+			size += archetype.entities.size();
+		}
+
+		return size;
+	}
+
+	/**
 	 * Called when a leaf node is reached in the query mask.
 	 *
 	 * @param target The current remaining mask.
