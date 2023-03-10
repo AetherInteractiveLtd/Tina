@@ -14,4 +14,23 @@
 	},
 	"eslint.run": "onType",
 	"eslint.format.enable": true,
+
+	/**
+	 * Disable any file you don't want to see anymore.
+	 */
+	"files.exclude": {
+		"**/.git": true,
+		"**/.svn": true,
+		"**/.hg": true,
+		"**/CVS": true,
+		"**/.DS_Store": true,
+		"**/Thumbs.db": true,
+
+		"out": true,
+		"include": true,
+
+		"**/node_modules": true,
+		"**/.github": true,
+		"**/assets": true
+	}
 }
