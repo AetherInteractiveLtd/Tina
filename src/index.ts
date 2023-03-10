@@ -15,6 +15,7 @@ import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import { Logger, Scope } from "./lib/logger/Logger";
+import { TinaNet } from "./lib/net/tina_net";
 import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
@@ -32,7 +33,6 @@ export enum Protocol {
 }
 
 namespace Tina {
-	const isClient = RunService.IsClient();
 	const isServer = RunService.IsServer();
 
 	/**
@@ -47,11 +47,15 @@ namespace Tina {
 		{
 			if (isServer) {
 				Server._init();
-			} else if (isClient) {
+			} else {
 				Client._init();
 			}
 
 			Identifiers._init();
+
+			/** Internals set up */
+			TinaNet.setupInternals();
+			Users.setupEvents();
 		}
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.

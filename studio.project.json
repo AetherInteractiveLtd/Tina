@@ -1,5 +1,5 @@
 {
-	"name": "tina-as-game",
+	"name": "tina-tests",
 	"globIgnorePaths": [
 		"**/package.json",
 		"**/tsconfig.json"

@@ -1,6 +1,6 @@
 import { COND } from "../conditions";
 import { Condition } from "../conditions/types";
-import { CondFunc, EventNode } from "./types";
+import { ArrayOrNever, CondFunc, Default, EventNode } from "./types";
 
 export enum EAction {
 	COND = "c",
@@ -65,7 +65,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 			if (_type === EAction.DO) {
 				if (lastCondition === true) {
 					try {
-						lastArgument = handler(...lastArgument) as T;
+						lastArgument = [handler(...lastArgument)] as T;
 					} catch (e) {
 						warn(`[Tina:Event]: There has been an error, more information. ${e}`);
 					}
@@ -83,13 +83,8 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	}
 }
 
-type ArrayOrNever<T> = T extends Array<unknown> ? T : never;
-interface Default {
-	_default: Array<unknown>;
-}
-
 export abstract class EventEmitter<Events extends Default | {}> {
-	protected readonly events: Map<keyof Events, Array<EventListener<[]>>> = new Map();
+	protected readonly events: Record<string, Array<EventListener<[]>>> = {};
 
 	/**
 	 * Lets you listen to a specific event from your Events interface definition.
@@ -97,52 +92,47 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 * @param token as string, should be the event to connect to.
 	 * @returns an EventListener of type T which are the parameters passed to the function.
 	 */
-
-	// Use default
-	public when(
-		token: Events extends Default ? void : "Token required when _default is not defined",
+	public when<T extends keyof Events, U extends Events[T]>(
+		token?: T,
 	): typeof token extends void
 		? EventListener<Events extends Default ? Events["_default"] : never>
-		: never;
+		: EventListener<U extends Array<unknown> ? U : never>;
 
-	// Use key
 	public when<T extends keyof Events>(token: T): EventListener<ArrayOrNever<Events[T]>>;
 
 	// Implementation
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public when(token: any = "_default"): unknown {
-		const hasEvent = this.events.has(token);
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const event = new EventListener<any>();
-		if (!hasEvent) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const eventsArray: Array<EventListener<any>> = [];
+
+	public when(token = "_default"): unknown {
+		const event = new EventListener();
+
+		if (!(token in this.events)) {
+			const eventsArray: Array<EventListener> = [];
 			eventsArray.push(event);
-			this.events.set(token, eventsArray);
+
+			this.events[token] = eventsArray;
 		} else {
-			this.events.get(token)!.push(event);
+			this.events[token].push(event);
 		}
 
 		return event;
 	}
 
 	/**
-	 * @hidden
 	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
 	 *
 	 * @param token event to emit.
 	 * @param args of type T which are the parameters passed to the function definition.
+	 *
 	 * @returns a promise.
 	 */
 	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(
 		token: T,
 		...args: S
 	): void {
-		const hasEvent = this.events.has(token);
-		if (!hasEvent) return;
-
-		for (const thread of this.events.get(token)!) {
-			void thread.call(...args);
+		if (token in this.events) {
+			for (const thread of this.events[token as string]) {
+				void thread.call(...(token === "_default" ? [] : args));
+			}
 		}
 	}
 }

@@ -1,12 +1,12 @@
 import { ComponentId, EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { AnyComponent, AnyComponentInternal } from "./component";
+import { AnyComponent, AnyComponentInternal, TagComponent } from "./component";
 import { World } from "./world";
 
 export type RawQuery =
-	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent> }
-	| { op: typeof NOT; dt: RawQuery | AnyComponent };
+	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent | TagComponent> }
+	| { op: typeof NOT; dt: RawQuery | AnyComponent | TagComponent };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
@@ -30,7 +30,7 @@ type QueryMask = Group | Not | MLeaf;
  *
  * @param components The components or query to match to.
  */
-export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
+export function ALL(...components: Array<RawQuery | AnyComponent | TagComponent>): RawQuery {
 	if (components.size() === 0) {
 		throw "ALL must have at least one component";
 	}
@@ -55,7 +55,7 @@ export function ALL(...components: Array<RawQuery | AnyComponent>): RawQuery {
  *
  * @param components The components or query to match to.
  */
-export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
+export function ANY(...components: Array<RawQuery | AnyComponent | TagComponent>): RawQuery {
 	if (components.size() === 0) {
 		throw "ANY must have at least one component";
 	}
@@ -80,7 +80,7 @@ export function ANY(...components: Array<RawQuery | AnyComponent>): RawQuery {
  *
  * @param components The components or query to match to.
  */
-export function NOT(components: RawQuery | AnyComponent): RawQuery {
+export function NOT(components: RawQuery | AnyComponent | TagComponent): RawQuery {
 	return {
 		op: NOT,
 		dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components),
@@ -183,7 +183,7 @@ export class Query {
 	 */
 	public enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
 		for (const entityId of this.entered.dense) {
-			if (!callback(entityId)) {
+			if (callback(entityId) === false) {
 				break;
 			}
 		}
@@ -209,7 +209,7 @@ export class Query {
 	 */
 	public exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
 		for (const entityId of this.exited.dense) {
-			if (!callback(entityId)) {
+			if (callback(entityId) === false) {
 				break;
 			}
 		}
@@ -235,7 +235,7 @@ export class Query {
 	public forEach(callback: (entityId: EntityId) => boolean | void): void {
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
-				if (!callback(entityId)) {
+				if (callback(entityId) === false) {
 					return;
 				}
 			}
@@ -254,6 +254,19 @@ export class Query {
 				yield entityId;
 			}
 		}
+	}
+
+	/**
+	 * @returns the number of entities that currently match the query.
+	 */
+	public size(): number {
+		let size = 0;
+
+		for (const archetype of this.archetypes) {
+			size += archetype.entities.size();
+		}
+
+		return size;
 	}
 
 	/**

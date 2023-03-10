@@ -91,6 +91,17 @@ export abstract class System {
 	 */
 	public priority = 0;
 
+	constructor(ctor?: Partial<System>) {
+		if (ctor === undefined) {
+			return;
+		}
+
+		this.after = ctor.after;
+		this.executionGroup = ctor.executionGroup;
+		this.name = ctor.name ?? this.name;
+		this.priority = ctor.priority ?? this.priority;
+	}
+
 	/**
 	 * The onUpdate method is called on every execution of this systems
 	 * execution group.
@@ -191,7 +202,7 @@ export class SystemManager {
 				this.systems.push(system);
 			}
 
-			this.sortSystems();
+			this.sortSystems(systems);
 
 			/**
 			 * If the system manager has already started, we go through the
@@ -342,31 +353,6 @@ export class SystemManager {
 	}
 
 	/**
-	 * Runs all systems in a given execution group.
-	 *
-	 * @param executionGroup The execution group to run.
-	 */
-	private runSystems(executionGroup: ExecutionGroup): void {
-		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
-			if (!system.enabled) {
-				return;
-			}
-
-			system.dt = os.clock() - system.lastCalled;
-			system.lastCalled = os.clock();
-
-			debug.profilebegin("system: " + system.name);
-			{
-				this.ensureNoAsync(system, () => {
-					system.onUpdate(this.world /**, ...this.systemArgs */);
-					this.world.flush();
-				});
-			}
-			debug.profileend();
-		}
-	}
-
-	/**
 	 * Connects the execution group to the system manager, and runs all systems
 	 * in that execution group.
 	 */
@@ -451,6 +437,31 @@ export class SystemManager {
 	}
 
 	/**
+	 * Runs all systems in a given execution group.
+	 *
+	 * @param executionGroup The execution group to run.
+	 */
+	private runSystems(executionGroup: ExecutionGroup): void {
+		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
+			if (!system.enabled) {
+				return;
+			}
+
+			system.dt = os.clock() - system.lastCalled;
+			system.lastCalled = os.clock();
+
+			debug.profilebegin("system: " + system.name);
+			{
+				this.ensureNoAsync(system, () => {
+					system.onUpdate(this.world /**, ...this.systemArgs */);
+					this.world.flush();
+				});
+			}
+			debug.profileend();
+		}
+	}
+
+	/**
 	 * Initializes a system.
 	 *
 	 * @param system The system to initialize.
@@ -472,10 +483,10 @@ export class SystemManager {
 	/**
 	 * Internally sorts all systems by the given set of requirements.
 	 */
-	private sortSystems(): void {
+	private sortSystems(systems: Array<System>): void {
 		debug.profilebegin("SystemManager:sortSystems");
 		{
-			for (const system of this.systems) {
+			for (const system of systems) {
 				this.systemsByExecutionGroup
 					.get(system.executionGroup ?? this.executionDefault)
 					?.push(system);

@@ -36,6 +36,23 @@ export = (): void => {
 		manager = new SystemManager(world);
 	});
 	describe("A system should", () => {
+		it("be able to be created using its constructor", () => {
+			const system = new (class ExampleSystem extends System {
+				constructor() {
+					super({
+						name: "ASystemWithAName",
+						priority: 1000,
+					});					
+				}
+
+				public onUpdate(): void {}
+			})();
+
+			expect(system).to.be.ok();
+			expect(system.name).to.equal("ASystemWithAName");
+			expect(system.priority).to.equal(1000);
+		});
+
 		// FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
@@ -352,6 +369,29 @@ export = (): void => {
 			bindableEvent.Fire();
 
 			expect(callCount).to.equal(1);
+		});
+
+		it("should not be called more than once if a system is scheduled later", () => {
+			let callCount = 0;
+
+			const system = createSystem();
+			system.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			const system2 = createSystem();
+			system2.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			manager.scheduleSystem(system);
+			manager.scheduleSystem(system2);
+
+			manager.start();
+			
+			bindableEvent.Fire();
+			expect(callCount).to.equal(2);
+
 		});
 	});
 

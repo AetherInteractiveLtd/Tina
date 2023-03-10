@@ -1,7 +1,5 @@
 import { Players, RunService } from "@rbxts/services";
 
-import { TinaEvents } from "../events/tina_events";
-import { TinaNet } from "../net/tina_net";
 import { DefaultUserDeclaration } from "./default/types";
 
 export namespace Users {
@@ -63,17 +61,17 @@ export namespace Users {
 	}
 
 	/**
+	 * @hidden
+	 */
+	export function setupEvents(): void {}
+
+	/**
 	 * Events related to user creation
 	 */
 	{
 		if (isServer) {
 			Players.PlayerAdded.Connect(player => {
 				const user = Users.get(player);
-
-				{
-					TinaEvents.fireEventListener("user:added", user as never);
-					TinaNet.getExposed("user:added").send(player, user as never);
-				}
 
 				return Users.set(player, user);
 			});
@@ -82,20 +80,10 @@ export namespace Users {
 				const user = users.get(player);
 
 				if (user !== undefined) {
-					{
-						TinaEvents.fireEventListener("user:removing", user as never);
-						TinaNet.getExposed("user:removing").send(player, user as never);
-					}
+					/* empty */
 				}
 
 				return users.delete(player);
-			});
-
-			/**
-			 * User being retrieved
-			 */
-			TinaNet.getInternal("user:get").reply(user => {
-				return user;
 			});
 		}
 	}
