@@ -1,4 +1,5 @@
 import Sift, { None } from "@rbxts/sift";
+import { copyDeep } from "@rbxts/sift/out/Dictionary";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
@@ -13,7 +14,7 @@ type Mutable<T> = {
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 
-export type AnyFlyweight = Flyweight<Tree<Type>>;
+export type AnyFlyweight = Flyweight<object>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
@@ -38,11 +39,11 @@ export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
 };
 
-export type Flyweight<T extends Tree<Type>> = Immutable<T> & {
-	set<U extends Partial<OptionalKeys<T>>>(data: U): void;
+export type Flyweight<T extends object> = Immutable<T> & {
+	set<U extends Partial<T>>(data: U): void;
 };
 
-export type FlyweightInternal<T extends Tree<Type>> = Flyweight<T> & ComponentIdField;
+export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 
@@ -185,8 +186,9 @@ export namespace ComponentInternalCreation {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
-		return Sift.Dictionary.merge(schema, {
+	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+		const _schema = copyDeep(schema);
+		return Sift.Dictionary.merge(_schema, {
 			componentId: getNextComponentId(),
 
 			/**
@@ -199,11 +201,12 @@ export namespace ComponentInternalCreation {
 			 *
 			 * @param data The data to update.
 			 */
-			set<U extends Partial<OptionalKeys<T>>>(data: U): void {
+			set<U extends Partial<T>>(data: U): void {
 				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key, value] of pairs(data)) {
-					schema[key as never] = value as never;
+					_schema[key as never] = value as never;
 				}
+				print(_schema);
 			},
 		}) as FlyweightInternal<T>;
 	}
@@ -238,6 +241,7 @@ function createComponentArray<T extends Tree<Type>>(
 	const result: ComponentArray = {};
 
 	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
+		// TODO: key should be the user-defined object key
 		result[key] = createComponentArray(value, arraySize);
 	}
 
