@@ -1,5 +1,4 @@
 import Sift, { None } from "@rbxts/sift";
-import { copyDeep } from "@rbxts/sift/out/Dictionary";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
@@ -71,9 +70,10 @@ function Custom<T>(init?: () => T): Array<() => T> {
  * Types that can be used as component properties. These are the types that can
  * will support built-in serialization.
  *
- * TODO: Support custom serialization (and serialization of any type).
  * If you want to use a custom type, you can use the `Custom` function to create
  * a component that uses a custom type, and then provide a custom serializer.
+ *
+ * TODO: Support custom serialization (and serialization of any type).
  */
 export const ComponentTypes = {
 	Custom,
@@ -89,12 +89,6 @@ export const ComponentTypes = {
 };
 
 export namespace ComponentInternalCreation {
-	// const test = createComponent({
-	// 	x: ComponentTypes.Number,
-	// });
-
-	// test.x[1] = 1;
-
 	/**
 	 * Creates a component that matches the given schema.
 	 *
@@ -187,28 +181,27 @@ export namespace ComponentInternalCreation {
 	 * @returns A flyweight component.
 	 */
 	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
-		const _schema = copyDeep(schema);
-		return Sift.Dictionary.merge(_schema, {
+		const flyweight = Sift.Dictionary.merge(schema, {
 			componentId: getNextComponentId(),
 
 			/**
 			 * Sets the data for the flyweight.
 			 *
 			 * The set function is used to explicitly update the flyweight
-			 * data. This is just a semantic choice to make it clear that the
-			 * flyweight data is being updated, since the data would not
-			 * typically changed that often.
+			 * data. This a semantic choice to make it clear that the flyweight
+			 * data is being updated
 			 *
 			 * @param data The data to update.
 			 */
 			set<U extends Partial<T>>(data: U): void {
 				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key, value] of pairs(data)) {
-					_schema[key as never] = value as never;
+					flyweight[key as never] = value as never;
 				}
-				print(_schema);
 			},
 		}) as FlyweightInternal<T>;
+
+		return flyweight as Flyweight<T>;
 	}
 }
 
