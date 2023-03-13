@@ -106,4 +106,57 @@ export = (): void => {
 			}
 		});
 	});
+
+	describe("a flyweight component should", () => {
+		it("be able to be created", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: ComponentTypes.Number,
+			});
+			expect(component).to.be.ok();
+		});
+
+		it("be able to be given to an entity", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: ComponentTypes.Number,
+			});
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+			expect(world.hasComponent(entity, component)).to.equal(true);
+		});
+
+		it("be able to be removed from an entity", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: ComponentTypes.Number,
+			});
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+			world.removeComponent(entity, component);
+			world.flush();
+			expect(world.hasComponent(entity, component)).to.equal(false);
+		});
+
+		it("to be able to hold data", () => {
+			const component = ComponentInternalCreation.createFlyweight({
+				x: 5,
+			});
+
+			expect(component.x).to.equal(5);
+
+			component.set({
+				x: 1,
+			});
+
+			print(component);
+
+			expect(component.x).to.equal(1);
+
+			component.set({
+				x: 10000,
+			});
+
+			expect(component.x).to.equal(10000);
+		});
+	});
 };

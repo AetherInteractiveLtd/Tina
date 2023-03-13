@@ -2,6 +2,7 @@ import Sift, { None } from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
+import { Immutable } from "../types/readonly";
 import { getNextComponentId } from "./entity-manager";
 import { Observer } from "./observer";
 
@@ -11,6 +12,8 @@ type Mutable<T> = {
 
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
+
+export type AnyFlyweight = Flyweight<object>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
@@ -34,6 +37,12 @@ export type TagComponent = {
 export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
 };
+
+export type Flyweight<T extends object> = Immutable<T> & {
+	set<U extends Partial<T>>(data: U): void;
+};
+
+export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
 
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 
@@ -61,9 +70,10 @@ function Custom<T>(init?: () => T): Array<() => T> {
  * Types that can be used as component properties. These are the types that can
  * will support built-in serialization.
  *
- * TODO: Support custom serialization (and serialization of any type).
  * If you want to use a custom type, you can use the `Custom` function to create
  * a component that uses a custom type, and then provide a custom serializer.
+ *
+ * TODO: Support custom serialization (and serialization of any type).
  */
 export const ComponentTypes = {
 	Custom,
@@ -79,12 +89,6 @@ export const ComponentTypes = {
 };
 
 export namespace ComponentInternalCreation {
-	// const test = createComponent({
-	// 	x: ComponentTypes.Number,
-	// });
-
-	// test.x[1] = 1;
-
 	/**
 	 * Creates a component that matches the given schema.
 	 *
@@ -163,6 +167,42 @@ export namespace ComponentInternalCreation {
 			componentId: getNextComponentId(),
 		} as TagComponentInternal;
 	}
+
+	/**
+	 * Creates a flyweight component; a component that holds data that is
+	 * shared between all entities that have the component.
+	 *
+	 * Flyweight components are useful for minimizing memory usage by only
+	 * storing one set of data for a given component. Rather than having an
+	 * array of data for each entity, there is only a single set of data.
+	 *
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A flyweight component.
+	 */
+	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+		const flyweight = Sift.Dictionary.merge(schema, {
+			componentId: getNextComponentId(),
+
+			/**
+			 * Sets the data for the flyweight.
+			 *
+			 * The set function is used to explicitly update the flyweight
+			 * data. This a semantic choice to make it clear that the flyweight
+			 * data is being updated
+			 *
+			 * @param data The data to update.
+			 */
+			set<U extends Partial<T>>(data: U): void {
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key, value] of pairs(data)) {
+					flyweight[key as never] = value as never;
+				}
+			},
+		}) as FlyweightInternal<T>;
+
+		return flyweight as Flyweight<T>;
+	}
 }
 
 /**
@@ -194,6 +234,7 @@ function createComponentArray<T extends Tree<Type>>(
 	const result: ComponentArray = {};
 
 	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
+		// TODO: key should be the user-defined object key
 		result[key] = createComponentArray(value, arraySize);
 	}
 
