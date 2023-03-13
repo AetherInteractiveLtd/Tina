@@ -1,6 +1,6 @@
 import { EventListener } from "../../../../events";
 import { Users } from "../../../../user";
-import { UserType } from "../../../../user/default/types";
+import { DefaultUserDeclaration } from "../../../../user/default/types";
 import Client from "../../../utilities/client";
 import Server from "../../../utilities/server";
 import { AbstractEndpoint } from "../endpoint/endpoint";
@@ -15,7 +15,7 @@ export class GetEndpoint<S, R> extends AbstractEndpoint implements GETDeclaratio
 		return eventListener;
 	}
 
-	public reply(func: (user: UserType, value: S) => R): void {
+	public reply(func: (user: DefaultUserDeclaration, value: S) => R): void {
 		Server.listen(this.id, (player: Player, value: never) =>
 			Server.send(this.id, [player], func(Users.get(player), value) as {}),
 		);

@@ -1,4 +1,4 @@
-import { Connection } from "../../utilities/simple-signal";
+import { Connection } from "../../util/simple-signal";
 import { NetworkEvent } from "./NetworkEvent";
 
 /**

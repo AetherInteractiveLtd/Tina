@@ -35,4 +35,5 @@ interface UPDATEClientObjectImplementation<T> {
 	when(): EventListener<[value: T]>;
 }
 
-export declare type UPDATEDeclaration<T> = UPDATEServerObjectImplementation<T> & UPDATEClientObjectImplementation<T>;
+export declare type UPDATEDeclaration<T> = UPDATEServerObjectImplementation<T> &
+	UPDATEClientObjectImplementation<T>;

@@ -2,9 +2,21 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+import {
+	Component,
+	ComponentInternalCreation,
+	Flyweight,
+	TagComponent,
+	Tree,
+	Type,
+} from "./lib/ecs/component";
+import { World, WorldOptions } from "./lib/ecs/world";
+/* Networking namespace */
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
-import logger from "./lib/logger";
+import { Logger, Scope } from "./lib/logger/Logger";
+import { TinaNet } from "./lib/net/tina_net";
+import { Exposed } from "./lib/net/tina_net/types";
 import Client from "./lib/net/utilities/client";
 import Identifiers from "./lib/net/utilities/identifiers";
 import Server from "./lib/net/utilities/server";
@@ -12,8 +24,7 @@ import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { ConvertSchemaToState, createReplicatedState } from "./lib/state/createState";
 import { Users } from "./lib/user";
-import { AbstractUser } from "./lib/user/default";
-import { UserType } from "./lib/user/default/types";
+import { DefaultUserDeclaration } from "./lib/user/default/types";
 
 export enum Protocol {
 	/** Create/Load Online User Data */
@@ -23,7 +34,6 @@ export enum Protocol {
 }
 
 namespace Tina {
-	const isClient = RunService.IsClient();
 	const isServer = RunService.IsServer();
 
 	/**
@@ -34,18 +44,19 @@ namespace Tina {
 	 * @param name Name of the game
 	 * @returns The game instance, this isn't very useful but contains certain global methods.
 	 */
-	export function registerGame(name: string): TinaGame {
-		/**
-		 * Processes initialisation.
-		 */
+	export function registerGame(_name: string): TinaGame {
 		{
 			if (isServer) {
 				Server._init();
-			} else if (isClient) {
+			} else {
 				Client._init();
 			}
 
 			Identifiers._init();
+
+			/** Internals set up */
+			TinaNet.setupInternals();
+			Users.setupEvents();
 		}
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
@@ -77,10 +88,12 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(userClass: new (ref: Player | number) => UserType): void {
-		Users.changeUserClass(userClass); // Changes internally the way user is defined and constructed
+	export function setUserClass(
+		userClass: new (ref: Player | number) => DefaultUserDeclaration,
+	): void {
+		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
-		logger.warn("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
+		log.log("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.
 	}
 
 	/**
@@ -104,13 +117,19 @@ namespace Tina {
 		return new Process(name, Scheduler);
 	}
 
+	export const log: Scope = Logger.scope("TINA");
+
 	/**
-	 * Used to connect to Tina's internal events, such as when a user is registed, etc.
+	 * Used to connect to Tina's internal events, such as when a user is registered, etc.
 	 *
 	 * @param event event name (defined internally specially for Tina)
 	 * @returns an EventListener object.
 	 */
-	export function when<T extends keyof TinaInternalEvents>(event: T): EventListener<[TinaInternalEvents[T]]> {
+	export function when<T extends keyof TinaInternalEvents>(
+		event: T,
+	): EventListener<
+		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
+	> {
 		return TinaEvents.addEventListener(event);
 	}
 
@@ -125,11 +144,80 @@ namespace Tina {
 
 	/**
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.
+	 * Create a new ECS World.
 	 *
-	 * Use the methods on Tina's root (such as `Tina.setUserClass`) to actually apply any modifications.
+	 * The world is the main access point for the ECS functionality, along with
+	 * being responsible for creating and managing entities, components, and
+	 * systems.
+	 *
+	 * Typically there is only a single world, but there is no limit on the number
+	 * of worlds an application can create.
+	 *
+	 * @param options Optional world options to configure the world.
+	 *
+	 * @returns a new ECS World.
 	 */
-	export namespace Mirror {
-		export const User = AbstractUser;
+	export function createWorld(options?: WorldOptions): World {
+		return new World(options);
+	}
+
+	/**
+	 * Creates a component that matches the given schema.
+	 *
+	 * Internally this creates an array for each property in the schema, where the
+	 * index of the array matches an entity id. This allows for fast lookups of
+	 * component data.
+	 *
+	 * The array is pre-allocated to the given size, so it is important to ensure
+	 * that you do not access the component data for an entity that does not exist,
+	 * or that does not have the component. This is because the array could hold
+	 * data for a given entity, despite the fact that the entity would be invalid.
+	 *
+	 * Components are singletons, and should be created once per component type.
+	 * Components also persist between worlds, therefore you do not need more than
+	 * one component per world. EntityIds are global, therefore the index of a
+	 * given entity will always match the index of the component data.
+	 *
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A single component instance.
+	 */
+	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+		return ComponentInternalCreation.createComponent(schema);
+	}
+
+	/**
+	 * Creates a tag component; a component that has no data.
+	 *
+	 * Tags are useful for marking entities as having a certain property, without
+	 * the overhead of storing any data. For example, you could use a tag component
+	 * to mark an entity as being a player, and then use a system to query for all
+	 * entities that have the player tag.
+	 *
+	 * Tags are singletons, and should be created once per component type. Tags
+	 * also persist between worlds, therefore you do not need more than one Tag per
+	 * world.
+	 *
+	 * @returns A tag component.
+	 */
+	export function createTag(): TagComponent {
+		return ComponentInternalCreation.createTag();
+	}
+
+	/**
+	 * Creates a flyweight component; a component that holds data that is
+	 * shared between all entities that have the component.
+	 *
+	 * Flyweight components are useful for minimizing memory usage by only
+	 * storing one set of data for a given component. Rather than having an
+	 * array of data for each entity, there is only a single set of data.
+	 *
+	 * @param schema The properties of the component.
+	 *
+	 * @returns A flyweight component.
+	 */
+	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
+		return ComponentInternalCreation.createFlyweight(schema);
 	}
 }
 
@@ -148,13 +236,24 @@ export { Network } from "./lib/net";
 /** Audience Utility */
 export { Audience } from "./lib/audience/audience";
 
+/** ECS Library  */
+export { Component, ComponentTypes, GetComponentSchema } from "./lib/ecs/component";
+export { Observer } from "./lib/ecs/observer";
+export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
+export { System } from "./lib/ecs/system";
+export { type World } from "./lib/ecs/world";
+export { ComponentId, EntityId } from "./lib/types/ecs";
+
 /** Users namespace */
-export { Users } from "./lib/user";
+export { User, Users } from "./lib/user";
 
 /** Container export */
 export { Container } from "./lib/container";
 
 /** Util exports */
-export { FunctionUtil } from "./lib/utilities/functions";
+export { FunctionUtil } from "./lib/util/functions";
 /* State exports */
 export { States } from "./lib/state/createState";
+
+/** Logger export */
+export { Logger } from "./lib/logger/Logger";

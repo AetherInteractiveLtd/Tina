@@ -8,7 +8,6 @@ import { Repository } from "./classes/repository";
 import { BaseRepository, RepositoryImplementation } from "./classes/repository/types";
 import { Router } from "./classes/router";
 import { RouterDeclaration } from "./classes/router/types";
-import { TinaNet } from "./tina_net";
 import { BaseEndpoints, EndpointsDeclaration } from "./types";
 
 export namespace Network {
@@ -52,15 +51,6 @@ export namespace Network {
 	export function registerEndpoints<T extends EndpointsDeclaration<BaseEndpoints>>(
 		endpoints: T,
 	): RouterDeclaration<T> {
-		{
-			TinaNet.setRouter(
-				new Router({
-					"user:added": Network.Method.UPDATE<never>(),
-					"user:removing": Network.Method.UPDATE<never>(),
-				} as never),
-			);
-		}
-
 		return new Router(endpoints);
 	}
 
@@ -69,7 +59,9 @@ export namespace Network {
 	 *
 	 * @param repository your repository.
 	 */
-	export function repository<T extends BaseRepository>(repository: T): RepositoryImplementation<T> {
+	export function repository<T extends BaseRepository>(
+		repository: T,
+	): RepositoryImplementation<T> {
 		return new Repository(repository);
 	}
 }

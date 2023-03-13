@@ -1,7 +1,9 @@
 interface Identifiers {
 	/**
 	 * Creates a unique identifier for an endpoint, if it's on client it awaits for the result.
+	 * Creates a unique identifier for an endpoint, if it's on client it awaits for the result.
 	 *
+	 * @param id an id to compress from.
 	 * @param id an id to compress from.
 	 */
 	create: () => string;
@@ -21,8 +23,9 @@ interface Identifiers {
 	fromIdentifier: (fullIdentifier: string) => string;
 
 	/**
-	 * Yields current thread waiting for the identifier existance.
+	 * Yields current thread waiting for the identifier existence.
 	 *
+	 * @client
 	 * @client
 	 * @param identifierName identifier to wait for.
 	 */

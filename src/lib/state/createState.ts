@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ReplicatedStorage } from "@rbxts/services";
 
-import { IS_CLIENT } from "../utilities/globals";
+import { IS_CLIENT } from "../util/globals";
 import { NetworkEvent } from "./network/NetworkEvent";
 import { RemoteNetworkEvent } from "./network/RemoteNetworkEvent";
 import { NetworkBoundary } from "./types";
 import { checkValidSchema } from "./utilities/checkValidSchema";
 import { getOrCreateRemote } from "./utilities/getOrCreateRemote";
-import { GlobalStateConfig, isStateConfig, PlayerStateConfig, StateConfig } from "./utilities/StateConfig";
+import {
+	GlobalStateConfig,
+	isStateConfig,
+	PlayerStateConfig,
+	StateConfig,
+} from "./utilities/StateConfig";
 
 export type ConvertSchemaToState<T extends {}> = Reconstruct<{
 	[K in keyof T]: T[K] extends StateConfig<unknown>
@@ -40,7 +45,10 @@ const DefaultOptions = {
 /**
  * Recursively traverses the schema and instantiates the GlobalStates and PlayerStates
  */
-export function createReplicatedState<T extends {}>(schema: T, options: StateOptions = {}): ConvertSchemaToState<T> {
+export function createReplicatedState<T extends {}>(
+	schema: T,
+	options: StateOptions = {},
+): ConvertSchemaToState<T> {
 	checkValidSchema(schema);
 
 	/* Apply default options to the options parameter */

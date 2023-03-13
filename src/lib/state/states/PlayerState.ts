@@ -1,8 +1,8 @@
 import { Players } from "@rbxts/services";
 
 import { ValueOrSetter } from "../../types/global";
-import { ObservableValue } from "../../utilities/ObservableValue";
-import { Connection } from "../../utilities/simple-signal";
+import { ObservableValue } from "../../util/ObservableValue";
+import { Connection } from "../../util/simple-signal";
 import { NetworkEvent } from "../network/NetworkEvent";
 import { NetworkBoundary, Observer, UpdateObject } from "../types";
 

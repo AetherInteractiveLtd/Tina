@@ -3,6 +3,9 @@ export interface Manifest {
 	version: string;
 	description: string;
 	config: {
+		ecs: {
+			max_entities: number;
+		};
 		net: {
 			compression: boolean;
 		};

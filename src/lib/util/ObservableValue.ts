@@ -1,9 +1,13 @@
 import { ValueOrSetter } from "../types/global";
 import Signal, { Connection } from "./simple-signal";
 
-type StrictCallback<TReturnType, TParams extends Array<unknown>> = (...args: TParams) => TReturnType;
+type StrictCallback<TReturnType, TParams extends Array<unknown>> = (
+	...args: TParams
+) => TReturnType;
 
-function toFunction<T, TParams extends Array<unknown>>(v: T | StrictCallback<T, TParams>): StrictCallback<T, TParams> {
+function toFunction<T, TParams extends Array<unknown>>(
+	v: T | StrictCallback<T, TParams>,
+): StrictCallback<T, TParams> {
 	return typeIs(v, "function") ? v : () => v;
 }
 

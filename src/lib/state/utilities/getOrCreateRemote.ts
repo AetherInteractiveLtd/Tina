@@ -1,4 +1,4 @@
-import { IS_CLIENT } from "../../utilities/globals";
+import { IS_CLIENT } from "../../util/globals";
 
 function findRemoteClient(name: string, parent: Instance): RemoteEvent {
 	const remote = parent.WaitForChild(name);

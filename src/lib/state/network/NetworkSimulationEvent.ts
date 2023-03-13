@@ -1,4 +1,4 @@
-import Signal, { Connection } from "../../utilities/simple-signal";
+import Signal, { Connection } from "../../util/simple-signal";
 import { NetworkEvent } from "./NetworkEvent";
 
 const SimulatedPlayer = { Name: "NetworkSimulation" } as Player;

@@ -1,4 +1,4 @@
-import { FunctionUtil } from "../utilities/functions";
+import { FunctionUtil } from "../util/functions";
 import { Condition, ConditionCallback } from "./types";
 
 export class COND {
