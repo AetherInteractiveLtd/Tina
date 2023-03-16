@@ -218,6 +218,20 @@ export class Query {
 	}
 
 	/**
+	 * Runs a callback for each entity that matches the query.
+	 *
+	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
+	 * that is supported.
+	 */
+	public *iter(): Generator<EntityId> {
+		for (const archetype of this.archetypes) {
+			for (const entityId of archetype.entities) {
+				yield entityId;
+			}
+		}
+	}
+
+	/**
 	 * @returns an array of all matching entities mapped to their IDs.
 	 */
 	public items(): Array<EntityId> {
