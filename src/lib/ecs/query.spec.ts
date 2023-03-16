@@ -187,9 +187,9 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});
@@ -214,9 +214,10 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
+
 
 				expect(callCount).to.equal(2);
 			});
@@ -239,15 +240,15 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});
@@ -275,13 +276,13 @@ export = (): void => {
 
 				// We need to ensure that the entity is not entered and exited
 				// at the same time
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 10;
-				});
+				};
 
 				expect(callCount).to.equal(10);
 			});
@@ -311,9 +312,9 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(2);
 			});
@@ -337,15 +338,15 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});

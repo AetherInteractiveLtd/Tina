@@ -104,9 +104,9 @@ export function NOT(components: RawQuery | AnyComponent | TagComponent): RawQuer
  *
  * const world = Tina.createWorld({...});
  * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
- * query.forEach((entity) => {
+ * for (const entity of query.iterate()) {
  * 	// ...
- * });
+ * };
  * ```
  *
  * @note Order of iteration is not guaranteed.
@@ -181,11 +181,9 @@ export class Query {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public enteredQuery(callback: (entityId: EntityId) => boolean | void): void {
+	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
-			if (callback(entityId) === false) {
-				break;
-			}
+			yield entityId;
 		}
 
 		this.entered = new SparseSet();
@@ -207,39 +205,12 @@ export class Query {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public exitedQuery(callback: (entityId: EntityId) => boolean | void): void {
+	public *exitedQuery(): Generator<EntityId> {
 		for (const entityId of this.exited.dense) {
-			if (callback(entityId) === false) {
-				break;
-			}
+			yield entityId;
 		}
 
 		this.exited = new SparseSet();
-	}
-
-	/**
-	 * Runs a callback for each entity that matches the query.
-	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over.
-	 *
-	 * #### Usage Example:
-	 * ```ts
-	 * query.forEach((entity) => {
-	 * 	// ...
-	 * });
-	 * ```
-	 *
-	 * @param callback The callback to run for each entity.
-	 */
-	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		for (const archetype of this.archetypes) {
-			for (const entityId of archetype.entities) {
-				if (callback(entityId) === false) {
-					return;
-				}
-			}
-		}
 	}
 
 	/**
