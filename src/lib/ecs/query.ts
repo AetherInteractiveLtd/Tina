@@ -218,42 +218,18 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entity that matches the query.
-	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over.
-	 *
-	 * #### Usage Example:
-	 * ```ts
-	 * query.forEach((entity) => {
-	 * 	// ...
-	 * });
-	 * ```
-	 *
-	 * @param callback The callback to run for each entity.
+	 * @returns an array of all matching entities mapped to their IDs.
 	 */
-	public forEach(callback: (entityId: EntityId) => boolean | void): void {
-		for (const archetype of this.archetypes) {
-			for (const entityId of archetype.entities) {
-				if (callback(entityId) === false) {
-					return;
-				}
-			}
-		}
-	}
+	public items(): Array<EntityId> {
+		const idList: Array<EntityId> = new Array();
 
-	/**
-	 * Runs a callback for each entity that matches the query.
-	 *
-	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
-	 * that is supported.
-	 */
-	public *iterate(): Generator<EntityId> {
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
-				yield entityId;
+				idList.push(entityId);
 			}
 		}
+
+		return idList;
 	}
 
 	/**
