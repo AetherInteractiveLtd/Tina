@@ -205,7 +205,7 @@ namespace Tina {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
 		return ComponentInternalCreation.createFlyweight(schema);
 	}
 }
