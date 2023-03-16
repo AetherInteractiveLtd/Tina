@@ -3,7 +3,7 @@ import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
 import { Immutable } from "../types/readonly";
-import { getNextComponentId } from "./entity-manager";
+import { getNextComponentId, internal_getGlobalEntityId } from "./entity-manager";
 import { Observer } from "./observer";
 
 type Mutable<T> = {
@@ -88,6 +88,13 @@ export const ComponentTypes = {
 	Vector3int16: [new Vector3int16()],
 };
 
+function componentInstantiationCheck(): void {
+	assert(
+		internal_getGlobalEntityId() === 0,
+		"Cannot create a component after entities have been created.",
+	);
+}
+
 export namespace ComponentInternalCreation {
 	/**
 	 * Creates a component that matches the given schema.
@@ -115,6 +122,8 @@ export namespace ComponentInternalCreation {
 	 * @returns A single component instance.
 	 */
 	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+		componentInstantiationCheck();
+
 		const componentData = createComponentArray<T>(schema as T, 10000);
 		const observers = new Array<Observer<T>>();
 		return Sift.Dictionary.merge(componentData, {
@@ -163,6 +172,8 @@ export namespace ComponentInternalCreation {
 	 * @returns A tag component.
 	 */
 	export function createTag(): TagComponent {
+		componentInstantiationCheck();
+
 		return {
 			componentId: getNextComponentId(),
 		} as TagComponentInternal;
@@ -181,6 +192,8 @@ export namespace ComponentInternalCreation {
 	 * @returns A flyweight component.
 	 */
 	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+		componentInstantiationCheck();
+
 		const flyweight = Sift.Dictionary.merge(schema, {
 			componentId: getNextComponentId(),
 
