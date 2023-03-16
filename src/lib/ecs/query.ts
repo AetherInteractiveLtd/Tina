@@ -232,7 +232,7 @@ export class Query {
 	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
 	 * that is supported.
 	 */
-	public *iterate(): Generator<EntityId> {
+	public *iter(): Generator<EntityId> {
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
 				yield entityId;
