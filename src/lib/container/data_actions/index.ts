@@ -112,7 +112,11 @@ namespace DataStoreQueue {
 		}
 	}
 
-	export function call(fn: Callback, bucketKey: string, itemKey: string): ReturnType<typeof fn> {
+	export function call<T>(
+		fn: () => LuaTuple<[T, DataStoreKeyInfo]>,
+		bucketKey: string,
+		itemKey: string,
+	): LuaTuple<[T, DataStoreKeyInfo]> {
 		if (!QUEUE.get(bucketKey)) QUEUE.set(bucketKey, new Map()); // Checking if bucket has somewhere to store the items loader jobs
 		if (!QUEUE.get(bucketKey)!.get(itemKey)) {
 			QUEUE.get(bucketKey)!.set(itemKey, {
@@ -149,6 +153,7 @@ namespace DataStoreQueue {
 				}
 			}
 		}
+		error("Should never reach this point"); // The code will never reach this point but unfortunately TypeScript can't figure that out because of the while loop
 	}
 }
 
@@ -222,7 +227,10 @@ export namespace Data {
 			};
 
 			[loadedData, keyInfo] = DataStoreQueue.call(
-				() => bucketOn._globalDataStore.UpdateAsync(itemKey, callback),
+				() =>
+					bucketOn._globalDataStore.UpdateAsync(itemKey, callback) as LuaTuple<
+						[DataSaved, DataStoreKeyInfo]
+					>,
 				itemKey,
 				bucketOn.key,
 			);
