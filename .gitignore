@@ -10,4 +10,5 @@
 *.DS_store
 
 # Settings (don't know why we would want other's settings as well, this is per user
-.vscode/settings.json
+.vscode/*
+!.vscode/extensions.json
