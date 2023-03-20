@@ -168,6 +168,42 @@ export = (): void => {
 			});
 		});
 
+		describe("items", () => {
+			it("get all entities", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const component1 = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const id1 = tempWorld.add();
+				const id2 = tempWorld.add();
+				const id3 = tempWorld.add();
+				const id4 = tempWorld.add();
+				const id5 = tempWorld.add();
+
+				tempWorld.addComponent(id1, component);
+				tempWorld.addComponent(id2, component);
+				tempWorld.addComponent(id3, component).addComponent(id3, component1);
+				tempWorld.addComponent(id4, component).addComponent(id4, component1);
+				tempWorld.addComponent(id5, component1);
+
+				tempWorld.flush();
+
+				const query = tempWorld.createQuery(ALL(component));
+				const allEntities = query.items();
+
+				print(allEntities);
+
+				expect(allEntities.size()).to.equal(4);
+			});
+		});
+
 		describe("enteredQuery", () => {
 			it("allow for entities to enter the query", () => {
 				internal_resetGlobalState();
@@ -187,9 +223,9 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});
@@ -214,9 +250,9 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(2);
 			});
@@ -239,15 +275,15 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});
@@ -275,13 +311,13 @@ export = (): void => {
 
 				// We need to ensure that the entity is not entered and exited
 				// at the same time
-				query.enteredQuery((entityId) => {
+				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				});
+				};
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 10;
-				});
+				};
 
 				expect(callCount).to.equal(10);
 			});
@@ -311,9 +347,9 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(2);
 			});
@@ -337,15 +373,15 @@ export = (): void => {
 
 				let callCount = 0;
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 
-				query.exitedQuery((entityId) => {
+				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				});
+				};
 
 				expect(callCount).to.equal(1);
 			});
