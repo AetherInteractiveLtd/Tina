@@ -35,6 +35,8 @@ export enum Protocol {
 namespace Tina {
 	const isServer = RunService.IsServer();
 
+	Identifiers._init();
+
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
 	 *
@@ -50,8 +52,6 @@ namespace Tina {
 			} else {
 				Client._init();
 			}
-
-			Identifiers._init();
 
 			/** Internals set up */
 			TinaNet.setupInternals();
