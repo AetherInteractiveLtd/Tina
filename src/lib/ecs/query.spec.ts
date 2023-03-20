@@ -15,6 +15,10 @@ type MockComponent = {
 	set(): void;
 };
 
+function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
+	return a.join() === b.join();
+}
+
 function createMockComponent(id: number): MockComponent {
 	return {
 		componentData: [],
@@ -198,9 +202,34 @@ export = (): void => {
 				const query = tempWorld.createQuery(ALL(component));
 				const allEntities = query.items();
 
-				print(allEntities);
-
 				expect(allEntities.size()).to.equal(4);
+			});
+
+			it("have a size of 0 when no entities match", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const component1 = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const id1 = tempWorld.add();
+				const id2 = tempWorld.add();
+
+				tempWorld.addComponent(id1, component);
+
+				tempWorld.flush();
+
+				const query = tempWorld.createQuery(ALL(component1));
+				const allEntities = query.items();
+
+				expect(allEntities.size()).to.equal(0);
+				expect(shallowEquals(allEntities, [])).to.equal(true);
+
 			});
 		});
 

@@ -217,8 +217,8 @@ export class Query {
 	 * @returns an array of all the entities that currently match the query.
 	 */
 	public items(): Array<EntityId> {
-		const newArray = table.clone(this.archetypes[0].entities);
-		for (const i of $range(1, this.archetypes.size() - 1)) {
+		const newArray = new Array<number>(this.size());
+		for (const i of $range(0, this.archetypes.size() - 1)) {
 			const archetype = this.archetypes[i].entities;
 			archetype.move(0, archetype.size(), newArray.size(), newArray);
 		}
