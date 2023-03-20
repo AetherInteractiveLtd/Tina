@@ -16,6 +16,10 @@ export function internal_resetGlobalState(): void {
 	reusableEntityIds = new SparseSet();
 }
 
+export function internal_getGlobalEntityId(): number {
+	return globalEntityId;
+}
+
 /**
  * @returns the next available component id.
  */
