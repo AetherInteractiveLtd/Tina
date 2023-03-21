@@ -88,9 +88,7 @@ namespace Tina {
 	 *
 	 * @param userClass The new User class constructor
 	 */
-	export function setUserClass(
-		userClass: new (ref: Player | number) => DefaultUserDeclaration,
-	): void {
+	export function setUserClass(userClass: new (ref: Player) => DefaultUserDeclaration): void {
 		Users.setUserClass(userClass); // Changes internally the way user is defined and constructed
 
 		log.log("The User Class has been changed to:", userClass); // Not sure why this is being warned at all.

@@ -1,12 +1,23 @@
 import { Players, RunService } from "@rbxts/services";
 
+import { ClientUser } from "./default/client";
+import { ServerUser } from "./default/server";
 import { DefaultUserDeclaration } from "./default/types";
 
 export namespace Users {
 	const users: Map<Player, DefaultUserDeclaration> = new Map();
 	const isServer = RunService.IsServer();
 
-	export let tina_user_class: new (ref: Player | number) => DefaultUserDeclaration;
+	/**
+	 * Default User class using Mixins for multiple class inheritance
+	 */
+	export class DefaultUser extends ServerUser(ClientUser) implements DefaultUserDeclaration {
+		constructor(public readonly ref: Player) {
+			super(ref);
+		}
+	}
+
+	export let tina_user_class: new (ref: Player) => DefaultUserDeclaration = DefaultUser;
 
 	/**
 	 * Used to change the User class from where all the Users are created.
@@ -14,9 +25,7 @@ export namespace Users {
 	 * @hidden
 	 * @param userClass the new user-defined User class.
 	 */
-	export function setUserClass(
-		userClass: new (ref: Player | number) => DefaultUserDeclaration,
-	): void {
+	export function setUserClass(userClass: new (ref: Player) => DefaultUserDeclaration): void {
 		tina_user_class = userClass;
 	}
 
