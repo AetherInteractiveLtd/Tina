@@ -1,0 +1,21 @@
+{
+    "entryPoints": [
+        // "./src/lib/ecs/query.ts",
+        // "./src/lib/ecs/system.ts",
+        // "./src/lib/ecs/world.ts",
+        // "./src/lib/ecs/component.ts",
+        // "./src/lib/ecs/observer.ts",
+        "./src/"
+    ],
+    "out": "./docs/api",
+    "excludePrivate": true,
+    "media": "./assets",
+    "entryPointStrategy": "expand",
+    "excludeInternal": true,
+    "exclude": [
+        "**/*+(.spec|.e2e).ts"
+    ],
+    "symbolsWithOwnFile": [
+        "none"
+    ]
+}
