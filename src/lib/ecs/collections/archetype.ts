@@ -17,7 +17,9 @@ export class Archetype {
 	public readonly sparseSet: SparseSet = new SparseSet();
 
 	public change: Array<Archetype> = [];
-	/** The type of the archetype denoted by all its relevant components. */
+	/**
+	 * The type of the archetype denoted by all its relevant components.
+	 * */
 	public mask: Array<ComponentId>;
 	/** All queries that are interested in this archetype. */
 	public queries: Array<Query> = [];

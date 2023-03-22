@@ -104,7 +104,7 @@ export function NOT(components: RawQuery | AnyComponent | TagComponent): RawQuer
  *
  * const world = Tina.createWorld({...});
  * const query = world.createQuery(Position, ANY(Velocity, NOT(Acceleration)));
- * for (const entity of query.iterate()) {
+ * for (const entityId of query.iter()) {
  * 	// ...
  * };
  * ```
@@ -115,17 +115,35 @@ export class Query {
 	/** The world that the query belongs to. */
 	public readonly world: World;
 
+	/** All the archetypes that match the given query. */
 	public archetypes: Array<Archetype> = [];
+
+	/**
+	 * Any entities that have moved into the query since the last time that
+	 * {@link Query.enteredQuery} was called. Any entity that leaves the query
+	 * will be added to {@link Query.exitedQuery} and removed from this set.
+	 */
 	public entered: SparseSet = new SparseSet();
+
+	/**
+	 * Any entities that have left the query since the last time that
+	 * {@link Query.exitedQuery} was called. Any entity that enters the query
+	 * will be added to {@link Query.enteredQuery} and removed from this set.
+	 */
 	public exited: SparseSet = new SparseSet();
+
+	/** @internal */
 	public mask: QueryMask;
 
+	/** @internal */
 	constructor(world: World, query?: RawQuery) {
 		this.mask = query ? this.createQuery(query) : { op: ALL, dt: [] };
 		this.world = world;
 	}
 
 	/**
+	 * @internal
+	 *
 	 * Traverses the query mask, and returns true if the archetype mask
 	 * matches the given query.
 	 *
@@ -179,7 +197,8 @@ export class Query {
 	 * although unconventional, you can use the `Query.entered.dense` array
 	 * directly instead.
 	 *
-	 * @param callback The callback to run for each entity.
+	 * @returns An iterator that yields the entity IDs of the entities that
+	 * have been added to the query since the last time this method was called.
 	 */
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
@@ -203,7 +222,9 @@ export class Query {
 	 * although unconventional, you can use the `Query.exited.dense` array
 	 * directly instead.
 	 *
-	 * @param callback The callback to run for each entity.
+	 * @returns An iterator that yields the entity IDs of the entities that
+	 * have been removed from the query since the last time this method was
+	 * called.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
 		for (const entityId of this.exited.dense) {
@@ -228,11 +249,10 @@ export class Query {
 
 	/**
 	 * Runs a callback for each entity that matches the query.
-	 *
-	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
-	 * that is supported.
 	 */
 	public *iter(): Generator<EntityId> {
+		// TODO: This should be turned into a *[Symbol.iterator] method whenever
+		// that is supported.
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
 				yield entityId;

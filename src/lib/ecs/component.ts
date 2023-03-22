@@ -1,6 +1,8 @@
 import Sift, { None } from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Tina from "../..";
 import { ComponentId, EntityId } from "../types/ecs";
 import { Immutable } from "../types/readonly";
 import { getNextComponentId, internal_getGlobalEntityId } from "./entity-manager";
@@ -11,6 +13,8 @@ type Mutable<T> = {
 };
 
 export type AnyComponent = Component<Tree<Type>>;
+
+/** @internal */
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 
 export type AnyFlyweight = Flyweight<object>;
@@ -21,10 +25,14 @@ export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Arr
 
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
+/**
+ * To create a component, use the {@link Tina.createComponent} function.
+ */
 export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
+/** @internal */
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
 	ComponentIdField & {
 		observers: Array<Observer<T>>;
@@ -34,6 +42,7 @@ export type TagComponent = {
 	[index: string]: never;
 };
 
+/** @internal */
 export type TagComponentInternal = ComponentIdField & {
 	[index: string]: never;
 };
@@ -42,12 +51,16 @@ export type Flyweight<T extends object> = Immutable<T> & {
 	set<U extends Partial<T>>(data: U): void;
 };
 
+/** @internal */
 export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
 
+/** @internal */
 export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 
+/** @internal */
 export type Type = ArrayConstructor | Array<unknown>;
 
+/** @internal */
 export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
 	? T
 	: T extends ArrayConstructor
@@ -72,10 +85,9 @@ function Custom<T>(init?: () => T): Array<() => T> {
  *
  * If you want to use a custom type, you can use the `Custom` function to create
  * a component that uses a custom type, and then provide a custom serializer.
- *
- * TODO: Support custom serialization (and serialization of any type).
  */
 export const ComponentTypes = {
+	// TODO: Support custom serialization (and serialization of any type).
 	Custom,
 	Boolean: [false],
 	CFrame: [new CFrame()],
@@ -95,6 +107,9 @@ function componentInstantiationCheck(): void {
 	);
 }
 
+/**
+ * @internal
+ */
 export namespace ComponentInternalCreation {
 	/**
 	 * Creates a component that matches the given schema.
@@ -219,6 +234,8 @@ export namespace ComponentInternalCreation {
 }
 
 /**
+ * @internal
+ *
  * Creates an array of the given size, and fills it with the given default
  * value.
  *
