@@ -46,10 +46,6 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Roblox-TS
-        run: |
-          npm i roblox-ts@2.1.0
-
       - name: Install Dependencies
         run: npm i
 
