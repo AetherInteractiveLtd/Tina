@@ -70,7 +70,7 @@ export = (): void => {
 			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
 		});
 
-		it("have a singular default value", () => {
+		it("be able to hold a single value", () => {
 			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
 			const entity = world.add();
 			world.addComponent(entity, component);
