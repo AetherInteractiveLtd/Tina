@@ -81,6 +81,19 @@ export = (): void => {
 			world.flush();
 			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
 		});
+
+		it("be able to hold a single value", () => {
+			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
+			const entity = world.add();
+			world.addComponent(entity, component);
+			component[entity] = 1;
+			world.flush();
+			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(1);
+
+			component[entity] = 2;
+			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(2);
+
+		});
 	});
 
 	describe("a tag should", () => {
@@ -159,8 +172,6 @@ export = (): void => {
 			component.set({
 				x: 1,
 			});
-
-			print(component);
 
 			expect(component.x).to.equal(1);
 
