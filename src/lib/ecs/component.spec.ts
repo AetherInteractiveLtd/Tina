@@ -137,6 +137,24 @@ export = (): void => {
 
 			expect(component.x[entity]).to.equal(10);
 		});
+
+		it("be able to clone its data from another entity", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.Boolean,
+			});
+
+			const entity = world.add();
+			const entity2 = world.add();
+
+			world.addComponent(entity, component, { x: 200, y: true });
+			world.flush();
+
+			component.clone(entity, entity2);
+
+			expect(component.x[entity2]).to.equal(200);
+			expect(component.y[entity2]).to.equal(true);
+		});
 	});
 
 	describe("a tag should", () => {

@@ -28,8 +28,9 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	 * will be given to the entity.
 	 */
 	defaults?: Partial<OptionalKeys<T>>;
-	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
+	clone(fromEntityId: EntityId, toEntityId: EntityId): void;
 	reset(entityId: EntityId): void;
+	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
@@ -137,6 +138,14 @@ export namespace ComponentInternalCreation {
 			componentId: getNextComponentId(),
 			defaults: undefined,
 			observers: observers,
+
+			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key] of pairs(componentData)) {
+					componentData[key as never][toEntityId as never] =
+						componentData[key as never][fromEntityId as never];
+				}
+			},
 
 			/**
 			 * Resets the data for the given entity to the default values if
