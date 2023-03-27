@@ -131,6 +131,8 @@ export class World {
 
 				if (data !== undefined) {
 					component.set(entityId, data);
+				} else if (component.defaults !== undefined) {
+					component.set(entityId, component.defaults);
 				}
 			}
 		}

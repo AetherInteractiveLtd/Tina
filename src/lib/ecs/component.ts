@@ -22,6 +22,12 @@ export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Arr
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
 export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
+	/**
+	 * The default values for this component. This is used when adding a
+	 * component to an entity; each property that is specified in this object
+	 * will be given to the entity.
+	 */
+	defaults?: Partial<OptionalKeys<T>>;
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
@@ -131,6 +137,8 @@ export namespace ComponentInternalCreation {
 
 			observers: observers,
 
+			defaultValues: undefined,
+
 			/**
 			 * Sets the data for the given entity.
 			 *
@@ -148,6 +156,8 @@ export namespace ComponentInternalCreation {
 				for (const observer of observers) {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
+
+				print(data);
 
 				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key, value] of pairs(data)) {
