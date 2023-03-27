@@ -191,7 +191,7 @@ export class World {
 	 */
 	public createQuery(
 		arg: RawQuery | AnyComponent | TagComponent,
-		...raw: Array<RawQuery>
+		...raw: Array<RawQuery | AnyComponent | TagComponent>
 	): Query {
 		let query: Query;
 
