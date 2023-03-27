@@ -115,6 +115,28 @@ export = (): void => {
 			expect(component.x[entity]).to.equal(100);
 			expect(component.x[entity2]).to.equal(200);
 		});
+
+		it("be able to reset its default values", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.Boolean,
+			});
+
+			component.defaults = {
+				x: 10,
+			};
+
+			const entity = world.add();
+
+			world.addComponent(entity, component, { x: 200 });
+			world.flush();
+
+			expect(component.x[entity]).to.equal(200);
+
+			component.reset(entity);
+
+			expect(component.x[entity]).to.equal(10);
+		});
 	});
 
 	describe("a tag should", () => {

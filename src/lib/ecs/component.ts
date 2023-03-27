@@ -29,6 +29,7 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	 */
 	defaults?: Partial<OptionalKeys<T>>;
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
+	reset(entityId: EntityId): void;
 };
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
@@ -134,10 +135,23 @@ export namespace ComponentInternalCreation {
 		const observers = new Array<Observer<T>>();
 		return Sift.Dictionary.merge(componentData, {
 			componentId: getNextComponentId(),
-
+			defaults: undefined,
 			observers: observers,
 
-			defaultValues: undefined,
+			/**
+			 * Resets the data for the given entity to the default values if
+			 * they are defined.
+			 */
+			reset(entityId: EntityId): void {
+				if (this.defaults === undefined) {
+					return;
+				}
+
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key, value] of pairs(this.defaults)) {
+					componentData[key as never][entityId as never] = value as never;
+				}
+			},
 
 			/**
 			 * Sets the data for the given entity.
@@ -157,7 +171,7 @@ export namespace ComponentInternalCreation {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
 
-				print(data);
+				// TODO: This currently does not support nested fields.
 
 				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key, value] of pairs(data)) {
