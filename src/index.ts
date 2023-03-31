@@ -15,14 +15,12 @@ import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
 import { Logger, Scope } from "./lib/logger/Logger";
-import { TinaNet } from "./lib/net/tina_net";
-import { Exposed } from "./lib/net/tina_net/types";
-import Client from "./lib/net/utilities/client";
-import Identifiers from "./lib/net/utilities/identifiers";
-import Server from "./lib/net/utilities/server";
+import { Internals } from "./lib/net/internal";
+import { Client } from "./lib/net/util/client";
+import { Identifiers } from "./lib/net/util/identifiers";
+import { Server } from "./lib/net/util/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
-import { ConvertSchemaToState, createReplicatedState } from "./lib/state/createState";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
 
@@ -34,7 +32,7 @@ export enum Protocol {
 }
 
 namespace Tina {
-	const isServer = RunService.IsServer();
+	Identifiers.init();
 
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
@@ -46,17 +44,14 @@ namespace Tina {
 	 */
 	export function registerGame(_name: string): TinaGame {
 		{
-			if (isServer) {
-				Server._init();
+			if (RunService.IsServer()) {
+				Server.init();
 			} else {
-				Client._init();
+				Client.init();
 			}
 
-			Identifiers._init();
-
-			/** Internals set up */
-			TinaNet.setupInternals();
-			Users.setupEvents();
+			Internals.init();
+			Users.init();
 		}
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
@@ -127,19 +122,8 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(
 		event: T,
-	): EventListener<
-		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
-	> {
+	): EventListener<[...TinaInternalEvents[T]]> {
 		return TinaEvents.addEventListener(event);
-	}
-
-	/**
-	 *
-	 * @param schema
-	 * @returns
-	 */
-	export function createState<T extends {}>(schema: T): ConvertSchemaToState<T> {
-		return createReplicatedState(schema);
 	}
 
 	/**
@@ -252,8 +236,9 @@ export { Container } from "./lib/container";
 
 /** Util exports */
 export { FunctionUtil } from "./lib/util/functions";
+
 /* State exports */
-export { States } from "./lib/state/createState";
+export { State } from "./lib/state";
 
 /** Logger export */
 export { Logger } from "./lib/logger/Logger";

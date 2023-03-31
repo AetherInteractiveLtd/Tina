@@ -1,7 +1,3 @@
-import { RunService } from "@rbxts/services";
-
-import { TinaNet } from "../../net/tina_net";
-import { Exposed } from "../../net/tina_net/types";
 import { DefaultUserDeclaration } from "../../user/default/types";
 import { EventListener } from "..";
 
@@ -20,27 +16,19 @@ export namespace TinaEvents {
 	 * @param to Tina event
 	 * @returns and EventListener
 	 */
-	export function addEventListener<T extends keyof TinaInternalEvents | keyof Exposed>(
+	export function addEventListener<T extends keyof TinaInternalEvents>(
 		to: T,
-	): EventListener<
-		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
-	> {
-		const isServer = RunService.IsServer();
+	): EventListener<[...TinaInternalEvents[T]]> {
+		const event = new EventListener<[never]>();
+		const listeners = events.get(to as string);
 
-		if (isServer) {
-			const event = new EventListener<[never]>();
-			const listeners = events.get(to as string);
-
-			if (listeners === undefined) {
-				events.set(to as string, [event]);
-			} else {
-				events.get(to as string)!.push(event);
-			}
-
-			return event as never;
+		if (listeners === undefined) {
+			events.set(to as string, [event]);
 		} else {
-			return TinaNet.getExposed(to).when() as never;
+			events.get(to as string)!.push(event);
 		}
+
+		return event as never;
 	}
 
 	/**

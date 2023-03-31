@@ -28,7 +28,7 @@ export class ObservableValue<T> {
 		}
 	}
 
-	public getValue(): T {
+	public get(): T {
 		return this.value;
 	}
 
