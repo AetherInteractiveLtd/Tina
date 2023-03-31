@@ -25,6 +25,16 @@ export = (): void => {
 			expect(component).to.be.ok();
 		});
 
+		it("not be able to be created after entities have been added", () => {
+			world.add();	
+
+			expect(() => {
+				ComponentInternalCreation.createComponent({
+					x: ComponentTypes.Number,
+				});
+			}).to.throw();
+		});
+
 		it("be able to be given to an entity", () => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
@@ -51,6 +61,11 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
+			
+			const component2 = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
@@ -59,15 +74,25 @@ export = (): void => {
 			});
 			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
 
-			const component2 = ComponentInternalCreation.createComponent({
-				x: ComponentTypes.Number,
-			});
 			const entity2 = world.add();
 			world.addComponent(entity2, component2, {
 				x: 2,
 			});
 			world.flush();
 			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
+		});
+
+		it("be able to hold a single value", () => {
+			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
+			const entity = world.add();
+			world.addComponent(entity, component);
+			component[entity] = 1;
+			world.flush();
+			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(1);
+
+			component[entity] = 2;
+			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(2);
+
 		});
 	});
 
@@ -147,8 +172,6 @@ export = (): void => {
 			component.set({
 				x: 1,
 			});
-
-			print(component);
 
 			expect(component.x).to.equal(1);
 
