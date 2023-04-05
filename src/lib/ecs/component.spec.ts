@@ -160,8 +160,6 @@ export = (): void => {
 				x: 1,
 			});
 
-			print(component);
-
 			expect(component.x).to.equal(1);
 
 			component.set({

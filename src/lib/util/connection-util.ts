@@ -1,7 +1,7 @@
 /**
  * Used to infer the parameters of a callback function.
  */
-type InferSignalParameters<S> = S extends SignalLike
+export type InferSignalParameters<S> = S extends SignalLike
 	? Parameters<
 			Parameters<
 				S["Connect"] extends Callback
