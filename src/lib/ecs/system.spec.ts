@@ -53,7 +53,6 @@ export = (): void => {
 			expect(system.priority).to.equal(1000);
 		});
 
-		// FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
 
@@ -162,6 +161,39 @@ export = (): void => {
 
 			tempBindableEvent.Fire();
 			expect(callCount).to.equal(1);
+		});
+
+		it("be able to stop all systems", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+
+			let callCount = 0;
+
+			const system1 = createSystem();
+			system1.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			const system2 = createSystem();
+			system2.onUpdate = (): void => {
+				callCount += 10;
+			};
+			system2.executionGroup = tempBindableEvent.Event;
+
+			manager.scheduleSystems([system1, system2]);
+			manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+
+			tempBindableEvent.Fire();
+			expect(callCount).to.equal(11);
+
+			manager.stop();
+			bindableEvent.Fire();
+			tempBindableEvent.Fire();
+			expect(callCount).to.equal(11);
 		});
 
 		it("be ordered by execution group", () => {

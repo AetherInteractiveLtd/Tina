@@ -1,10 +1,10 @@
 import { RunService } from "@rbxts/services";
 
-import { EventListener } from "../events";
 import { insertionSort } from "../util/array-utils";
+import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
 
-export type ExecutionGroup = RBXScriptSignal | EventListener<Array<unknown>>;
+export type ExecutionGroup = SignalLike;
 
 export interface System {
 	/**
@@ -122,7 +122,7 @@ export abstract class System {
  */
 export class SystemManager {
 	private executionDefault: ExecutionGroup;
-	private executionGroupSignals: Map<ExecutionGroup, RBXScriptConnection> = new Map();
+	private executionGroupSignals: Map<ExecutionGroup, ConnectionLike> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
 	/** Whether or not the system manager has began execution. */
 	private started = false;
@@ -279,7 +279,7 @@ export class SystemManager {
 	 */
 	public stop(): void {
 		for (const [_, signal] of this.executionGroupSignals) {
-			signal.Disconnect();
+			ConnectionUtil.disconnect(signal);
 		}
 	}
 
@@ -358,17 +358,11 @@ export class SystemManager {
 	 */
 	private executeSystems(): void {
 		for (const executionGroup of this.executionGroups) {
-			if (typeIs(executionGroup, "RBXScriptSignal")) {
-				const disconnect = executionGroup.Connect(() => {
-					this.runSystems(executionGroup);
-				});
+			const connection = ConnectionUtil.connect(executionGroup, () => {
+				this.runSystems(executionGroup);
+			});
 
-				this.executionGroupSignals.set(executionGroup, disconnect);
-			} else {
-				executionGroup.do(() => {
-					this.runSystems(executionGroup);
-				});
-			}
+			this.executionGroupSignals.set(executionGroup, connection);
 		}
 	}
 
