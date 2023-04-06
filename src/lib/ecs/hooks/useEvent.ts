@@ -1,4 +1,4 @@
-import { Players, UserInputService } from "@rbxts/services";
+import { UserInputService } from "@rbxts/services";
 import { Queue } from "@rbxts/stacks-and-queues";
 
 import {
@@ -7,8 +7,6 @@ import {
 	InferSignalParameters,
 	SignalLike,
 } from "../../util/connection-util";
-import { System } from "../system";
-import { World } from "../world";
 
 type Event<E> = {
 	queue: Queue<InferSignalParameters<E>>;
@@ -16,35 +14,32 @@ type Event<E> = {
 	cleanup: () => void;
 };
 
+type InstanceEvent<I extends Instance, E extends InstanceEventNames<I>> = {
+	storage: Map<Instance, { queue: Queue<InferSignalParameters<E>>; connection: ConnectionLike }>;
+	items: (instance: I) => Generator<InferSignalParameters<I[E]>, void, unknown>;
+	cleanup: (discriminator: I) => void;
+};
+
 export function createEvent<E extends SignalLike>(
 	event: E,
 	predicate?: (...args: InferSignalParameters<E>) => boolean,
-) {
+): Event<E> {
 	const connection = ConnectionUtil.connect(event, (...args: InferSignalParameters<E>) => {
 		if (predicate === undefined || predicate(...(args as InferSignalParameters<E>))) {
 			queue.push(args);
 		}
 	});
 
-	// const connection = event.Connect!((...args: InferSignalParameters<E>) => {
-	// 	if (predicate === undefined || predicate(...(args as InferSignalParameters<E>))) {
-	// 		queue.push(args);
-	// 	}
-	// });
-
 	const queue = new Queue<InferSignalParameters<E>>();
 
 	/**
-	 *
-	 * @param discriminator
-	 * @param event
 	 * @returns
 	 */
 	function* items(): Generator<InferSignalParameters<E>, void, unknown> {
 		while (queue.size() > 0) {
 			const args = queue.pop();
 			if (args) {
-				yield args;
+				yield args as InferSignalParameters<E>;
 			}
 		}
 	}
@@ -62,7 +57,7 @@ export function createEvent<E extends SignalLike>(
 
 export function createInstanceEvent<I extends Instance, E extends InstanceEventNames<I>>(
 	eventType: E,
-) {
+): InstanceEvent<I, E> {
 	const storage = new Map<
 		Instance,
 		{
@@ -87,7 +82,7 @@ export function createInstanceEvent<I extends Instance, E extends InstanceEventN
 		const entityQueue = data.queue;
 		while (entityQueue.size() > 0) {
 			const args = entityQueue.pop();
-			if (args) {
+			if (args !== undefined) {
 				yield args;
 			}
 		}
@@ -110,12 +105,6 @@ export function createInstanceEvent<I extends Instance, E extends InstanceEventN
 			},
 		);
 
-		// const connection = (instance[eventType] as SignalLike).Connect!(
-		// 	(...args: InferSignalParameters<E>) => {
-		// 		queue.push(args);
-		// 	},
-		// );
-
 		storage.set(instance, { queue, connection });
 	}
 
@@ -133,3 +122,9 @@ export function createInstanceEvent<I extends Instance, E extends InstanceEventN
 
 	return { storage, items, cleanup };
 }
+
+const event = createInstanceEvent("PlayerAdded");
+
+const event1 = createInstanceEvent("AncestryChanged");
+
+const event2 = createEvent(UserInputService.InputBegan);
