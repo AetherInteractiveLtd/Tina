@@ -11,15 +11,14 @@ import {
 	Type,
 } from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
-/* Networking namespace */
 import { EventListener } from "./lib/events";
-import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
+import { TinaEvents } from "./lib/events/internal";
+import { TinaInternalEvents } from "./lib/events/internal/types";
 import { Logger, Scope } from "./lib/logger/Logger";
-import { TinaNet } from "./lib/net/tina_net";
-import { Exposed } from "./lib/net/tina_net/types";
-import Client from "./lib/net/utilities/client";
-import Identifiers from "./lib/net/utilities/identifiers";
-import Server from "./lib/net/utilities/server";
+import { Internals } from "./lib/net/internal";
+import { Client } from "./lib/net/util/client";
+import { Identifiers } from "./lib/net/util/identifiers";
+import { Server } from "./lib/net/util/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
 import { ConvertSchemaToState, createReplicatedState } from "./lib/state/createState";
@@ -34,9 +33,7 @@ export enum Protocol {
 }
 
 namespace Tina {
-	const isServer = RunService.IsServer();
-
-	Identifiers._init();
+	Identifiers.init();
 
 	/**
 	 * ! ⚠️ **THIS SHOULD ONLY EVER BE USED ONCE PER GAME** ⚠️ !
@@ -48,15 +45,14 @@ namespace Tina {
 	 */
 	export function registerGame(_name: string): TinaGame {
 		{
-			if (isServer) {
-				Server._init();
+			if (RunService.IsServer()) {
+				Server.init();
 			} else {
-				Client._init();
+				Client.init();
 			}
 
-			/** Internals set up */
-			TinaNet.setupInternals();
-			Users.setupEvents();
+			Internals.init();
+			Users.init();
 		}
 
 		// TODO: Auto-Detect `manifest.tina.yml` and load it.
@@ -125,13 +121,12 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(
 		event: T,
-	): EventListener<
-		[...(T extends keyof TinaInternalEvents ? TinaInternalEvents[T] : Exposed[T])]
-	> {
-		return TinaEvents.addEventListener(event);
+	): EventListener<TinaInternalEvents[T]> {
+		return TinaEvents.when(event);
 	}
 
 	/**
+<<<<<<< HEAD
 	 *
 	 * @param schema
 	 * @returns
@@ -141,6 +136,8 @@ namespace Tina {
 	}
 
 	/**
+=======
+>>>>>>> 9baf9e8 (Replicated state (#29))
 	 * `Tina.Mirror` defines any built-in classes that can be replaced.
 	 * Create a new ECS World.
 	 *
@@ -214,7 +211,7 @@ namespace Tina {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends Tree<Type>>(schema: T): Flyweight<T> {
 		return ComponentInternalCreation.createFlyweight(schema);
 	}
 }
@@ -248,10 +245,18 @@ export { User, Users } from "./lib/user";
 /** Container export */
 export { Container } from "./lib/container";
 
+<<<<<<< HEAD
 /** Util exports */
 export { FunctionUtil } from "./lib/util/functions";
 /* State exports */
 export { States } from "./lib/state/createState";
+=======
+/* State exports */
+export { State } from "./lib/state";
+>>>>>>> 9baf9e8 (Replicated state (#29))
 
 /** Logger export */
 export { Logger } from "./lib/logger/Logger";
+
+/** Util exports */
+export { FunctionUtil } from "./lib/util/functions";

@@ -72,7 +72,7 @@ export namespace Users {
 	/**
 	 * @hidden
 	 */
-	export function setupEvents(): void {}
+	export function init(): void {}
 
 	/**
 	 * Events related to user creation

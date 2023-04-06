@@ -1,4 +1,4 @@
-import Identifiers from "../../../utilities/identifiers";
+import { Identifiers } from "../../../util/identifiers";
 import { AbstractEndpointImplementation } from "./types";
 
 export abstract class AbstractEndpoint implements AbstractEndpointImplementation {
@@ -8,7 +8,7 @@ export abstract class AbstractEndpoint implements AbstractEndpointImplementation
 		this.id = Identifiers.create();
 	}
 
-	public getIdentifier(): string {
-		return Identifiers.fromCompressed(this.id);
+	public getIdentifier(): string | undefined {
+		return Identifiers.decompress(this.id!);
 	}
 }
