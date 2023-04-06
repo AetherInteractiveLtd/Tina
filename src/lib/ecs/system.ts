@@ -6,6 +6,14 @@ import { World } from "./world";
 
 export type ExecutionGroup = RBXScriptSignal | EventListener<Array<unknown>>;
 
+interface SystemInternal extends System {
+	/**
+	 * Storage for errors that have occured recently in the system. This is
+	 * used to prevent spamming the console with errors.
+	 */
+	recentErrors?: Map<string, number>;
+}
+
 export interface System {
 	/**
 	 * An optional hook that can be used to clean up the system. This is useful
@@ -336,7 +344,7 @@ export class SystemManager {
 	 * @param system The system to check for yielding.
 	 * @param callback The system function to call.
 	 */
-	private ensureNoAsync(system: System, callback: () => void): void {
+	private ensureNoAsync(system: SystemInternal, callback: () => void): void {
 		const thread = coroutine.create(callback);
 		const [success, result] = coroutine.resume(thread);
 		if (coroutine.status(thread) !== "dead") {
@@ -348,7 +356,21 @@ export class SystemManager {
 		}
 
 		if (!success) {
-			task.spawn(error, `System: ${system.name} errored! ${result} + \n ${debug.traceback}`);
+			if (system.recentErrors === undefined) {
+				system.recentErrors = new Map();
+			}
+
+			const recentError = `System: ${system.name} errored! ${result} + \n ${debug.traceback}`;
+
+			const lastError = system.recentErrors.get(recentError);
+			print(system.recentErrors);
+			if (lastError !== undefined && lastError > os.clock()) {
+				return;
+			}
+
+			system.recentErrors.set(recentError, os.clock() + 10);
+			task.spawn(error, recentError);
+			warn("The above error has been suppressed for 10 seconds.");
 		}
 	}
 

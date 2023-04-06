@@ -1,5 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { ScriptContext } from "@rbxts/services";
 import { Query } from "./query";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
@@ -393,6 +394,31 @@ export = (): void => {
 			expect(callCount).to.equal(2);
 
 		});
+
+		itFOCUS("should not send multiple duplicate errors to the console", () => {
+			const system = createSystem();
+			system.onUpdate = (): void => {
+				throw ("test");
+			};
+
+			manager.scheduleSystem(system);
+			manager.start();
+
+			let errorCount = 0;
+
+			const connection = ScriptContext.Error.Connect(() => {
+				errorCount += 1;
+			});
+
+			bindableEvent.Fire();
+			bindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(errorCount).to.equal(1);
+
+			connection.Disconnect();
+		});
+
 	});
 
 	afterAll(() => {
