@@ -4,21 +4,22 @@ import { FunctionUtil } from "../../util/functions";
 import { Identifiers } from "./identifiers";
 import { Contents, InitialPacket, Packet, ServerListener } from "./types";
 
-function getWhiteListed(list: { [x: string]: boolean }): Array<Player> {
-	const to: Array<Player> = [];
-
-	for (const player of Players.GetPlayers()) {
-		if (list[player.Name] !== undefined) {
-			to.push(player);
-		}
-	}
-
-	return to;
-}
-
 export namespace Server {
 	const queue: Array<InitialPacket> = [];
 	const listeners: { [x: string]: Array<ServerListener> } = {};
+
+	// eslint-disable-next-line no-inner-declarations
+	function whiteList(blacklist: { [x: string]: boolean }): Array<Player> {
+		const to: Array<Player> = [];
+
+		for (const player of Players.GetPlayers()) {
+			if (blacklist[player.Name] !== undefined) {
+				to.push(player);
+			}
+		}
+
+		return to;
+	}
 
 	/** @hidden */
 	export function init(): void {
@@ -41,7 +42,7 @@ export namespace Server {
 			for (const packet of packets as Array<Packet>) {
 				if (listeners[packet.id] === undefined) {
 					warn(
-						`[Networking:Server]: Callback expected got nil on ${Identifiers.fromCompressed(
+						`[Networking:Server]: Callback expected got nil on ${Identifiers.decompress(
 							packet.id,
 						)}`,
 					);
@@ -88,7 +89,7 @@ export namespace Server {
 			blacklisted[player.Name] = true;
 		}
 
-		queue.push({ id, to: getWhiteListed(blacklisted), contents });
+		queue.push({ id, to: whiteList(blacklisted), contents });
 	}
 
 	/**

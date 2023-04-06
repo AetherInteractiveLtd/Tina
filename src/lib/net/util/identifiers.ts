@@ -3,12 +3,12 @@
 import { RunService } from "@rbxts/services";
 
 export namespace Identifiers {
-	let autoSerde: Folder | undefined;
+	let identifiers: Folder | undefined;
 	let numOfSerials = 0;
 
 	const limit = 65536;
 
-	const receiveDict: { [x: string]: unknown } = {};
+	const receiveDict: { [x: string]: string | undefined } = {};
 	const sendDict: { [x: string]: string | undefined } = {};
 
 	const isServer = RunService.IsServer();
@@ -16,15 +16,15 @@ export namespace Identifiers {
 	/** @hidden */
 	export function init(): void {
 		if (!isServer) {
-			autoSerde = script.WaitForChild("auto_serde") as Folder;
+			identifiers = script.WaitForChild("auto_serde") as Folder;
 
-			for (const [id, value] of autoSerde.GetAttributes()) {
+			for (const [id, value] of identifiers.GetAttributes()) {
 				sendDict[id] = value as string;
 				receiveDict[value as never] = id;
 			}
 
-			autoSerde.AttributeChanged.Connect((id: string) => {
-				const packed = autoSerde?.GetAttribute(id) as string;
+			identifiers.AttributeChanged.Connect((id: string) => {
+				const packed = identifiers?.GetAttribute(id) as string;
 
 				if (packed !== undefined) {
 					sendDict[id] = packed;
@@ -37,9 +37,9 @@ export namespace Identifiers {
 				}
 			});
 		} else {
-			autoSerde = new Instance("Folder");
-			autoSerde.Name = "auto_serde";
-			autoSerde.Parent = script;
+			identifiers = new Instance("Folder");
+			identifiers.Name = "auto_serde";
+			identifiers.Parent = script;
 		}
 	}
 
@@ -51,13 +51,20 @@ export namespace Identifiers {
 	 * @param id an id to compress from.
 	 */
 	export function create(): string {
-		const current = ++numOfSerials;
+		const current = numOfSerials++;
 		const id = tostring(current);
 
 		if (current >= limit) {
-			throw `Over the identification cap ${id}`;
+			throw `Over the identifier cap ${id}`;
 		}
 
+		/**
+		 * First checks for it to be the client, if so, it awaits
+		 * the identifier to exist.
+		 *
+		 * Second check is for it to be client but the identifier it's already there, if so,
+		 * return it directly.
+		 */
 		if (!sendDict[id] && !isServer) {
 			return Identifiers.await(id);
 		} else if (sendDict[id] && !isServer) {
@@ -65,7 +72,7 @@ export namespace Identifiers {
 		}
 
 		const packed = string.pack("H", current);
-		autoSerde?.SetAttribute(id, packed);
+		identifiers?.SetAttribute(id, packed);
 
 		sendDict[id] = packed;
 		receiveDict[packed] = id;
@@ -85,7 +92,9 @@ export namespace Identifiers {
 	export function await(id: string): string {
 		let identifier =
 			sendDict[id] ||
-			((autoSerde?.Parent !== undefined ? autoSerde.GetAttribute(id) : undefined) as string);
+			((identifiers?.Parent !== undefined
+				? identifiers.GetAttribute(id)
+				: undefined) as string);
 
 		if (identifier) {
 			return identifier;
@@ -97,8 +106,8 @@ export namespace Identifiers {
 			do {
 				identifier =
 					sendDict[id] ||
-					((autoSerde?.Parent !== undefined
-						? autoSerde.GetAttribute(id)
+					((identifiers?.Parent !== undefined
+						? identifiers.GetAttribute(id)
 						: undefined) as string);
 			} while (identifier !== undefined);
 
@@ -111,10 +120,10 @@ export namespace Identifiers {
 	/**
 	 * Returns the initial decompressed identifier.
 	 *
-	 * @param compressedIdentifier compressed identifier.
+	 * @param compressed compressed identifier.
 	 */
-	export function fromCompressed(compressed: string): string | undefined {
-		return receiveDict[compressed] as string;
+	export function decompress(compressed: string): string | undefined {
+		return receiveDict[compressed];
 	}
 
 	/**
@@ -122,7 +131,7 @@ export namespace Identifiers {
 	 *
 	 * @param fullIdentifier identifier string.
 	 */
-	export function fromIdentifier(identifier: string): string | undefined {
+	export function compress(identifier: string): string | undefined {
 		return sendDict[identifier];
 	}
 }

@@ -20,7 +20,7 @@ export namespace Client {
 		remote.OnClientEvent.Connect((packet: Packet) => {
 			if (listeners[packet.id] === undefined) {
 				warn(
-					`[Networking:Client]: Callback expected got nil on ${Identifiers.fromCompressed(
+					`[Networking:Client]: Callback expected got nil on ${Identifiers.decompress(
 						packet.id,
 					)}`,
 				);

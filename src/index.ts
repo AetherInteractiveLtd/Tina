@@ -11,9 +11,9 @@ import {
 	Type,
 } from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
-/* Networking namespace */
 import { EventListener } from "./lib/events";
-import { TinaEvents, TinaInternalEvents } from "./lib/events/tina_events";
+import { TinaEvents } from "./lib/events/internal";
+import { TinaInternalEvents } from "./lib/events/internal/types";
 import { Logger, Scope } from "./lib/logger/Logger";
 import { Internals } from "./lib/net/internal";
 import { Client } from "./lib/net/util/client";
@@ -122,8 +122,8 @@ namespace Tina {
 	 */
 	export function when<T extends keyof TinaInternalEvents>(
 		event: T,
-	): EventListener<[...TinaInternalEvents[T]]> {
-		return TinaEvents.addEventListener(event);
+	): EventListener<TinaInternalEvents[T]> {
+		return TinaEvents.when(event);
 	}
 
 	/**
@@ -234,11 +234,11 @@ export { User, Users } from "./lib/user";
 /** Container export */
 export { Container } from "./lib/container";
 
-/** Util exports */
-export { FunctionUtil } from "./lib/util/functions";
-
 /* State exports */
 export { State } from "./lib/state";
 
 /** Logger export */
 export { Logger } from "./lib/logger/Logger";
+
+/** Util exports */
+export { FunctionUtil } from "./lib/util/functions";

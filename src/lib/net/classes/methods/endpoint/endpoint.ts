@@ -9,6 +9,6 @@ export abstract class AbstractEndpoint implements AbstractEndpointImplementation
 	}
 
 	public getIdentifier(): string | undefined {
-		return Identifiers.fromCompressed(this.id);
+		return Identifiers.decompress(this.id!);
 	}
 }
