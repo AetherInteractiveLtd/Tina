@@ -363,6 +363,7 @@ export = (): void => {
 				task.wait();
 				callCount += 1;
 			};
+			system.name = "YieldSystem";
 
 			manager.scheduleSystems([system]);
 
@@ -395,11 +396,12 @@ export = (): void => {
 
 		});
 
-		itFOCUS("should not send multiple duplicate errors to the console", () => {
+		it("should not send multiple duplicate errors to the console", () => {
 			const system = createSystem();
 			system.onUpdate = (): void => {
 				throw ("test");
 			};
+			system.name = "multipleErrorTest"
 
 			manager.scheduleSystem(system);
 			manager.start();
@@ -418,7 +420,10 @@ export = (): void => {
 
 			connection.Disconnect();
 		});
+	});
 
+	afterEach(() => {
+		manager.stop();
 	});
 
 	afterAll(() => {
