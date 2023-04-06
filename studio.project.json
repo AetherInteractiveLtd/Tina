@@ -15,13 +15,13 @@
 						"$path": "node_modules/@rbxts"
 					}
 				}
+			},
+			"Package": {
+				"$path": "out"
 			}
 		},
 		"ServerScriptService": {
 			"$className": "ServerScriptService",
-			"Package": {
-				"$path": "out"
-			},
 			"testBootstrap": {
 				"$path": "out/testBootstrap.server.lua"
 			}

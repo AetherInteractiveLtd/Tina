@@ -1,7 +1,7 @@
 import { AudienceDeclaration } from "../../../../audience/types";
 import { EventListener } from "../../../../events";
-import Client from "../../../utilities/client";
-import Server from "../../../utilities/server";
+import { Client } from "../../../util/client";
+import { Server } from "../../../util/server";
 import { AbstractEndpoint } from "../endpoint/endpoint";
 import { UPDATEDeclaration } from "./types";
 
@@ -9,7 +9,7 @@ export class UpdateEndpoint<T> extends AbstractEndpoint implements UPDATEDeclara
 	public when(): EventListener<[value: T]> {
 		const eventListener: EventListener<[T]> = new EventListener();
 
-		Client.listen(this.id, (value: never) => eventListener.call(value));
+		Client.listen(this.id, value => eventListener.call(value));
 
 		return eventListener;
 	}
@@ -23,10 +23,10 @@ export class UpdateEndpoint<T> extends AbstractEndpoint implements UPDATEDeclara
 	}
 
 	public sendAll(value: T): void {
-		Server.sendAll(this.id, value);
+		Server.sendAll(this.id, value as never);
 	}
 
 	public sendAllExcept(blacklist: AudienceDeclaration, value: T): void {
-		Server.sendAllExcept(this.id, blacklist.get(), value);
+		Server.sendAllExcept(this.id, blacklist.get(), value as never);
 	}
 }
