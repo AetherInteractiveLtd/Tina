@@ -339,12 +339,15 @@ export class SystemManager {
 	}
 
 	/**
-	 * A helper function that will ensure that a system does not yield.
+	 * A helper function that will ensure that a system runs correctly.
 	 *
-	 * @param system The system to check for yielding.
+	 * This will check if the system yielded, and if it did, it will throw an
+	 * error. It will also suppress errors if the system has recently errored.
+	 *
+	 * @param system The system to check for errors.
 	 * @param callback The system function to call.
 	 */
-	private ensureNoAsync(system: SystemInternal, callback: () => void): void {
+	private ensure(system: SystemInternal, callback: () => void): void {
 		const thread = coroutine.create(callback);
 		const [success, result] = coroutine.resume(thread);
 		if (coroutine.status(thread) !== "dead") {
@@ -363,7 +366,7 @@ export class SystemManager {
 			const recentError = `System: ${system.name} errored! ${result} + \n ${debug.traceback}`;
 
 			const lastError = system.recentErrors.get(recentError);
-			print(system.recentErrors);
+
 			if (lastError !== undefined && lastError > os.clock()) {
 				return;
 			}
@@ -408,7 +411,7 @@ export class SystemManager {
 			return;
 		}
 
-		this.ensureNoAsync(system, () => {
+		this.ensure(system, () => {
 			system.initialize(this.world);
 		});
 	}
@@ -474,7 +477,7 @@ export class SystemManager {
 
 			debug.profilebegin("system: " + system.name);
 			{
-				this.ensureNoAsync(system, () => {
+				this.ensure(system, () => {
 					system.onUpdate(this.world /**, ...this.systemArgs */);
 					this.world.flush();
 				});
@@ -494,7 +497,7 @@ export class SystemManager {
 		}
 
 		if (system.configureQueries !== undefined) {
-			this.ensureNoAsync(system, () => {
+			this.ensure(system, () => {
 				system.configureQueries(this.world);
 			});
 		}
