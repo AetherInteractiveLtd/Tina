@@ -190,14 +190,16 @@ export class World {
 	 * @returns A new {@link Query}.
 	 */
 	public createQuery(
-		arg: RawQuery | AnyComponent | TagComponent,
-		...raw: Array<RawQuery>
+		...raw: [
+			RawQuery | AnyComponent | TagComponent,
+			...Array<RawQuery | AnyComponent | TagComponent>,
+		]
 	): Query {
 		let query: Query;
 
 		debug.profilebegin("World:createQuery");
 		{
-			query = new Query(this, ALL(arg, ...raw));
+			query = new Query(this, ALL(...raw));
 			for (const [_, archetype] of this.entityManager.archetypes) {
 				if (Query.match(archetype.mask, query.mask)) {
 					query.archetypes.push(archetype);

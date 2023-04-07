@@ -23,7 +23,7 @@ function createMockComponent(id: number): MockComponent {
 	return {
 		componentData: [],
 		componentId: id,
-		set(): void { },
+		set(): void {},
 	};
 }
 
@@ -155,7 +155,7 @@ export = (): void => {
 				tempWorld.flush();
 
 				const query = tempWorld.createQuery(ALL(component));
-				
+
 				expect(query.size()).to.equal(2);
 
 				tempWorld.removeComponent(id1, component);
@@ -168,7 +168,7 @@ export = (): void => {
 
 				tempWorld.flush();
 
-				expect(query.size()).to.equal(0);				
+				expect(query.size()).to.equal(0);
 			});
 		});
 
@@ -229,7 +229,6 @@ export = (): void => {
 
 				expect(allEntities.size()).to.equal(0);
 				expect(shallowEquals(allEntities, [])).to.equal(true);
-
 			});
 		});
 
@@ -254,7 +253,7 @@ export = (): void => {
 
 				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(1);
 			});
@@ -281,7 +280,7 @@ export = (): void => {
 
 				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(2);
 			});
@@ -306,13 +305,13 @@ export = (): void => {
 
 				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(1);
 
 				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(1);
 			});
@@ -342,11 +341,11 @@ export = (): void => {
 				// at the same time
 				for (const _entityId of query.enteredQuery()) {
 					callCount += 1;
-				};
+				}
 
 				for (const _entityId of query.exitedQuery()) {
 					callCount += 10;
-				};
+				}
 
 				expect(callCount).to.equal(10);
 			});
@@ -378,7 +377,7 @@ export = (): void => {
 
 				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(2);
 			});
@@ -404,16 +403,16 @@ export = (): void => {
 
 				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(1);
 
 				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
-				};
+				}
 
 				expect(callCount).to.equal(1);
 			});
 		});
 	});
-}
+};
