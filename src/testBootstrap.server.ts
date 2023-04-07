@@ -1,4 +1,4 @@
-import { ServerScriptService } from "@rbxts/services";
+import { ReplicatedStorage } from "@rbxts/services";
 import TestEZ from "@rbxts/testez";
 
-TestEZ.TestBootstrap.run([ServerScriptService.Package]); // Run tests
+TestEZ.TestBootstrap.run([ReplicatedStorage.Package]); // Run tests

@@ -25,7 +25,7 @@ export class Audience implements AudienceDeclaration {
 	}
 
 	public clean(): AudienceDeclaration {
-		this.listed = [];
+		table.clear(this.listed);
 
 		return this;
 	}
