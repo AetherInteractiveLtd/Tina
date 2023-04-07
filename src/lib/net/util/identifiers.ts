@@ -15,6 +15,12 @@ export namespace Identifiers {
 
 	/** @hidden */
 	export function init(): void {
+		if (!script.FindFirstChild("auto_serde")) {
+			identifiers = new Instance("Folder");
+			identifiers.Name = "auto_serde";
+			identifiers.Parent = script;
+		}
+
 		if (!isServer) {
 			identifiers = script.WaitForChild("auto_serde") as Folder;
 
@@ -36,10 +42,6 @@ export namespace Identifiers {
 					receiveDict[old as never] = undefined;
 				}
 			});
-		} else {
-			identifiers = new Instance("Folder");
-			identifiers.Name = "auto_serde";
-			identifiers.Parent = script;
 		}
 	}
 

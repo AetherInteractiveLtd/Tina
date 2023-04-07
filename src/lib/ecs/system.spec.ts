@@ -284,7 +284,7 @@ export = (): void => {
 			expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
 		});
 
-		it("not allow systems to be scheduled after each other on different execution groups", () => {
+		it("not allow systems to be scheduled after each other on different execution groups", async () => {
 			const tempBindableEvent = new Instance("BindableEvent");
 
 			const event = tempBindableEvent.Event;
@@ -299,11 +299,16 @@ export = (): void => {
 			system2.after = [system1];
 			system2.onUpdate = (): void => { };
 
+			let errored = false;
 			const promise = manager.scheduleSystems([system1, system2]).catch(() => {
 				// do nothing
+				errored = true;
 			});
+
+			await promise;
+
 			expect(promise).to.be.ok();
-			expect(promise.getStatus()).to.equal(Promise.Status.Rejected);
+			expect(errored).to.equal(true);
 
 			tempBindableEvent.Destroy();
 		});
