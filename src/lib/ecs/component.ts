@@ -22,6 +22,41 @@ export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Arr
 export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
 
 export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
+	/**
+	 * The default values for this component. This is used when adding a
+	 * component to an entity; each property that is specified in this object
+	 * will be given to the entity.
+	 */
+	defaults?: Partial<OptionalKeys<T>>;
+	/**
+	 * Clones all the data from one entity to another. This will
+	 * overwrite any existing data for the target entity. If you want
+	 * to copy specific properties, then you should do this manually.
+	 *
+	 * @param fromEntityId The entity to copy from.
+	 * @param toEntityId The entity to copy to.
+	 */
+	clone(fromEntityId: EntityId, toEntityId: EntityId): void;
+	/**
+	 * Resets the data for the given entity to the default values if
+	 * they are defined.
+	 *
+	 * @param entityId The entity to reset.
+	 */
+	reset(entityId: EntityId): void;
+	/**
+	 * Sets the data for the given entity.
+	 *
+	 * The set function is used to update any observers that are
+	 * watching the given component. If there are no observers, then it
+	 * is recommended to use the component data directly.
+	 *
+	 * There is no equality check, so it is recommended to only use this
+	 * function when the data has changed.
+	 *
+	 * @param entityId The entity to update.
+	 * @param data The data to update.
+	 */
 	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
 };
 
@@ -128,8 +163,41 @@ export namespace ComponentInternalCreation {
 		const observers = new Array<Observer<T>>();
 		return Sift.Dictionary.merge(componentData, {
 			componentId: getNextComponentId(),
-
+			defaults: undefined,
 			observers: observers,
+
+			/**
+			 * Clones all the data from one entity to another. This will
+			 * overwrite any existing data for the target entity. If you want
+			 * to copy specific properties, then you should do this manually.
+			 *
+			 * @param fromEntityId The entity to copy from.
+			 * @param toEntityId The entity to copy to.
+			 */
+			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key] of pairs(componentData)) {
+					componentData[key as never][toEntityId as never] =
+						componentData[key as never][fromEntityId as never];
+				}
+			},
+
+			/**
+			 * Resets the data for the given entity to the default values if
+			 * they are defined.
+			 *
+			 * @param entityId The entity to reset.
+			 */
+			reset(entityId: EntityId): void {
+				if (this.defaults === undefined) {
+					return;
+				}
+
+				// eslint-disable-next-line roblox-ts/no-array-pairs
+				for (const [key, value] of pairs(this.defaults)) {
+					componentData[key as never][entityId as never] = value as never;
+				}
+			},
 
 			/**
 			 * Sets the data for the given entity.
@@ -148,6 +216,8 @@ export namespace ComponentInternalCreation {
 				for (const observer of observers) {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
+
+				// TODO: This currently does not support nested fields.
 
 				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key, value] of pairs(data)) {

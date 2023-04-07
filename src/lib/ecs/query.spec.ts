@@ -13,6 +13,8 @@ type MockComponent = {
 	componentData: Array<never>;
 	componentId: number;
 	set(): void;
+	reset(): void;
+	clone(): void;
 };
 
 function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
@@ -24,6 +26,8 @@ function createMockComponent(id: number): MockComponent {
 		componentData: [],
 		componentId: id,
 		set(): void {},
+		reset(): void {},
+		clone(): void {},
 	};
 }
 

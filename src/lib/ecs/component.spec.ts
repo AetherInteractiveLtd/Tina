@@ -14,6 +14,7 @@ let world: World;
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		world = new (World as any)() as World;
 	});
 
@@ -26,7 +27,7 @@ export = (): void => {
 		});
 
 		it("not be able to be created after entities have been added", () => {
-			world.add();	
+			world.add();
 
 			expect(() => {
 				ComponentInternalCreation.createComponent({
@@ -61,7 +62,7 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
-			
+
 			const component2 = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
@@ -92,7 +93,67 @@ export = (): void => {
 
 			component[entity] = 2;
 			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(2);
+		});
 
+		it("be able to have a default value", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.Boolean,
+			});
+
+			component.defaults = {
+				x: 100,
+			};
+
+			const entity = world.add();
+			const entity2 = world.add();
+
+			world.addComponent(entity, component);
+			world.addComponent(entity2, component, { x: 200 });
+			world.flush();
+
+			expect(component.x[entity]).to.equal(100);
+			expect(component.x[entity2]).to.equal(200);
+		});
+
+		it("be able to reset its default values", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.Boolean,
+			});
+
+			component.defaults = {
+				x: 10,
+			};
+
+			const entity = world.add();
+
+			world.addComponent(entity, component, { x: 200 });
+			world.flush();
+
+			expect(component.x[entity]).to.equal(200);
+
+			component.reset(entity);
+
+			expect(component.x[entity]).to.equal(10);
+		});
+
+		it("be able to clone its data from another entity", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.Boolean,
+			});
+
+			const entity = world.add();
+			const entity2 = world.add();
+
+			world.addComponent(entity, component, { x: 200, y: true });
+			world.flush();
+
+			component.clone(entity, entity2);
+
+			expect(component.x[entity2]).to.equal(200);
+			expect(component.y[entity2]).to.equal(true);
 		});
 	});
 
