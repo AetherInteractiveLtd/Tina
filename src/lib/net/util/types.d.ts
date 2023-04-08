@@ -1,4 +1,4 @@
-export declare type Contents = { [x: string | number]: unknown } | undefined;
+export declare type Contents = object | undefined;
 
 export declare type ClientListener = (contents: Contents) => unknown;
 export declare type ServerListener = (player: Player, contents: Contents) => unknown;

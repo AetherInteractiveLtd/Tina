@@ -51,7 +51,7 @@ export namespace Identifiers {
 	 * @param id an id to compress from.
 	 */
 	export function create(): string {
-		const current = numOfSerials++;
+		const current = ++numOfSerials;
 		const id = tostring(current);
 
 		if (current >= limit) {

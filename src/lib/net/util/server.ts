@@ -1,6 +1,5 @@
 import { Players, RunService } from "@rbxts/services";
 
-import { FunctionUtil } from "../../util/functions";
 import { Identifiers } from "./identifiers";
 import { Contents, InitialPacket, Packet, ServerListener } from "./types";
 
@@ -48,7 +47,7 @@ export namespace Server {
 					);
 				} else {
 					for (const listener of listeners[packet.id]) {
-						FunctionUtil.runOnFreeThread(listener, player, packet.contents);
+						task.spawn(() => listener(player, packet.contents));
 					}
 				}
 			}
