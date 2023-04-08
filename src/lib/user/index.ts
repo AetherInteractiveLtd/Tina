@@ -2,7 +2,6 @@ import { Players, RunService } from "@rbxts/services";
 
 import { TinaEvents } from "../events/internal";
 import { Internals } from "../net/internal";
-import { DefaultUser as Default } from "./default";
 import { ClientUser as Client } from "./default/client";
 import { ServerUser as Server } from "./default/server";
 import { DefaultUserDeclaration } from "./default/types";
@@ -29,12 +28,12 @@ export namespace Users {
 	const users: Map<Player, DefaultUserDeclaration> = new Map();
 	const isServer = RunService.IsServer();
 
-	export const DefaultUser = Default(Client);
-
 	export const ServerUser = Server;
 	export const ClientUser = Client;
 
-	export let tina_user_class: new (player: Player) => DefaultUserDeclaration = Users.DefaultUser;
+	export let tina_user_class: new (player: Player) => DefaultUserDeclaration = isServer
+		? ServerUser
+		: ClientUser;
 
 	/**
 	 * Used to change the User class from where all the Users are created.
