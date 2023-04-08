@@ -1,6 +1,5 @@
 import { RunService } from "@rbxts/services";
 
-import { FunctionUtil } from "../../util/functions";
 import { Identifiers } from "./identifiers";
 import { ClientListener, Contents, Packet } from "./types";
 
@@ -26,7 +25,7 @@ export namespace Client {
 				);
 			} else {
 				for (const listener of listeners[packet.id]) {
-					FunctionUtil.runOnFreeThread(listener, packet.contents);
+					task.spawn(() => listener(packet.contents));
 				}
 			}
 		});

@@ -1,11 +1,12 @@
 import { Players, RunService } from "@rbxts/services";
 
-import { EventListener } from "../../events";
-import { Internals } from "../../net/internal";
-import { FunctionUtil } from "../../util/functions";
-import { StateSetter } from "../types";
+import { EventListener } from "../../../events";
+import { Internals } from "../../../net/internal";
+import { FunctionUtil } from "../../../util/functions";
+import { StateSetter } from "../../types";
+import { PlayerStateImplementation } from "./types";
 
-export class PlayerState<T = unknown> {
+export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 	private readonly isServer = RunService.IsServer();
 	private readonly values: Map<Player, T> = new Map();
 
@@ -55,7 +56,6 @@ export class PlayerState<T = unknown> {
 		return this.subscription;
 	}
 
-	/** @server */
 	public set(player: Player, setter: StateSetter<T>): void {
 		if (!this.isServer) {
 			throw `[PlayerState:Client]: State can only be set from the server.`;

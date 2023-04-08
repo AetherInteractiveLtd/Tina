@@ -1,9 +1,9 @@
 import { Players, RunService } from "@rbxts/services";
 
 import { EventListener } from "../../events";
-import { FunctionUtil } from "../../util/functions";
 import { Identifiers } from "../util/identifiers";
-import { ClientListener, Packet, ServerListener } from "../util/types";
+import { ClientListener, ServerListener } from "../util/types";
+import { Packet } from "../util/types";
 import { InternalNetworkingEvents } from "./types";
 
 export namespace Internals {
@@ -12,16 +12,7 @@ export namespace Internals {
 	const listeners: Map<string, Array<ClientListener | ServerListener>> = new Map();
 	const isServer = RunService.IsServer();
 
-	const queue: Array<{ to?: Array<Player>; contents?: object; id: string }> = [];
-
-	// eslint-disable-next-line no-inner-declarations
-	function listen(id: string, callback: ClientListener | ServerListener): void {
-		if (listeners.has(id)) {
-			listeners.set(id, [callback]);
-		} else {
-			listeners.get(id)!.push(callback);
-		}
-	}
+	const queue: Array<{ to?: Array<Player>; contents: object; id: string }> = [];
 
 	/** @hidden */
 	export function init(): void {
@@ -30,14 +21,14 @@ export namespace Internals {
 
 			RunService.PostSimulation.Connect(() => {
 				if (queue.size() < 1) return;
-				remote?.FireServer(queue);
 
+				remote!.FireServer(queue);
 				table.clear(queue);
 			});
 
-			remote?.OnClientEvent.Connect((packet: Packet) => {
+			remote!.OnClientEvent.Connect((packet: Packet) => {
 				for (const listener of listeners.get(packet.id)!) {
-					FunctionUtil.runOnFreeThread(listener, packet.contents);
+					task.spawn(() => (listener as ClientListener)(packet.contents));
 				}
 			});
 		} else {
@@ -45,13 +36,11 @@ export namespace Internals {
 			remote.Name = "[Internals]";
 
 			RunService.PostSimulation.Connect(() => {
-				if (queue.size() < 1) return;
-
 				for (const packet of queue) {
 					if (packet.to === undefined) return;
 
 					for (const player of packet.to) {
-						remote?.FireClient(player, {
+						remote!.FireClient(player, {
 							id: packet.id,
 							contents: packet.contents,
 						});
@@ -71,7 +60,7 @@ export namespace Internals {
 						);
 					} else {
 						for (const listener of listeners.get(packet.id)!) {
-							FunctionUtil.runOnFreeThread(listener, player, packet.contents);
+							task.spawn(() => (listener as ServerListener)(player, packet.contents));
 						}
 					}
 				}
@@ -91,7 +80,7 @@ export namespace Internals {
 	export function update<T extends keyof InternalNetworkingEvents>(
 		to: Player,
 		id: T,
-		contents?: object,
+		contents: object,
 	): void {
 		return void queue.push({ to: [to], id, contents });
 	}
@@ -106,7 +95,7 @@ export namespace Internals {
 	 */
 	export function updateAll<T extends keyof InternalNetworkingEvents>(
 		id: T,
-		contents?: object,
+		contents: object,
 	): void {
 		return void queue.push({ to: Players.GetPlayers(), id, contents });
 	}
@@ -119,7 +108,7 @@ export namespace Internals {
 	 * @param id event id.
 	 * @param contents for packet being sent.
 	 */
-	export function post<T extends keyof InternalNetworkingEvents>(id: T, contents?: object): void {
+	export function post<T extends keyof InternalNetworkingEvents>(id: T, contents: object): void {
 		return void queue.push({ id, contents });
 	}
 
@@ -133,7 +122,15 @@ export namespace Internals {
 	): EventListener<InternalNetworkingEvents[T]> {
 		const eventListener: EventListener<InternalNetworkingEvents[T]> = new EventListener();
 
-		listen(id, (...args: Array<unknown>) => eventListener.call(...args));
+		const callback = (...args: Array<unknown>): void => {
+			return void eventListener.call(...args);
+		};
+
+		if (!listeners.has(id)) {
+			listeners.set(id, [callback]);
+		} else {
+			listeners.get(id)!.push(callback);
+		}
 
 		return eventListener;
 	}

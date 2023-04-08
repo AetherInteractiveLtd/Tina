@@ -5,12 +5,8 @@ import { FriendPage, ServerUserImplementation } from "./types";
 export class ServerUser implements ServerUserImplementation {
 	public player: Player;
 
-	constructor(private ref: Player | number) {
-		this.player = (
-			typeOf(this.ref) === "number"
-				? Players.GetPlayerByUserId(this.ref as number)
-				: (this.ref as Player)
-		)!;
+	constructor(player: Player) {
+		this.player = player;
 	}
 
 	public async friends(onlineOnly?: boolean): Promise<Map<string, FriendPage>> {
@@ -22,11 +18,11 @@ export class ServerUser implements ServerUserImplementation {
 			if (friendsPages !== undefined) {
 				do {
 					for (const page of friendsPages.GetCurrentPage()) {
-						// if (onlineOnly && page.IsOnline) {
+						if (onlineOnly && !page.IsOnline) {
+							continue;
+						}
+
 						friends.set(page.Username, page);
-						// } else if (onlineOnly === undefined) {
-						//	friends.set(page.Username, page);
-						// }
 					}
 
 					friendsPages.AdvanceToNextPageAsync();
@@ -34,7 +30,7 @@ export class ServerUser implements ServerUserImplementation {
 			}
 		} catch (e) {
 			warn(
-				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s${
+				`[Tina:User]: There has been an error while trying to retrieve ${this.player}'s${
 					onlineOnly === true ? " online" : ""
 				} friends. More information: ${e}`,
 			);
@@ -52,7 +48,9 @@ export class ServerUser implements ServerUserImplementation {
 			if (friendsPages !== undefined) {
 				do {
 					for (const page of friendsPages.GetCurrentPage()) {
-						if (page.IsOnline === false) continue;
+						if (!page.IsOnline) {
+							continue;
+						}
 
 						if (Players.FindFirstChild(page.Username) !== undefined) {
 							friends.set(page.Username, page);
@@ -64,7 +62,7 @@ export class ServerUser implements ServerUserImplementation {
 			}
 		} catch (e) {
 			warn(
-				`[TinaUser]: There has been an error while trying to retrieve ${this.player}'s friends in server. More information: `,
+				`[Tina:User]: There has been an error while trying to retrieve ${this.player}'s friends in server. More information: `,
 				e,
 			);
 		}
