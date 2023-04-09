@@ -12,3 +12,7 @@
 # Settings (don't know why we would want other's settings as well, this is per user
 .vscode/*
 !.vscode/extensions.json
+/example/package-lock.json
+/example/node_modules
+/example/include
+/example/out
