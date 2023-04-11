@@ -31,8 +31,14 @@ export interface SignalLike {
 	on?(callback: Callback): ConnectionLike;
 }
 
-const EVENT_CONNECT_METHODS = ["Connect", "do", "on", "connect"];
-const EVENT_DISCONNECT_METHODS = ["Disconnect", "Destroy", "disconnect", "destroy"];
+const EVENT_CONNECT_METHODS: Array<keyof SignalLike> = ["Connect", "do", "on", "connect"];
+
+const EVENT_DISCONNECT_METHODS: Array<keyof ConnectionLike> = [
+	"Disconnect",
+	"Destroy",
+	"disconnect",
+	"destroy",
+];
 
 /**
  * Utility functions for connecting and disconnecting to events that are not
@@ -54,7 +60,7 @@ export namespace ConnectionUtil {
 
 		for (const method of EVENT_CONNECT_METHODS) {
 			if (type(event[method as keyof SignalLike["Connect"]]) === "function") {
-				return event[method as keyof SignalLike]!(callback);
+				return event[method]!(callback);
 			}
 		}
 
@@ -74,7 +80,7 @@ export namespace ConnectionUtil {
 
 		for (const method of EVENT_DISCONNECT_METHODS) {
 			if (type(connection[method as keyof ConnectionLike["Destroy"]]) === "function") {
-				connection[method as keyof ConnectionLike]!();
+				connection[method]!();
 			}
 		}
 	}

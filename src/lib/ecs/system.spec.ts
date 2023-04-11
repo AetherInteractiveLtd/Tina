@@ -441,7 +441,7 @@ export = (): void => {
 			let callCount = 0;
 
 			system.onUpdate = (): void => {
-				for (const [,] of event.items()) {
+				for (const [,] of event.iter()) {
 					callCount += 1;
 				}
 			};

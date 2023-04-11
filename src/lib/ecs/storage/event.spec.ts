@@ -18,7 +18,7 @@ export = (): void => {
 			let callCount = 0;
 
 			const eventFn = function (): void {
-				for (const [x, y, z] of eventStorage.items()) {
+				for (const [x, y, z] of eventStorage.iter()) {
 					callCount += 1;
 					a = x;
 					b = y;

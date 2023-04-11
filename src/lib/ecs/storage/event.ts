@@ -10,7 +10,7 @@ import { StorageObject } from "../system";
 
 export type Event<E> = StorageObject & {
 	queue: Queue<InferSignalParameters<E>>;
-	items: () => Generator<InferSignalParameters<E>, void, unknown>;
+	iter: () => Generator<InferSignalParameters<E>, void, unknown>;
 };
 
 /**
@@ -74,7 +74,7 @@ export function createEvent<E extends SignalLike>(
 	 * }
 	 * ```
 	 */
-	function* items(): Generator<InferSignalParameters<E>> {
+	function* iter(): Generator<InferSignalParameters<E>> {
 		while (queue.size() > 0) {
 			const args = queue.pop();
 			if (args) {
@@ -109,5 +109,5 @@ export function createEvent<E extends SignalLike>(
 		queue.clear();
 	}
 
-	return { cleanup, items, queue, setup };
+	return { cleanup, iter, queue, setup };
 }

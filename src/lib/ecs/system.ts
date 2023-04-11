@@ -391,9 +391,9 @@ export class SystemManager {
 				system.recentErrors = new Map();
 			}
 
-			const recentError = `System: ${tostring(
-				getmetatable(system),
-			)} errored! ${result} + \n ${debug.traceback}`;
+			const recentError = `System ${tostring(getmetatable(system))} errored! ${result} + \n ${
+				debug.traceback
+			}`;
 
 			const lastError = system.recentErrors.get(recentError);
 
@@ -503,7 +503,7 @@ export class SystemManager {
 			system.dt = os.clock() - system.lastCalled;
 			system.lastCalled = os.clock();
 
-			debug.profilebegin("system: " + tostring(getmetatable(system)));
+			debug.profilebegin(tostring(getmetatable(system)));
 			{
 				this.ensure(system, () => {
 					system.onUpdate(this.world /**, ...this.systemArgs */);
