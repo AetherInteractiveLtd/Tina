@@ -1,9 +1,7 @@
-import { Players } from "@rbxts/services";
-
 import { ClientUserImplementation } from "./types";
 
 export class ClientUser implements ClientUserImplementation {
-	constructor(public player = Players.LocalPlayer) {}
+	constructor(public readonly player: Player) {}
 
 	public move(to: CFrame | BasePart): void {
 		const character = this.player.Character;

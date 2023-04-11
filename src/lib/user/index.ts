@@ -1,27 +1,55 @@
 import { Players, RunService } from "@rbxts/services";
 
+import { TinaEvents } from "../events/internal";
+import { Internals } from "../net/internal";
+import { ClientUser as Client } from "./default/client";
+import { ServerUser as Server } from "./default/server";
 import { DefaultUserDeclaration } from "./default/types";
 
+/**
+ * Users, a namespace capable of creating/deleting/retrieving Users from your experience.
+ *
+ * A User is an abstraction of the Player Instance with much more utilities, Users
+ * are retrieved with the `.get()` method and you can create your own Users with the `.set()` method.
+ *
+ * Users are done automatically and internally within Tina, to start interacting with them, make sure
+ * to provide a Users class which extends from the Default User.
+ *
+ * @example
+ * ```ts
+ * import Tina, { Users } from "@rbxts/tina";
+ *
+ * class MyUser extends Users.DefaultUser {}
+ *
+ * Tina.setUserClass(MyUser);
+ * ```
+ */
 export namespace Users {
 	const users: Map<Player, DefaultUserDeclaration> = new Map();
 	const isServer = RunService.IsServer();
 
-	export let tina_user_class: new (ref: Player | number) => DefaultUserDeclaration;
+	export const ServerUser = Server;
+	export const ClientUser = Client;
+
+	export let tina_user_class: new (player: Player) => DefaultUserDeclaration = isServer
+		? ServerUser
+		: ClientUser;
 
 	/**
 	 * Used to change the User class from where all the Users are created.
 	 *
 	 * @hidden
+	 *
 	 * @param userClass the new user-defined User class.
 	 */
-	export function setUserClass(
-		userClass: new (ref: Player | number) => DefaultUserDeclaration,
-	): void {
+	export function setUserClass(userClass: new (ref: Player) => DefaultUserDeclaration): void {
 		tina_user_class = userClass;
 	}
 
 	/**
-	 * Used to retrieve a player's user, in-game at that moment.
+	 * Used to retrieve a player's users.
+	 *
+	 * @server
 	 *
 	 * @param from a player or a number used to retrieve the player's user.
 	 * @returns a User object constructed from your defined User class.
@@ -29,61 +57,95 @@ export namespace Users {
 	export function get(from: Player | number): DefaultUserDeclaration {
 		const ref =
 			type(from) === "number"
-				? Players.GetPlayerByUserId(from as number) !== undefined
-					? Players.GetPlayerByUserId(from as number)
-					: error(`[Tina:User]: User seems to not exist at all, id provided=${from}`)
-				: (from as Player);
+				? Players.GetPlayerByUserId(from as number)
+				: typeOf(from) === "Instance"
+				? (from as Instance).IsA("Player")
+					? (from as Player)
+					: undefined
+				: undefined;
 
 		if (ref === undefined) {
 			throw `[Tina:User]: Expected a valid Player's Instance reference or a UserId! Got: [${from}]`;
 		}
 
-		let user!: DefaultUserDeclaration;
+		let user: DefaultUserDeclaration | undefined = users.get(ref);
 
-		if (isServer) {
-			const existingUser = users.get(ref);
-			user = existingUser !== undefined ? existingUser : new tina_user_class(ref);
-		} else {
-			// TODO: Implement client retrieving Users.
+		if (user === undefined) {
+			user = new tina_user_class(ref);
+			Users.set(ref, user);
 		}
 
 		return user;
 	}
 
 	/**
-	 * Used to add user-created Users.
+	 * Used to add user-created User.
 	 *
 	 * @param player a Player Instance.
 	 * @param user a User object.
+	 * @returns the User passed.
 	 */
 	export function set(player: Player, user: DefaultUserDeclaration): void {
-		users.set(player, user);
+		return void users.set(player, user);
+	}
+
+	/**
+	 * Used to remove a user.
+	 *
+	 * @param player a Player Instance.
+	 * @returns the last User linked to the player given.
+	 */
+	export function remove(player: Player): void {
+		return void users.delete(player);
+	}
+
+	/**
+	 * Returns an array of all the connected users.
+	 */
+	export function items(): Array<DefaultUserDeclaration> {
+		const itemsList: Array<DefaultUserDeclaration> = [];
+
+		for (const [, user] of users) {
+			itemsList.push(user);
+		}
+
+		return itemsList;
 	}
 
 	/**
 	 * @hidden
 	 */
-	export function setupEvents(): void {}
+	export function init(): void {
+		if (!isServer) {
+			Internals.when("user:added").do(({ id }) => {
+				TinaEvents.emit("user:added", Users.get(id));
+			});
 
-	/**
-	 * Events related to user creation
-	 */
-	{
-		if (isServer) {
+			Internals.when("user:removing").do(({ id }) => {
+				const user = Users.get(id);
+				TinaEvents.emit("user:removing", user);
+
+				Users.remove(user.player);
+			});
+		} else {
 			Players.PlayerAdded.Connect(player => {
 				const user = Users.get(player);
 
-				return Users.set(player, user);
+				Internals.update(player, "user:added", { id: player.UserId });
+				TinaEvents.emit("user:added", user);
+
+				return void Users.set(player, user);
 			});
 
 			Players.PlayerRemoving.Connect(player => {
 				const user = users.get(player);
 
 				if (user !== undefined) {
-					/* empty */
-				}
+					Internals.update(player, "user:removing", { id: player.UserId });
+					TinaEvents.emit("user:removing", user);
 
-				return users.delete(player);
+					return void Users.remove(player);
+				}
 			});
 		}
 	}

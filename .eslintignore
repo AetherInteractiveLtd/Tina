@@ -1,4 +1,5 @@
 examples/*
+example/*
 transformer/*
 
 # Tests, it's annoying

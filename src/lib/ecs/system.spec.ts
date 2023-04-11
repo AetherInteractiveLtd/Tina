@@ -1,5 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { ScriptContext } from "@rbxts/services";
 import { Query } from "./query";
 import { createEvent } from "./storage/event";
 import { System, SystemManager } from "./system";
@@ -315,7 +316,7 @@ export = (): void => {
 			expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
 		});
 
-		it("not allow systems to be scheduled after each other on different execution groups", () => {
+		it("not allow systems to be scheduled after each other on different execution groups", async () => {
 			const tempBindableEvent = new Instance("BindableEvent");
 
 			const event = tempBindableEvent.Event;
@@ -330,11 +331,16 @@ export = (): void => {
 			system2.after = [system1];
 			system2.onUpdate = (): void => {};
 
+			let errored = false;
 			const promise = manager.scheduleSystems([system1, system2]).catch(() => {
 				// do nothing
+				errored = true;
 			});
+
+			await promise;
+
 			expect(promise).to.be.ok();
-			expect(promise.getStatus()).to.equal(Promise.Status.Rejected);
+			expect(errored).to.equal(true);
 
 			tempBindableEvent.Destroy();
 		});
@@ -394,6 +400,7 @@ export = (): void => {
 				task.wait();
 				callCount += 1;
 			};
+			system.name = "YieldSystem";
 
 			void manager.scheduleSystems([system]);
 
@@ -477,6 +484,35 @@ export = (): void => {
 
 			tempBindableEvent.Destroy();
 		});
+
+		it("should not send multiple duplicate errors to the console", () => {
+			const system = createSystem();
+			system.onUpdate = (): void => {
+				throw ("test");
+			};
+			system.name = "multipleErrorTest"
+
+			manager.scheduleSystem(system);
+			manager.start();
+
+			let errorCount = 0;
+
+			const connection = ScriptContext.Error.Connect(() => {
+				errorCount += 1;
+			});
+
+			bindableEvent.Fire();
+			bindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(errorCount).to.equal(1);
+
+			connection.Disconnect();
+		});
+	});
+
+	afterEach(() => {
+		manager.stop();
 	});
 
 	afterAll(() => {

@@ -6,12 +6,11 @@ import {
 	InferSignalParameters,
 	SignalLike,
 } from "../../util/connection-util";
+import { StorageObject } from "../system";
 
-export type Event<E> = {
+export type Event<E> = StorageObject & {
 	queue: Queue<InferSignalParameters<E>>;
 	items: () => Generator<InferSignalParameters<E>, void, unknown>;
-	cleanup: () => void;
-	setup: () => void;
 };
 
 /**
