@@ -51,7 +51,7 @@ export class Observer {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityId) => void): void {
+	public *iter(): Generator<EntityId> {
 		for (const entityId of this.storage) {
 			let valid = true;
 
@@ -65,7 +65,7 @@ export class Observer {
 				continue;
 			}
 
-			callback(entityId);
+			yield entityId;
 		}
 
 		this.storage.clear();
