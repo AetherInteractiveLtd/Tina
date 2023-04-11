@@ -220,7 +220,8 @@ export { Audience } from "./lib/audience/audience";
 export { Component, ComponentTypes, GetComponentSchema } from "./lib/ecs/component";
 export { Observer } from "./lib/ecs/observer";
 export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
-export { System } from "./lib/ecs/system";
+export { createEvent, Event } from "./lib/ecs/storage/event";
+export { StorageObject, System } from "./lib/ecs/system";
 export { type World } from "./lib/ecs/world";
 export { ComponentId, EntityId } from "./lib/types/ecs";
 
