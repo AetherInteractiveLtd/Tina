@@ -14,8 +14,6 @@ import {
 	GetComponentSchema,
 	OptionalKeys,
 	TagComponent,
-	Tree,
-	Type,
 } from "./component";
 import { EntityManager } from "./entity-manager";
 import { Observer } from "./observer";
@@ -59,7 +57,7 @@ export class World {
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
-	private observers: Map<AnyComponent, Observer<Tree<Type>>> = new Map();
+	private observers: Map<AnyComponent, Observer> = new Map();
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -72,7 +70,7 @@ export class World {
 	 * Observers that have entities to update.
 	 * @hidden
 	 */
-	public observersToUpdate: Array<[EntityId, Observer<Tree<Type>>]> = [];
+	public observersToUpdate: Array<[EntityId, Observer]> = [];
 
 	constructor(options?: WorldOptions) {
 		this.options = options ?? {};
@@ -168,7 +166,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver<C extends AnyComponent>(component: C): Observer<GetComponentSchema<C>> {
+	public createObserver<C extends AnyComponent>(component: C): Observer {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 

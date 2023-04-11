@@ -45,6 +45,8 @@ export = (): void => {
 
 			world.flush();
 
+			print(calledFn);
+
 			observer.forEach(_entityId => {
 				calledFn.push(3);
 			});
