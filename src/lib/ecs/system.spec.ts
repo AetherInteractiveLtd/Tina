@@ -400,7 +400,6 @@ export = (): void => {
 				task.wait();
 				callCount += 1;
 			};
-			system.name = "YieldSystem";
 
 			void manager.scheduleSystems([system]);
 
@@ -490,7 +489,6 @@ export = (): void => {
 			system.onUpdate = (): void => {
 				throw ("test");
 			};
-			system.name = "multipleErrorTest"
 
 			manager.scheduleSystem(system);
 			manager.start();
