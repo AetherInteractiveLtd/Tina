@@ -83,22 +83,19 @@ export abstract class System {
 	/**	The time that the system was last called. */
 	public lastCalled = 0;
 	/** The name of the system is primarily used for debugging purposes. */
-	// TODO: Can we infer this from the parent class name?
-	public name = "System";
 	/**
 	 * The priority order of the system.
 	 * A higher priority means the system will execute first.
 	 */
 	public priority = 0;
 
-	constructor(ctor?: Partial<System>) {
+	constructor(ctor?: Partial<Pick<System, "after" | "executionGroup" | "priority">>) {
 		if (ctor === undefined) {
 			return;
 		}
 
 		this.after = ctor.after;
 		this.executionGroup = ctor.executionGroup;
-		this.name = ctor.name ?? this.name;
 		this.priority = ctor.priority ?? this.priority;
 	}
 
@@ -343,12 +340,19 @@ export class SystemManager {
 			coroutine.close(thread);
 			task.spawn(
 				error,
-				`System ${system.name} yielded! Yielding in systems is not supported!`,
+				`System ${tostring(
+					getmetatable(system),
+				)} yielded! Yielding in systems is not supported!`,
 			);
 		}
 
 		if (!success) {
-			task.spawn(error, `System: ${system.name} errored! ${result} + \n ${debug.traceback}`);
+			task.spawn(
+				error,
+				`System: ${tostring(getmetatable(system))} errored! ${result} + \n ${
+					debug.traceback
+				}`,
+			);
 		}
 	}
 
@@ -398,7 +402,11 @@ export class SystemManager {
 		unscheduledSystems.sort((a, b) => {
 			if (a.after !== undefined && a.after.includes(b)) {
 				if (b.after !== undefined && b.after.includes(a)) {
-					throw error(`Systems ${a.name} and ${b.name} are in a circular dependency`);
+					throw error(
+						`Systems ${tostring(getmetatable(a))} and ${tostring(
+							getmetatable(b),
+						)} are in a circular dependency`,
+					);
 				}
 				return false;
 			}
@@ -444,7 +452,7 @@ export class SystemManager {
 			system.dt = os.clock() - system.lastCalled;
 			system.lastCalled = os.clock();
 
-			debug.profilebegin("system: " + system.name);
+			debug.profilebegin("system: " + tostring(getmetatable(system)));
 			{
 				this.ensureNoAsync(system, () => {
 					system.onUpdate(this.world /**, ...this.systemArgs */);
@@ -462,7 +470,7 @@ export class SystemManager {
 	 */
 	private setupSystem(system: System): void {
 		if (!system.onUpdate) {
-			throw `System ${system.name} does not have an onUpdate method`;
+			throw `System ${tostring(getmetatable(system))} does not have an onUpdate method`;
 		}
 
 		if (system.configureQueries !== undefined) {
@@ -510,7 +518,9 @@ export class SystemManager {
 
 			for (const afterSystem of system.after) {
 				if (system.executionGroup !== afterSystem.executionGroup) {
-					const msg = `System ${system.name} and ${afterSystem.name} are in different execution groups`;
+					const msg = `System ${tostring(getmetatable(system))} and ${tostring(
+						getmetatable(afterSystem),
+					)} are in different execution groups`;
 					throw msg;
 				}
 			}

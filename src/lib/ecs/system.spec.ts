@@ -13,7 +13,7 @@ const bindableEvent = new Instance("BindableEvent");
 const world = {} as World;
 (world.options as WorldOptions) = {};
 world.options.defaultExecutionGroup = bindableEvent.Event;
-world.flush = (): void => { };
+world.flush = (): void => {};
 
 let manager = {} as SystemManager;
 
@@ -25,9 +25,8 @@ function createSystem(): System {
 	const system = {} as System;
 	system.dt = 0;
 	system.enabled = true;
-	system.name = "System";
 	system.priority = 0;
-	system.onUpdate = (): void => { };
+	system.onUpdate = (): void => {};
 	return system;
 }
 
@@ -37,19 +36,18 @@ export = (): void => {
 	});
 	describe("A system should", () => {
 		it("be able to be created using its constructor", () => {
-			const system = new (class ExampleSystem extends System {
+			const system = new (class ASystemWithAName extends System {
 				constructor() {
 					super({
-						name: "ASystemWithAName",
 						priority: 1000,
-					});					
+					});
 				}
 
 				public onUpdate(): void {}
 			})();
 
 			expect(system).to.be.ok();
-			expect(system.name).to.equal("ASystemWithAName");
+			expect(tostring(getmetatable(system))).to.equal("ASystemWithAName");
 			expect(system.priority).to.equal(1000);
 		});
 
@@ -98,7 +96,7 @@ export = (): void => {
 			system.configureQueries = (world: World): void => {
 				query = new Query(world).mask;
 			};
-			system.onUpdate = (): void => { };
+			system.onUpdate = (): void => {};
 
 			manager.scheduleSystem(system);
 			manager.start();
@@ -322,13 +320,13 @@ export = (): void => {
 
 			const system1 = createSystem();
 			system1.priority = 1;
-			system1.onUpdate = (): void => { };
+			system1.onUpdate = (): void => {};
 
 			const system2 = createSystem();
 			system2.executionGroup = event;
 			system2.priority = 100;
 			system2.after = [system1];
-			system2.onUpdate = (): void => { };
+			system2.onUpdate = (): void => {};
 
 			const promise = manager.scheduleSystems([system1, system2]).catch(() => {
 				// do nothing
@@ -420,10 +418,9 @@ export = (): void => {
 			manager.scheduleSystem(system2);
 
 			manager.start();
-			
+
 			bindableEvent.Fire();
 			expect(callCount).to.equal(2);
-
 		});
 	});
 
