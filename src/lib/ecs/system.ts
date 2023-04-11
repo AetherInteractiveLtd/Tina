@@ -6,6 +6,11 @@ import { World } from "./world";
 
 export type ExecutionGroup = SignalLike;
 
+type StorageObject = {
+	cleanup: () => void;
+	setup: () => void;
+};
+
 export interface System {
 	/**
 	 * An optional hook that can be used to clean up the system. This is useful
@@ -73,8 +78,8 @@ export abstract class System {
 	 */
 	public enabled = true;
 	/**
-	 * The group that this system will be executed on, e.g. Heartbeat,
-	 * RenderStepped, etc.
+	 * The group that this system will be executed on, e.g. PostSimulation,
+	 * PreRender, etc.
 	 *
 	 * The only requirement for an execution group is that the group has a
 	 * .Connect method.
@@ -88,13 +93,21 @@ export abstract class System {
 	 * A higher priority means the system will execute first.
 	 */
 	public priority = 0;
+	/**
+	 * A list of storages that are used by this system.
+	 *
+	 * An example of a storage is `createEvent`, which collects all the events
+	 * since the last call of its iterator.
+	 */
+	public storage: Array<StorageObject> = [];
 
-	constructor(ctor?: Partial<Pick<System, "after" | "executionGroup" | "priority">>) {
+	constructor(ctor?: Partial<Pick<System, "after" | "enabled" | "executionGroup" | "priority">>) {
 		if (ctor === undefined) {
 			return;
 		}
 
 		this.after = ctor.after;
+		this.enabled = ctor.enabled ?? this.enabled;
 		this.executionGroup = ctor.executionGroup;
 		this.priority = ctor.priority ?? this.priority;
 	}
@@ -129,7 +142,7 @@ export class SystemManager {
 	private world: World;
 
 	constructor(world: World) {
-		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.Heartbeat;
+		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.PostSimulation;
 		this.world = world;
 	}
 
@@ -145,6 +158,10 @@ export class SystemManager {
 	public disableSystem(system: System): void {
 		system.enabled = false;
 
+		for (const storage of system.storage) {
+			storage.cleanup();
+		}
+
 		// TODO: Should we also be disabling dependent systems here?
 	}
 
@@ -158,6 +175,10 @@ export class SystemManager {
 	 */
 	public enableSystem(system: System): void {
 		system.enabled = true;
+
+		for (const storage of system.storage) {
+			storage.setup();
+		}
 
 		// TODO: Should we also be enabling systems that depend here? Likely just
 		// issue a warning to the dev that it hasn't been enabled.
@@ -262,6 +283,10 @@ export class SystemManager {
 					this.setupSystem(system);
 				}
 
+				for (const system of systems) {
+					this.setupSystemStorage(system);
+				}
+
 				this.executeSystems();
 
 				this.started = true;
@@ -313,6 +338,10 @@ export class SystemManager {
 
 			if (system.cleanup !== undefined) {
 				system.cleanup();
+			}
+
+			for (const storage of system.storage) {
+				storage.cleanup();
 			}
 		}
 
@@ -480,6 +509,22 @@ export class SystemManager {
 		}
 
 		system.lastCalled = os.clock();
+	}
+
+	/**
+	 * Initializes all the system storages.
+	 *
+	 * @param system
+	 * @returns
+	 */
+	private setupSystemStorage(system: System): void {
+		if (!system.enabled) {
+			return;
+		}
+
+		for (const storage of system.storage) {
+			storage.setup();
+		}
 	}
 
 	/**

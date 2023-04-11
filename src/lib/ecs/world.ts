@@ -26,7 +26,7 @@ import { ExecutionGroup, System, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
-	 * The default execution group for systems. Defaults to `Heartbeat`.
+	 * The default execution group for systems. Defaults to `PostSimulation `.
 	 */
 	defaultExecutionGroup?: ExecutionGroup;
 	/**

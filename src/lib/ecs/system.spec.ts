@@ -1,6 +1,7 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { Query } from "./query";
+import { createEvent } from "./storage/event";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
 
@@ -26,6 +27,7 @@ function createSystem(): System {
 	system.dt = 0;
 	system.enabled = true;
 	system.priority = 0;
+	system.storage = [];
 	system.onUpdate = (): void => {};
 	return system;
 }
@@ -59,8 +61,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -81,8 +83,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system1, system2]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -98,8 +100,8 @@ export = (): void => {
 			};
 			system.onUpdate = (): void => {};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(query).to.be.ok();
 		});
@@ -132,8 +134,8 @@ export = (): void => {
 				systemOrder.push(2);
 			};
 
-			manager.scheduleSystems([system1, system2, system3, system4]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2, system3, system4]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -152,8 +154,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -177,8 +179,8 @@ export = (): void => {
 			};
 			system2.executionGroup = tempBindableEvent.Event;
 
-			manager.scheduleSystems([system1, system2]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -240,8 +242,8 @@ export = (): void => {
 				systemOrder.push(4);
 			};
 
-			manager.scheduleSystems([system1, system2, system3, system5, system6, system4]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2, system3, system5, system6, system4]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -274,8 +276,8 @@ export = (): void => {
 				systemOrder.push(1);
 			};
 
-			manager.scheduleSystems([system2, system1, system3]);
-			manager.start();
+			void manager.scheduleSystems([system2, system1, system3]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -303,8 +305,8 @@ export = (): void => {
 			};
 
 			manager = new SystemManager(world);
-			manager.scheduleSystems([system5, system4, system6]);
-			manager.start();
+			void manager.scheduleSystems([system5, system4, system6]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder1, [])).to.equal(true);
 
@@ -345,8 +347,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system]);
-			manager.start();
+			void manager.scheduleSystems([system]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -370,8 +372,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system]);
-			manager.start();
+			void manager.scheduleSystems([system]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -393,9 +395,9 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system]);
+			void manager.scheduleSystems([system]);
 
-			manager.start();
+			void manager.start();
 			bindableEvent.Fire();
 
 			expect(callCount).to.equal(1);
@@ -414,13 +416,66 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.scheduleSystem(system2);
+			void manager.scheduleSystem(system);
+			void manager.scheduleSystem(system2);
 
-			manager.start();
+			void manager.start();
 
 			bindableEvent.Fire();
 			expect(callCount).to.equal(2);
+		});
+
+		it("be able to use storages", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+			const event = createEvent(tempBindableEvent.Event);
+
+			const system = createSystem();
+			system.storage.push(event);
+
+			let callCount = 0;
+
+			system.onUpdate = (): void => {
+				for (const [,] of event.items()) {
+					callCount += 1;
+				}
+			};
+
+			void manager.scheduleSystems([system]);
+			void manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(0);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(1);
+
+			manager.disableSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(1);
+
+			manager.enableSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(2);
+
+			manager.unscheduleSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(2);
+
+			tempBindableEvent.Destroy();
 		});
 	});
 
