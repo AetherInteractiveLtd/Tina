@@ -31,23 +31,23 @@ export = (): void => {
 
 			world.flush();
 
-			observer.forEach(_entityId => {
+			for (const _ of observer.iter()) {
 				calledFn.push(1);
-			});
+			};
 
 			component.set(id, { x: 1 });
 
-			observer.forEach(_entityId => {
+			for (const _ of observer.iter()) {
 				calledFn.push(2);
-			});
+			};
 
 			expect(shallowEquals(calledFn, [])).to.equal(true);
 
 			world.flush();
 
-			observer.forEach(_entityId => {
+			for (const _ of observer.iter()) {
 				calledFn.push(3);
-			});
+			};
 
 			expect(shallowEquals(calledFn, [3])).to.equal(true);
 		});
@@ -77,9 +77,9 @@ export = (): void => {
 
 			world.flush();
 
-			observer.forEach(entityId => {
+			for (const entityId of observer.iter()) {
 				calledFn.push(entityId);
-			});
+			};
 
 			expect(shallowEquals(calledFn, [id2])).to.equal(true);
 		});

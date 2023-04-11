@@ -1,16 +1,6 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent, Component, GetComponentSchema, Tree, Type } from "./component";
+import { AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
-
-type ChangeStorage<T extends Tree<Type>> = {
-	old: GetComponentSchema<T> | undefined;
-	new: GetComponentSchema<T> | undefined;
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type PickOne<T> = {
-	[P in keyof T]: Record<P, T[P]> & Partial<Record<Exclude<keyof T, P>, undefined>>;
-}[keyof T];
 
 /**
  * An observer is a way to listen for when an entity's data changes.
@@ -30,7 +20,7 @@ type PickOne<T> = {
  * {@link World.createObserver} method, otherwise any changes will not be
  * registered.
  */
-export class Observer<T extends Tree<Type>> {
+export class Observer {
 	/** A set of components that must match for an entity to be valid. */
 	private requiredComponents: Array<AnyComponent> = [];
 
@@ -50,16 +40,10 @@ export class Observer<T extends Tree<Type>> {
 	 */
 	public storage: Set<EntityId> = new Set();
 
-	/**
-	 * TODO: It would be nice to get the "old" data when we observe the change.
-	 * How can we do this? We can't just have a copy of the data because it is
-	 * not stored together.
-	 * @hidden */
-	private testStorage: Map<EntityId, ChangeStorage<T>> = new Map();
-
-	constructor(world: World, component: Component<T>) {
+	constructor(world: World, component: AnyComponent) {
 		this.world = world;
 		this.primaryComponent = component;
+		(component as AnyComponentInternal).observers.push(this);
 	}
 
 	/**
@@ -67,7 +51,7 @@ export class Observer<T extends Tree<Type>> {
 	 *
 	 * @param callback The callback to run for each entity.
 	 */
-	public forEach(callback: (entityId: EntityId) => void): void {
+	public *iter(): Generator<EntityId> {
 		for (const entityId of this.storage) {
 			let valid = true;
 
@@ -81,7 +65,7 @@ export class Observer<T extends Tree<Type>> {
 				continue;
 			}
 
-			callback(entityId);
+			yield entityId;
 		}
 
 		this.storage.clear();
