@@ -2,6 +2,7 @@
 
 import { ScriptContext } from "@rbxts/services";
 import { Query } from "./query";
+import { createEvent } from "./storage/event";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
 
@@ -14,7 +15,7 @@ const bindableEvent = new Instance("BindableEvent");
 const world = {} as World;
 (world.options as WorldOptions) = {};
 world.options.defaultExecutionGroup = bindableEvent.Event;
-world.flush = (): void => { };
+world.flush = (): void => {};
 
 let manager = {} as SystemManager;
 
@@ -26,9 +27,9 @@ function createSystem(): System {
 	const system = {} as System;
 	system.dt = 0;
 	system.enabled = true;
-	system.name = "System";
 	system.priority = 0;
-	system.onUpdate = (): void => { };
+	system.storage = [];
+	system.onUpdate = (): void => {};
 	return system;
 }
 
@@ -38,23 +39,21 @@ export = (): void => {
 	});
 	describe("A system should", () => {
 		it("be able to be created using its constructor", () => {
-			const system = new (class ExampleSystem extends System {
+			const system = new (class ASystemWithAName extends System {
 				constructor() {
 					super({
-						name: "ASystemWithAName",
 						priority: 1000,
-					});					
+					});
 				}
 
 				public onUpdate(): void {}
 			})();
 
 			expect(system).to.be.ok();
-			expect(system.name).to.equal("ASystemWithAName");
+			expect(tostring(getmetatable(system))).to.equal("ASystemWithAName");
 			expect(system.priority).to.equal(1000);
 		});
 
-		// FOCUS();
 		it("be able to be scheduled", () => {
 			let callCount = 0;
 
@@ -63,8 +62,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -85,8 +84,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system1, system2]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -100,10 +99,10 @@ export = (): void => {
 			system.configureQueries = (world: World): void => {
 				query = new Query(world).mask;
 			};
-			system.onUpdate = (): void => { };
+			system.onUpdate = (): void => {};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(query).to.be.ok();
 		});
@@ -136,8 +135,8 @@ export = (): void => {
 				systemOrder.push(2);
 			};
 
-			manager.scheduleSystems([system1, system2, system3, system4]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2, system3, system4]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -156,13 +155,46 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
 			tempBindableEvent.Fire();
 			expect(callCount).to.equal(1);
+		});
+
+		it("be able to stop all systems", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+
+			let callCount = 0;
+
+			const system1 = createSystem();
+			system1.onUpdate = (): void => {
+				callCount += 1;
+			};
+
+			const system2 = createSystem();
+			system2.onUpdate = (): void => {
+				callCount += 10;
+			};
+			system2.executionGroup = tempBindableEvent.Event;
+
+			void manager.scheduleSystems([system1, system2]);
+			void manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+			expect(callCount).to.equal(1);
+
+			tempBindableEvent.Fire();
+			expect(callCount).to.equal(11);
+
+			manager.stop();
+			bindableEvent.Fire();
+			tempBindableEvent.Fire();
+			expect(callCount).to.equal(11);
 		});
 
 		it("be ordered by execution group", () => {
@@ -211,8 +243,8 @@ export = (): void => {
 				systemOrder.push(4);
 			};
 
-			manager.scheduleSystems([system1, system2, system3, system5, system6, system4]);
-			manager.start();
+			void manager.scheduleSystems([system1, system2, system3, system5, system6, system4]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -245,8 +277,8 @@ export = (): void => {
 				systemOrder.push(1);
 			};
 
-			manager.scheduleSystems([system2, system1, system3]);
-			manager.start();
+			void manager.scheduleSystems([system2, system1, system3]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder, [])).to.equal(true);
 
@@ -274,8 +306,8 @@ export = (): void => {
 			};
 
 			manager = new SystemManager(world);
-			manager.scheduleSystems([system5, system4, system6]);
-			manager.start();
+			void manager.scheduleSystems([system5, system4, system6]);
+			void manager.start();
 
 			expect(shallowEquals(systemOrder1, [])).to.equal(true);
 
@@ -291,13 +323,13 @@ export = (): void => {
 
 			const system1 = createSystem();
 			system1.priority = 1;
-			system1.onUpdate = (): void => { };
+			system1.onUpdate = (): void => {};
 
 			const system2 = createSystem();
 			system2.executionGroup = event;
 			system2.priority = 100;
 			system2.after = [system1];
-			system2.onUpdate = (): void => { };
+			system2.onUpdate = (): void => {};
 
 			let errored = false;
 			const promise = manager.scheduleSystems([system1, system2]).catch(() => {
@@ -321,8 +353,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system]);
-			manager.start();
+			void manager.scheduleSystems([system]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -346,8 +378,8 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystems([system]);
-			manager.start();
+			void manager.scheduleSystems([system]);
+			void manager.start();
 
 			expect(callCount).to.equal(0);
 
@@ -368,11 +400,10 @@ export = (): void => {
 				task.wait();
 				callCount += 1;
 			};
-			system.name = "YieldSystem";
 
-			manager.scheduleSystems([system]);
+			void manager.scheduleSystems([system]);
 
-			manager.start();
+			void manager.start();
 			bindableEvent.Fire();
 
 			expect(callCount).to.equal(1);
@@ -391,14 +422,66 @@ export = (): void => {
 				callCount += 1;
 			};
 
-			manager.scheduleSystem(system);
-			manager.scheduleSystem(system2);
+			void manager.scheduleSystem(system);
+			void manager.scheduleSystem(system2);
 
-			manager.start();
-			
+			void manager.start();
+
 			bindableEvent.Fire();
 			expect(callCount).to.equal(2);
+		});
 
+		it("be able to use storages", () => {
+			const tempBindableEvent = new Instance("BindableEvent");
+			const event = createEvent(tempBindableEvent.Event);
+
+			const system = createSystem();
+			system.storage.push(event);
+
+			let callCount = 0;
+
+			system.onUpdate = (): void => {
+				for (const [,] of event.iter()) {
+					callCount += 1;
+				}
+			};
+
+			void manager.scheduleSystems([system]);
+			void manager.start();
+
+			expect(callCount).to.equal(0);
+
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(0);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(1);
+
+			manager.disableSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(1);
+
+			manager.enableSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(2);
+
+			manager.unscheduleSystem(system);
+
+			tempBindableEvent.Fire();
+			bindableEvent.Fire();
+
+			expect(callCount).to.equal(2);
+
+			tempBindableEvent.Destroy();
 		});
 
 		it("should not send multiple duplicate errors to the console", () => {
@@ -406,7 +489,6 @@ export = (): void => {
 			system.onUpdate = (): void => {
 				throw ("test");
 			};
-			system.name = "multipleErrorTest"
 
 			manager.scheduleSystem(system);
 			manager.start();

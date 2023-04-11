@@ -1,14 +1,19 @@
 import { RunService } from "@rbxts/services";
 
-import { EventListener } from "../events";
 import { insertionSort } from "../util/array-utils";
+import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
 
-export type ExecutionGroup = RBXScriptSignal | EventListener<Array<unknown>>;
+export type ExecutionGroup = SignalLike;
+
+export type StorageObject = {
+	cleanup: () => void;
+	setup: () => void;
+};
 
 interface SystemInternal extends System {
 	/**
-	 * Storage for errors that have occured recently in the system. This is
+	 * Storage for errors that have occurred recently in the system. This is
 	 * used to prevent spamming the console with errors.
 	 */
 	recentErrors?: Map<string, number>;
@@ -81,8 +86,8 @@ export abstract class System {
 	 */
 	public enabled = true;
 	/**
-	 * The group that this system will be executed on, e.g. Heartbeat,
-	 * RenderStepped, etc.
+	 * The group that this system will be executed on, e.g. PostSimulation,
+	 * PreRender, etc.
 	 *
 	 * The only requirement for an execution group is that the group has a
 	 * .Connect method.
@@ -91,22 +96,27 @@ export abstract class System {
 	/**	The time that the system was last called. */
 	public lastCalled = 0;
 	/** The name of the system is primarily used for debugging purposes. */
-	// TODO: Can we infer this from the parent class name?
-	public name = "System";
 	/**
 	 * The priority order of the system.
 	 * A higher priority means the system will execute first.
 	 */
 	public priority = 0;
+	/**
+	 * A list of storages that are used by this system.
+	 *
+	 * An example of a storage is `createEvent`, which collects all the events
+	 * since the last call of its iterator.
+	 */
+	public storage: Array<StorageObject> = [];
 
-	constructor(ctor?: Partial<System>) {
+	constructor(ctor?: Partial<Pick<System, "after" | "enabled" | "executionGroup" | "priority">>) {
 		if (ctor === undefined) {
 			return;
 		}
 
 		this.after = ctor.after;
+		this.enabled = ctor.enabled ?? this.enabled;
 		this.executionGroup = ctor.executionGroup;
-		this.name = ctor.name ?? this.name;
 		this.priority = ctor.priority ?? this.priority;
 	}
 
@@ -130,7 +140,7 @@ export abstract class System {
  */
 export class SystemManager {
 	private executionDefault: ExecutionGroup;
-	private executionGroupSignals: Map<ExecutionGroup, RBXScriptConnection> = new Map();
+	private executionGroupSignals: Map<ExecutionGroup, ConnectionLike> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
 	/** Whether or not the system manager has began execution. */
 	private started = false;
@@ -140,7 +150,7 @@ export class SystemManager {
 	private world: World;
 
 	constructor(world: World) {
-		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.Heartbeat;
+		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.PostSimulation;
 		this.world = world;
 	}
 
@@ -156,6 +166,10 @@ export class SystemManager {
 	public disableSystem(system: System): void {
 		system.enabled = false;
 
+		for (const storage of system.storage) {
+			storage.cleanup();
+		}
+
 		// TODO: Should we also be disabling dependent systems here?
 	}
 
@@ -169,6 +183,10 @@ export class SystemManager {
 	 */
 	public enableSystem(system: System): void {
 		system.enabled = true;
+
+		for (const storage of system.storage) {
+			storage.setup();
+		}
 
 		// TODO: Should we also be enabling systems that depend here? Likely just
 		// issue a warning to the dev that it hasn't been enabled.
@@ -273,6 +291,10 @@ export class SystemManager {
 					this.setupSystem(system);
 				}
 
+				for (const system of systems) {
+					this.setupSystemStorage(system);
+				}
+
 				this.executeSystems();
 
 				this.started = true;
@@ -287,7 +309,7 @@ export class SystemManager {
 	 */
 	public stop(): void {
 		for (const [_, signal] of this.executionGroupSignals) {
-			signal.Disconnect();
+			ConnectionUtil.disconnect(signal);
 		}
 	}
 
@@ -325,6 +347,10 @@ export class SystemManager {
 			if (system.cleanup !== undefined) {
 				system.cleanup();
 			}
+
+			for (const storage of system.storage) {
+				storage.cleanup();
+			}
 		}
 
 		// TODO: look into re-sorting systems. Removing a system could cause a
@@ -354,7 +380,9 @@ export class SystemManager {
 			coroutine.close(thread);
 			task.spawn(
 				error,
-				`System ${system.name} yielded! Yielding in systems is not supported!`,
+				`System ${tostring(
+					getmetatable(system),
+				)} yielded! Yielding in systems is not supported!`,
 			);
 		}
 
@@ -363,7 +391,9 @@ export class SystemManager {
 				system.recentErrors = new Map();
 			}
 
-			const recentError = `System: ${system.name} errored! ${result} + \n ${debug.traceback}`;
+			const recentError = `System ${tostring(getmetatable(system))} errored! ${result} + \n ${
+				debug.traceback
+			}`;
 
 			const lastError = system.recentErrors.get(recentError);
 
@@ -383,17 +413,11 @@ export class SystemManager {
 	 */
 	private executeSystems(): void {
 		for (const executionGroup of this.executionGroups) {
-			if (typeIs(executionGroup, "RBXScriptSignal")) {
-				const disconnect = executionGroup.Connect(() => {
-					this.runSystems(executionGroup);
-				});
+			const connection = ConnectionUtil.connect(executionGroup, () => {
+				this.runSystems(executionGroup);
+			});
 
-				this.executionGroupSignals.set(executionGroup, disconnect);
-			} else {
-				executionGroup.do(() => {
-					this.runSystems(executionGroup);
-				});
-			}
+			this.executionGroupSignals.set(executionGroup, connection);
 		}
 	}
 
@@ -429,7 +453,11 @@ export class SystemManager {
 		unscheduledSystems.sort((a, b) => {
 			if (a.after !== undefined && a.after.includes(b)) {
 				if (b.after !== undefined && b.after.includes(a)) {
-					throw error(`Systems ${a.name} and ${b.name} are in a circular dependency`);
+					throw error(
+						`Systems ${tostring(getmetatable(a))} and ${tostring(
+							getmetatable(b),
+						)} are in a circular dependency`,
+					);
 				}
 				return false;
 			}
@@ -475,7 +503,7 @@ export class SystemManager {
 			system.dt = os.clock() - system.lastCalled;
 			system.lastCalled = os.clock();
 
-			debug.profilebegin("system: " + system.name);
+			debug.profilebegin(tostring(getmetatable(system)));
 			{
 				this.ensure(system, () => {
 					system.onUpdate(this.world /**, ...this.systemArgs */);
@@ -493,7 +521,7 @@ export class SystemManager {
 	 */
 	private setupSystem(system: System): void {
 		if (!system.onUpdate) {
-			throw `System ${system.name} does not have an onUpdate method`;
+			throw `System ${tostring(getmetatable(system))} does not have an onUpdate method`;
 		}
 
 		if (system.configureQueries !== undefined) {
@@ -503,6 +531,22 @@ export class SystemManager {
 		}
 
 		system.lastCalled = os.clock();
+	}
+
+	/**
+	 * Initializes all the system storages.
+	 *
+	 * @param system
+	 * @returns
+	 */
+	private setupSystemStorage(system: System): void {
+		if (!system.enabled) {
+			return;
+		}
+
+		for (const storage of system.storage) {
+			storage.setup();
+		}
 	}
 
 	/**
@@ -541,7 +585,9 @@ export class SystemManager {
 
 			for (const afterSystem of system.after) {
 				if (system.executionGroup !== afterSystem.executionGroup) {
-					const msg = `System ${system.name} and ${afterSystem.name} are in different execution groups`;
+					const msg = `System ${tostring(getmetatable(system))} and ${tostring(
+						getmetatable(afterSystem),
+					)} are in different execution groups`;
 					throw msg;
 				}
 			}
