@@ -1,12 +1,12 @@
 import { ComponentId, EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { AnyComponent, AnyComponentInternal, TagComponent } from "./component";
+import { AllComponentTypes, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
 export type RawQuery =
-	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AnyComponent | TagComponent> }
-	| { op: typeof NOT; dt: RawQuery | AnyComponent | TagComponent };
+	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AllComponentTypes> }
+	| { op: typeof NOT; dt: RawQuery | AllComponentTypes };
 
 type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
@@ -30,7 +30,7 @@ type QueryMask = Group | Not | MLeaf;
  *
  * @param components The components or query to match to.
  */
-export function ALL(...components: Array<RawQuery | AnyComponent | TagComponent>): RawQuery {
+export function ALL(...components: Array<RawQuery | AllComponentTypes>): RawQuery {
 	if (components.size() === 0) {
 		throw "ALL must have at least one component";
 	}
@@ -55,7 +55,7 @@ export function ALL(...components: Array<RawQuery | AnyComponent | TagComponent>
  *
  * @param components The components or query to match to.
  */
-export function ANY(...components: Array<RawQuery | AnyComponent | TagComponent>): RawQuery {
+export function ANY(...components: Array<RawQuery | AllComponentTypes>): RawQuery {
 	if (components.size() === 0) {
 		throw "ANY must have at least one component";
 	}
@@ -80,7 +80,7 @@ export function ANY(...components: Array<RawQuery | AnyComponent | TagComponent>
  *
  * @param components The components or query to match to.
  */
-export function NOT(components: RawQuery | AnyComponent | TagComponent): RawQuery {
+export function NOT(components: RawQuery | AllComponentTypes): RawQuery {
 	return {
 		op: NOT,
 		dt: typeOf((components as RawQuery).op) === "function" ? components : ALL(components),

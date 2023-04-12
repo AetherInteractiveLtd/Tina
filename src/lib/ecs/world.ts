@@ -7,6 +7,7 @@ import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import {
+	AllComponentTypes,
 	AnyComponent,
 	AnyComponentInternal,
 	AnyFlyweight,
@@ -57,7 +58,7 @@ export class World {
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
-	private observers: Map<AnyComponent, Observer> = new Map();
+	private observers: Map<AllComponentTypes, Observer> = new Map();
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -190,10 +191,7 @@ export class World {
 	 * @returns A new {@link Query}.
 	 */
 	public createQuery(
-		...raw: [
-			RawQuery | AnyComponent | TagComponent,
-			...Array<RawQuery | AnyComponent | TagComponent>,
-		]
+		...raw: [RawQuery | AllComponentTypes, ...Array<RawQuery | AllComponentTypes>]
 	): Query {
 		let query: Query;
 
@@ -302,9 +300,9 @@ export class World {
 	 *
 	 * @returns Whether or not the entity has all of the given components.
 	 */
-	public hasAllOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+	public hasAllOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (!this.hasComponent(entityId, component)) {
+			if (!this.hasComponent(entityId, component as AnyComponent)) {
 				return false;
 			}
 		}
@@ -322,9 +320,9 @@ export class World {
 	 * @returns whether or not the entity has at least one of of the given
 	 * components.
 	 */
-	public hasAnyOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+	public hasAnyOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (this.hasComponent(entityId, component)) {
+			if (this.hasComponent(entityId, component as AnyComponent)) {
 				return true;
 			}
 		}
