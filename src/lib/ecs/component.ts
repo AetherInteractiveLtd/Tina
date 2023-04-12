@@ -10,6 +10,8 @@ type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
+export type AllComponentTypes = AnyComponent | TagComponent | AnyFlyweight;
+
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 

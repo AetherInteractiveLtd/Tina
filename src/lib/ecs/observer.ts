@@ -1,5 +1,5 @@
 import { EntityId } from "../types/ecs";
-import { AnyComponent, AnyComponentInternal } from "./component";
+import { AllComponentTypes, AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
 /**
@@ -22,13 +22,13 @@ import { World } from "./world";
  */
 export class Observer {
 	/** A set of components that must match for an entity to be valid. */
-	private requiredComponents: Array<AnyComponent> = [];
+	private requiredComponents: Array<AllComponentTypes> = [];
 
 	/** The world this observer belongs to. */
 	public readonly world: World;
 
 	/** The primary component that the observer is watching. */
-	public primaryComponent: AnyComponent;
+	public primaryComponent: AllComponentTypes;
 	/**
 	 * A cache of all entities that match the observer.
 	 *
@@ -40,7 +40,7 @@ export class Observer {
 	 */
 	public storage: Set<EntityId> = new Set();
 
-	constructor(world: World, component: AnyComponent) {
+	constructor(world: World, component: AllComponentTypes) {
 		this.world = world;
 		this.primaryComponent = component;
 		(component as AnyComponentInternal).observers.push(this);
@@ -56,7 +56,7 @@ export class Observer {
 			let valid = true;
 
 			for (const component of this.requiredComponents) {
-				if (valid && !this.world.hasComponent(entityId, component)) {
+				if (valid && !this.world.hasComponent(entityId, component as AnyComponent)) {
 					valid = false;
 				}
 			}
@@ -86,7 +86,7 @@ export class Observer {
 	 *
 	 * @returns The observer instance.
 	 */
-	public with(component: AnyComponent): this {
+	public with(component: AllComponentTypes): this {
 		this.requiredComponents.push(component);
 
 		return this;
