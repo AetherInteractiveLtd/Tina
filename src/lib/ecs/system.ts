@@ -1,6 +1,7 @@
 import { RunService } from "@rbxts/services";
 
 import { EventListener } from "../events";
+import { EntityId } from "../types/ecs";
 import { insertionSort } from "../util/array-utils";
 import { World } from "./world";
 
@@ -129,6 +130,7 @@ export abstract class System {
  * any system in a given world.
  */
 export class SystemManager {
+	private entitiesSetupInInitilization: Array<EntityId> = [];
 	private executionDefault: ExecutionGroup;
 	private executionGroupSignals: Map<ExecutionGroup, RBXScriptConnection> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
@@ -469,7 +471,7 @@ export class SystemManager {
 	private runSystems(executionGroup: ExecutionGroup): void {
 		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
 			if (!system.enabled) {
-				return;
+				continue;
 			}
 
 			system.dt = os.clock() - system.lastCalled;
