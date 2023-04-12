@@ -7,6 +7,7 @@ import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
 import {
+	AllComponentTypes,
 	AnyComponent,
 	AnyComponentInternal,
 	AnyFlyweight,
@@ -14,8 +15,6 @@ import {
 	GetComponentSchema,
 	OptionalKeys,
 	TagComponent,
-	Tree,
-	Type,
 } from "./component";
 import { EntityManager } from "./entity-manager";
 import { Observer } from "./observer";
@@ -26,7 +25,7 @@ import { ExecutionGroup, System, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
-	 * The default execution group for systems. Defaults to `Heartbeat`.
+	 * The default execution group for systems. Defaults to `PostSimulation `.
 	 */
 	defaultExecutionGroup?: ExecutionGroup;
 	/**
@@ -59,7 +58,7 @@ export class World {
 	/** Components that are waiting to be added or removed from an entity. */
 	private componentsToUpdate: SparseSet = new SparseSet();
 	/** A set of any component with a registered observer. */
-	private observers: Map<AnyComponent, Observer<Tree<Type>>> = new Map();
+	private observers: Map<AllComponentTypes, Observer> = new Map();
 	/** A set of all queries that match entities in the world. */
 	private queries: Array<Query> = [];
 
@@ -72,7 +71,7 @@ export class World {
 	 * Observers that have entities to update.
 	 * @hidden
 	 */
-	public observersToUpdate: Array<[EntityId, Observer<Tree<Type>>]> = [];
+	public observersToUpdate: Array<[EntityId, Observer]> = [];
 
 	constructor(options?: WorldOptions) {
 		this.options = options ?? {};
@@ -168,7 +167,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver<C extends AnyComponent>(component: C): Observer<GetComponentSchema<C>> {
+	public createObserver<C extends AnyComponent>(component: C): Observer {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 
@@ -192,10 +191,7 @@ export class World {
 	 * @returns A new {@link Query}.
 	 */
 	public createQuery(
-		...raw: [
-			RawQuery | AnyComponent | TagComponent,
-			...Array<RawQuery | AnyComponent | TagComponent>,
-		]
+		...raw: [RawQuery | AllComponentTypes, ...Array<RawQuery | AllComponentTypes>]
 	): Query {
 		let query: Query;
 
@@ -304,9 +300,9 @@ export class World {
 	 *
 	 * @returns Whether or not the entity has all of the given components.
 	 */
-	public hasAllOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+	public hasAllOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (!this.hasComponent(entityId, component)) {
+			if (!this.hasComponent(entityId, component as AnyComponent)) {
 				return false;
 			}
 		}
@@ -324,9 +320,9 @@ export class World {
 	 * @returns whether or not the entity has at least one of of the given
 	 * components.
 	 */
-	public hasAnyOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+	public hasAnyOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (this.hasComponent(entityId, component)) {
+			if (this.hasComponent(entityId, component as AnyComponent)) {
 				return true;
 			}
 		}

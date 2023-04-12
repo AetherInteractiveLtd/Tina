@@ -10,6 +10,8 @@ type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];
 };
 
+export type AllComponentTypes = AnyComponent | TagComponent | AnyFlyweight;
+
 export type AnyComponent = Component<Tree<Type>>;
 export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
 
@@ -62,7 +64,7 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 
 export type ComponentInternal<T extends Tree<Type>> = Component<T> &
 	ComponentIdField & {
-		observers: Array<Observer<T>>;
+		observers: Array<Observer>;
 	};
 
 export type TagComponent = {
@@ -160,7 +162,7 @@ export namespace ComponentInternalCreation {
 		componentInstantiationCheck();
 
 		const componentData = createComponentArray<T>(schema as T, 10000);
-		const observers = new Array<Observer<T>>();
+		const observers = new Array<Observer>();
 		return Sift.Dictionary.merge(componentData, {
 			componentId: getNextComponentId(),
 			defaults: undefined,
