@@ -139,7 +139,6 @@ export abstract class System {
  * any system in a given world.
  */
 export class SystemManager {
-	private entitiesSetupInInitilization: Array<EntityId> = [];
 	private executionDefault: ExecutionGroup;
 	private executionGroupSignals: Map<ExecutionGroup, ConnectionLike> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
