@@ -497,7 +497,7 @@ export class SystemManager {
 	private runSystems(executionGroup: ExecutionGroup): void {
 		for (const system of this.systemsByExecutionGroup.get(executionGroup)!) {
 			if (!system.enabled) {
-				return;
+				continue;
 			}
 
 			system.dt = os.clock() - system.lastCalled;
