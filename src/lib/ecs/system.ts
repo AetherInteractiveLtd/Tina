@@ -218,6 +218,14 @@ export class SystemManager {
 				let executionGroup = this.executionDefault;
 				if (system.executionGroup !== undefined) {
 					executionGroup = system.executionGroup;
+
+					for (const group of this.executionGroups) {
+						if (executionGroup === group) {
+							system.executionGroup = group;
+							executionGroup = group;
+							break;
+						}
+					}
 				}
 
 				if (!this.executionGroups.has(executionGroup)) {
