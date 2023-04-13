@@ -2,7 +2,7 @@
 
 import { ScriptContext } from "@rbxts/services";
 import { Query } from "./query";
-import { createEvent } from "./storage/event";
+import { bindEvent } from "./storage/event";
 import { System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
 
@@ -433,7 +433,7 @@ export = (): void => {
 
 		it("be able to use storages", () => {
 			const tempBindableEvent = new Instance("BindableEvent");
-			const event = createEvent(tempBindableEvent.Event);
+			const event = bindEvent(tempBindableEvent.Event);
 
 			const system = createSystem();
 			system.storage.push(event);

@@ -1,13 +1,13 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { createEvent } from "./event";
+import { bindEvent } from "./event";
 
 export = (): void => {
 	describe("an event should", () => {
 		it("queue up events until the next iteration", () => {
 			const event = new Instance("BindableEvent");
 
-			const eventStorage = createEvent(event.Event);
+			const eventStorage = bindEvent(event.Event);
 			eventStorage.setup();
 
 			event.Fire("Hello", "World!", 7);
@@ -53,7 +53,7 @@ export = (): void => {
 		it("should not queue up events if the predicate returns false", () => {
 			const event = new Instance("BindableEvent");
 
-			const eventStorage = createEvent<
+			const eventStorage = bindEvent<
 				RBXScriptSignal<(arg0: string, arg1: string, arg2: number) => void>
 			>(event.Event, (a, b, c) => {
 				return a === "Hello" && b === "World!" && c === 7;

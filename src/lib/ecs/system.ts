@@ -104,7 +104,7 @@ export abstract class System {
 	/**
 	 * A list of storages that are used by this system.
 	 *
-	 * An example of a storage is `createEvent`, which collects all the events
+	 * An example of a storage is `bindEvent`, which collects all the events
 	 * since the last call of its iterator.
 	 */
 	public storage: Array<StorageObject> = [];
