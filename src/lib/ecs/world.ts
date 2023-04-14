@@ -628,13 +628,22 @@ export class World {
 	 */
 	private updateArchetype(entityId: EntityId, componentId: ComponentId): void {
 		const oldArchetype = this.entityManager.updateTo[entityId];
+		const newArchetype = this.archetypeChange(oldArchetype, componentId);
+
 		for (const query of oldArchetype.queries) {
+			if (newArchetype.queries.includes(query)) {
+				continue;
+			}
+
 			query.entered.remove(entityId);
 			query.exited.add(entityId);
 		}
 
-		const newArchetype = this.archetypeChange(oldArchetype, componentId);
 		for (const query of newArchetype.queries) {
+			if (oldArchetype.queries.includes(query)) {
+				continue;
+			}
+
 			query.exited.remove(entityId);
 			query.entered.add(entityId);
 		}
