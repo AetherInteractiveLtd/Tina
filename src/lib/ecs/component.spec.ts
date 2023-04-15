@@ -243,4 +243,48 @@ export = (): void => {
 			expect(component.x).to.equal(10000);
 		});
 	});
+
+	describe("a component collection should", () => {
+		it("be able to be created", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const component1 = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const component2 = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const collection = [component, component1, component2];
+
+			expect(collection).to.be.ok();
+		});
+
+		it("be able to be given to an entity", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const component1 = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const component2 = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const collection = [component, component1, component2];
+
+			const entity = world.add();
+			world.addComponentCollection(entity, collection);
+			world.flush();
+
+			for (const comp of collection) {
+				expect(world.hasComponent(entity, comp)).to.equal(true);
+			}
+		});
+	});
 };

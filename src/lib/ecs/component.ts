@@ -85,6 +85,8 @@ export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
 
 export type Type = ArrayConstructor | Array<unknown>;
 
+export type ComponentCollection = Array<AnyComponent>;
+
 export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
 	? T
 	: T extends ArrayConstructor

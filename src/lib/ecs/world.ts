@@ -11,6 +11,7 @@ import {
 	AnyComponent,
 	AnyComponentInternal,
 	AnyFlyweight,
+	ComponentCollection,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	GetComponentSchema,
 	OptionalKeys,
@@ -134,6 +135,38 @@ export class World {
 
 				if (data !== undefined) {
 					component.set(entityId, data);
+				}
+			}
+		}
+		debug.profileend();
+
+		return this;
+	}
+
+	/**
+	 *
+	 * @param entityId
+	 * @param collection
+	 * @returns
+	 */
+	public addComponentCollection(entityId: EntityId, collection: ComponentCollection): this {
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+		}
+
+		this.componentsToUpdate.add(entityId);
+
+		debug.profilebegin("World:addComponentCollection");
+		{
+			const mask = this.entityManager.updateTo[entityId].mask;
+			for (const component of collection) {
+				const componentId = (component as AnyComponentInternal).componentId;
+				if (!this.hasComponentInternal(mask, componentId)) {
+					this.updateArchetype(entityId, componentId);
+
+					if (component.defaults !== undefined) {
+						component.set(entityId, component.defaults);
+					}
 				}
 			}
 		}
