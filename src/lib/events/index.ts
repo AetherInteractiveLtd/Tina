@@ -34,7 +34,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 *
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
-	public condition(condition: Condition<[data: T]>): EventListener<T> {
+	public condition(condition: Condition<T>): EventListener<T> {
 		this.head = {
 			value: [condition, EAction.COND] as CondFunc,
 			next: this.head,
@@ -126,15 +126,15 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
 	 *
 	 * @param token Event to emit.
-	 * @param data Type `T`, a single object.
+	 * @param args Type `T`, a single object.
 	 */
 	public emit<X extends keyof Events, S extends ArrayOrNever<Events[X]>>(
 		token: X,
-		...data: S
+		...args: S
 	): void {
 		if (token in this.events) {
 			for (const thread of this.events[token as string]) {
-				void thread.call(token === "_default" ? [] : data);
+				void thread.call(...(token === "_default" ? [] : args));
 			}
 		}
 	}
