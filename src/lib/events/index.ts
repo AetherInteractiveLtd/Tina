@@ -1,6 +1,6 @@
 import { COND } from "../conditions";
 import { Condition } from "../conditions/types";
-import { ArrayOrNever, CondFunc, Default, EventNode } from "./types";
+import { ArrayOrNever, CondFunc, Default, StepFunc } from "./types";
 
 export enum EAction {
 	COND = "c",
@@ -8,7 +8,7 @@ export enum EAction {
 }
 
 export class EventListener<T extends Array<unknown> = Array<unknown>> {
-	private head: EventNode;
+	private listeners: Array<CondFunc | StepFunc> = [];
 
 	protected readonly yieldThreads: Array<thread> = [];
 
@@ -21,10 +21,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever this function returned.
 	 */
 	public do<X>(func: (...args: T) => X): EventListener<[X]> {
-		this.head = {
-			value: [func, EAction.DO],
-			next: this.head,
-		};
+		this.listeners.push([func, EAction.DO]);
 
 		return this as unknown as EventListener<[X]>;
 	}
@@ -35,10 +32,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
 	public condition(condition: Condition<T>): EventListener<T> {
-		this.head = {
-			value: [condition, EAction.COND] as CondFunc,
-			next: this.head,
-		};
+		this.listeners.push([condition, EAction.COND] as CondFunc);
 
 		return this as unknown as EventListener<T>;
 	}
@@ -56,19 +50,15 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * Clears all the binded conditions and dos to this specific EventListener.
 	 */
 	public disconnect(): void {
-		this.head = undefined;
+		table.clear(this.listeners);
 	}
 
 	/** @hidden */
 	public async call<X extends Array<unknown> = Array<unknown>>(...args: X): Promise<void> {
-		let item = this.head;
-
 		let lastArgument = args;
 		let lastCondition = true;
 
-		while (item !== undefined) {
-			const [handler, _type] = item.value;
-
+		for (const [handler, _type] of this.listeners) {
 			if (_type === EAction.DO) {
 				if (lastCondition === true) {
 					try {
@@ -80,8 +70,6 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 			} else {
 				lastCondition = COND.eval(handler, ...lastArgument);
 			}
-
-			item = item.next;
 		}
 
 		if (this.yieldThreads.size() > 0) {
