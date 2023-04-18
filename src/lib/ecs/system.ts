@@ -32,7 +32,7 @@ export interface System {
 	cleanup(): void;
 	/**
 	 * The configureQueries method is optionally called when the system is
-	 * first run. This is a good place to setup any queries that the system
+	 * first run. This is where you should setup any queries that the system
 	 * will use.
 	 *
 	 * @param world The world that this system belongs to. This will be passed
@@ -276,7 +276,7 @@ export class SystemManager {
 	 *
 	 * This will run through the system lifecycle.
 	 *
-	 * Prepare (Async) -> Initialize -> Setup -> Execute
+	 * Prepare (Async) -> ConfigureQueries -> Initialize -> Execute
 	 *
 	 * Prepare will be called on all systems in parallel, and is the only step
 	 * that is allowed to be asynchronous.
@@ -292,11 +292,11 @@ export class SystemManager {
 		return Promise.allSettled(promises)
 			.andThen(() => {
 				for (const system of systems) {
-					this.initializeSystem(system);
+					this.setupSystem(system);
 				}
 
 				for (const system of systems) {
-					this.setupSystem(system);
+					this.initializeSystem(system);
 				}
 
 				for (const system of systems) {
@@ -528,10 +528,6 @@ export class SystemManager {
 	 * @param system The system to initialize.
 	 */
 	private setupSystem(system: System): void {
-		if (!system.onUpdate) {
-			throw `System ${tostring(getmetatable(system))} does not have an onUpdate method`;
-		}
-
 		if (system.configureQueries !== undefined) {
 			this.ensure(system, () => {
 				system.configureQueries(this.world);
@@ -544,8 +540,7 @@ export class SystemManager {
 	/**
 	 * Initializes all the system storages.
 	 *
-	 * @param system
-	 * @returns
+	 * @param system The system to setup.
 	 */
 	private setupSystemStorage(system: System): void {
 		if (!system.enabled) {
