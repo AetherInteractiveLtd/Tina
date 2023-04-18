@@ -2,6 +2,7 @@ import { Players, RunService } from "@rbxts/services";
 
 import { EventListener } from "../../../events";
 import { Internals } from "../../../net/internal";
+import { DefaultUserDeclaration } from "../../../user/default/types";
 import { FunctionUtil } from "../../../util/functions";
 import { StateSetter } from "../../types";
 import { PlayerStateImplementation } from "./types";
@@ -56,7 +57,7 @@ export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 		return this.subscription;
 	}
 
-	public set(player: Player, setter: StateSetter<T>): void {
+	public set({ player }: DefaultUserDeclaration, setter: StateSetter<T>): void {
 		if (!this.isServer) {
 			throw `[PlayerState:Client]: State can only be set from the server.`;
 		}
