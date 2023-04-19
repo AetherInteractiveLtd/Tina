@@ -1,6 +1,5 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import { t } from "@rbxts/t";
 import {
 	ComponentInternal,
 	ComponentInternalCreation,
