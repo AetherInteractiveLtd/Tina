@@ -1,5 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
+import { t } from "@rbxts/t";
 import {
 	ComponentInternal,
 	ComponentInternalCreation,
@@ -25,6 +26,27 @@ export = (): void => {
 			});
 			expect(component).to.be.ok();
 		});
+		
+		it("support custom types", () => {
+			const component = ComponentInternalCreation.createComponent({
+				abcccbc: ComponentTypes.Custom<Part>(),
+			});
+			
+			const entity = world.add();
+			world.addComponent(entity, component, { abcccbc: new Instance("Part") });
+			world.flush();
+			expect(typeOf(component.abcccbc[entity])).to.equal("Instance");
+		})
+		
+		it("be able to have default values for custom types", () => {
+			const component = ComponentInternalCreation.createComponent({
+				part: ComponentTypes.Custom(() => new Instance("Part")),
+			});
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+			expect(typeOf(component.part[entity])).to.equal("Instance");
+		})
 
 		it("not be able to be created after entities have been added", () => {
 			world.add();

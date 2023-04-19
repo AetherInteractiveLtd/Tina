@@ -97,7 +97,7 @@ export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<
 
 type ComponentIdField = { readonly componentId: ComponentId };
 
-function Custom<T>(init: () => T): [() => T];
+function Custom<T>(init: () => T): Array<T>;
 function Custom<T>(): Array<T>;
 function Custom<T>(init?: () => T): Array<() => T> {
 	return init ? [init] : [];
@@ -310,6 +310,15 @@ function createComponentArray<T extends Tree<Type>>(
 
 	if (t.array(t.any)(defaultValue) === true) {
 		if ((defaultValue as Array<T>).size() > 0) {
+			// Value inside ComponentTypes is a function (ComponentTypes.Custom)
+			if (typeIs((<Array<T>>defaultValue)[0], "function")) {
+				return new Array<T>(
+					arraySize,
+					((defaultValue as Array<T>)[0] as unknown as Callback)(), // Call the function to get the default value
+				) as ComponentArray<T>;
+			}
+
+			// Return the default value
 			return new Array<T>(arraySize, (defaultValue as Array<T>)[0]) as ComponentArray<T>;
 		}
 
