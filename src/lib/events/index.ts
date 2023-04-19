@@ -45,7 +45,6 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 
 		let data = coroutine.yield() as LuaTuple<T>;
 
-		table.clear(this.listeners);
 		return data;
 	}
 
