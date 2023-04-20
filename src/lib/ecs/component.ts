@@ -21,7 +21,11 @@ export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
 export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Array<U> : T;
 
-export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
+export type OptionalKeys<T> = {
+	[K in keyof T]:
+		| (T[K] extends Array<infer U> ? U : T[K] extends object ? OptionalKeys<T[K]> : never)
+		| None;
+};
 
 export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	/**
@@ -150,10 +154,6 @@ export namespace ComponentInternalCreation {
 	 * one component per world. EntityIds are global, therefore the index of a
 	 * given entity will always match the index of the component data.
 	 *
-	 * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
-	 * this to be configurable? It should also be possible to resize the array if
-	 * required (although this would not be desirable).
-	 *
 	 * @param schema The properties of the component.
 	 *
 	 * @returns A single component instance.
@@ -161,6 +161,9 @@ export namespace ComponentInternalCreation {
 	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
 		componentInstantiationCheck();
 
+		// TODO: Currently this is hardcoded to use 10000 entities, how can we allow
+		// this to be configurable? It should also be possible to resize the array if
+		// required (although this would not be desirable).
 		const componentData = createComponentArray<T>(schema as T, 10000);
 		const observers = new Array<Observer>();
 		return Sift.Dictionary.merge(componentData, {
@@ -219,12 +222,24 @@ export namespace ComponentInternalCreation {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
 
-				// TODO: This currently does not support nested fields.
+				function setRecursive(someData: U, currentData: Partial<ComponentArray<T>>): void {
+					// eslint-disable-next-line roblox-ts/no-array-pairs
+					for (const [key, value] of pairs(someData)) {
+						if (type(value) === "table") {
+							if (type((value as Array<any>)[0]) !== "table") {
+								setRecursive(
+									value as any,
+									currentData[key as keyof ComponentArray<T>] as any,
+								);
+								continue;
+							}
+						}
 
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(data)) {
-					componentData[key as never][entityId as never] = value as never;
+						currentData[key as never][entityId as never] = value as never;
+					}
 				}
+
+				setRecursive(data, componentData);
 			},
 		}) as unknown as ComponentInternal<T>;
 	}
@@ -309,19 +324,15 @@ function createComponentArray<T extends Tree<Type>>(
 	}
 
 	if (t.array(t.any)(defaultValue) === true) {
-		if ((defaultValue as Array<T>).size() > 0) {
-			return new Array<T>(arraySize, (defaultValue as Array<T>)[0]) as ComponentArray<T>;
-		}
-
 		return new Array<T>(arraySize) as ComponentArray<T>;
 	}
 
 	const result: ComponentArray = {};
 
-	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
-		// TODO: key should be the user-defined object key
-		result[key] = createComponentArray(value, arraySize);
+	// eslint-disable-next-line roblox-ts/no-array-pairs
+	for (const [key, value] of pairs(defaultValue)) {
+		result[key as keyof Tree<Type>] = createComponentArray(value as Tree<Type>, arraySize);
 	}
 
-	return result as never;
+	return result as ComponentArray<T>;
 }

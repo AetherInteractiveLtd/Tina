@@ -83,6 +83,38 @@ export = (): void => {
 			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
 		});
 
+		it("be able to update nested data", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: {
+					y: ComponentTypes.Number,
+				},
+
+				z: {
+					a: {
+						b: ComponentTypes.Number,
+					},
+				},				
+			});
+
+			const entity = world.add();
+			world.addComponent(entity, component);
+			world.flush();
+
+			component.set(entity, {
+				x: {
+					y: 1,
+				},
+
+				z: {
+					a: {
+						b: 2,
+					},
+				},
+			});
+
+			expect((component as ComponentInternal<{ x: { y: Array<number> }; z: { a: { b: Array<number> } } }>).x.y[entity]).to.equal(1);
+		});
+
 		it("be able to hold a single value", () => {
 			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
 			const entity = world.add();
