@@ -194,43 +194,6 @@ export class SystemManager {
 	}
 
 	/**
-	 * Replaces a system with a new system. System storages will
-	 * @param oldSystem
-	 * @param newSystem
-	 */
-	public replaceSystem(oldSystem: System, newSystem: System): void {
-		const index = this.systems.indexOf(oldSystem);
-		if (index === -1) {
-			throw `System ${tostring(getmetatable(oldSystem))} not found`;
-		}
-
-		for (const storage of oldSystem.storage) {
-			storage.cleanup();
-		}
-
-		this.setupSystemStorage(newSystem);
-
-		this.systems[index] = newSystem;
-
-		if (oldSystem.executionGroup !== newSystem.executionGroup) {
-			const index = this.systemsByExecutionGroup
-				.get(oldSystem.executionGroup ?? this.executionDefault)
-				?.indexOf(oldSystem);
-			if (index === undefined) {
-				throw `System ${tostring(
-					getmetatable(oldSystem),
-				)} not found in execution group ${tostring(oldSystem.executionGroup)}`;
-			}
-
-			this.systemsByExecutionGroup
-				.get(oldSystem.executionGroup ?? this.executionDefault)
-				?.remove(index);
-		}
-
-		this.sortSystems(this.systems);
-	}
-
-	/**
 	 * Schedules an individual system.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
