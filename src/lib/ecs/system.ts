@@ -200,6 +200,49 @@ export class SystemManager {
 	}
 
 	/**
+	 * Replaces a system with a new system. This is useful for hot-reloading.
+	 * This will not work in non-studio environments. Storage will not persist
+	 * between the old and new system, and instead will be cleaned up and set
+	 * up again.
+	 *
+	 * @param oldSystem The system to replace
+	 * @param newSystem The system to replace it with
+	 */
+	public replaceSystem(oldSystem: System, newSystem: System): void {
+		assert(RunService.IsStudio(), "replaceSystem can only be called in Studio");
+
+		const index = this.systems.indexOf(oldSystem);
+		if (index === -1) {
+			throw `System ${tostring(getmetatable(oldSystem))} not found`;
+		}
+
+		for (const storage of oldSystem.storage) {
+			storage.cleanup();
+		}
+
+		this.nameToSystem.set(tostring(getmetatable(oldSystem)), newSystem);
+		this.systems[index] = newSystem;
+
+		newSystem.configureQueries(this.world);
+		this.setupSystemStorage(newSystem);
+
+		const executionIndex = this.systemsByExecutionGroup
+			.get(oldSystem.executionGroup ?? this.executionDefault)
+			?.indexOf(oldSystem);
+		if (executionIndex === undefined) {
+			throw `System ${tostring(
+				getmetatable(oldSystem),
+			)} not found in execution group ${tostring(oldSystem.executionGroup)}`;
+		}
+
+		this.systemsByExecutionGroup
+			.get(oldSystem.executionGroup ?? this.executionDefault)
+			?.remove(executionIndex);
+
+		this.sortSystems(this.systems);
+	}
+
+	/**
 	 * Schedules an individual system.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
@@ -622,7 +665,7 @@ export class SystemManager {
 				const afterSystemInstance = this.getSystem(afterSystem);
 				if (system.executionGroup !== afterSystemInstance.executionGroup) {
 					const msg = `System ${tostring(getmetatable(system))} and ${tostring(
-						getmetatable(afterSystem),
+						afterSystem,
 					)} are in different execution groups`;
 					throw msg;
 				}
