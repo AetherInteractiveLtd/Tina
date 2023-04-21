@@ -492,7 +492,6 @@ export class SystemManager {
 	 */
 	private getSystem(ctor: SystemConstructor): System {
 		const systemName = tostring(ctor);
-		print(systemName);
 		const systemInstance = this.nameToSystem.get(systemName);
 		if (!systemInstance) {
 			throw `System ${systemName} does not exist!`;
