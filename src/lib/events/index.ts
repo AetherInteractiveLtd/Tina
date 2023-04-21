@@ -80,8 +80,8 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	}
 }
 
-export abstract class EventEmitter<Events extends Default | {}> {
-	protected readonly events: Record<string, Array<EventListener>> = {};
+export abstract class EventEmitter<Events extends Default | { [key: string]: Array<unknown> }> {
+	protected readonly events: Record<string, Array<EventListener | thread>> = {};
 
 	/**
 	 * Binds an EventListener to your Event, from where you can bind callbacks to be invoked when even is emitted.
@@ -112,6 +112,26 @@ export abstract class EventEmitter<Events extends Default | {}> {
 		return event;
 	}
 
+	public await<X extends keyof Events, U extends Events[X]>(
+		token?: X,
+	): typeof token extends void
+		? EventListener<Events extends Default ? Events["_default"] : never>
+		: EventListener<U extends Array<unknown> ? U : never>;
+
+	public await<X extends keyof Events>(token: X): LuaTuple<ArrayOrNever<Events[X]>>;
+
+	public await(token = "_default"): unknown {
+		let event = coroutine.running();
+
+		if (!(token in this.events)) {
+			this.events[token] = [event];
+		} else {
+			this.events[token].push(event);
+		}
+
+		return coroutine.yield() as LuaTuple<ArrayOrNever<Events[X]>>;
+	}
+
 	/**
 	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
 	 *
@@ -124,7 +144,11 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	): void {
 		if (token in this.events) {
 			for (const thread of this.events[token as string]) {
-				void thread.call(...(token === "_default" ? [] : args));
+				if (typeIs(thread, "thread")) {
+					coroutine.resume(thread);
+				} else {
+					void thread.call(...(token === "_default" ? [] : args));
+				}
 			}
 		}
 	}
