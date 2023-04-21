@@ -166,51 +166,37 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entity that has been added to the query since
-	 * the last time this method was called.
+	 * Iterate over all entities that have entered the query since the last
+	 * time this method was called.
 	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over. Please note that this will
-	 * still flush the contents of the query, so the next call to this method
-	 * will not iterate over the same entities.
-	 *
-	 * As this method flushes the contents of the query, it can only be used
-	 * once. If you need to iterate over the same entities multiple times,
-	 * although unconventional, you can use the `Query.entered.dense` array
-	 * directly instead.
-	 *
-	 * @param callback The callback to run for each entity.
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
 			yield entityId;
 		}
 
-		this.entered = new SparseSet();
+		this.entered.dense.clear();
 	}
 
 	/**
-	 * Runs a callback for each entity that has been removed from the query
-	 * since the last time this method was called.
+	 * Iterate over all entities that have exited the query since the last
+	 * time this method was called.
 	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over. Please note that this will
-	 * still flush the contents of the query, so the next call to this method
-	 * will not iterate over the same entities.
-	 *
-	 * As this method flushes the contents of the query, it can only be used
-	 * once. If you need to iterate over the same entities multiple times,
-	 * although unconventional, you can use the `Query.exited.dense` array
-	 * directly instead.
-	 *
-	 * @param callback The callback to run for each entity.
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
 		for (const entityId of this.exited.dense) {
 			yield entityId;
 		}
 
-		this.exited = new SparseSet();
+		this.exited.dense.clear();
 	}
 
 	/**
@@ -228,11 +214,10 @@ export class Query {
 
 	/**
 	 * Runs a callback for each entity that matches the query.
-	 *
-	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
-	 * that is supported.
 	 */
 	public *iter(): Generator<EntityId> {
+		// TODO: This should be turned into a *[Symbol.iterator] method whenever
+		// that is supported.
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
 				yield entityId;
