@@ -88,6 +88,9 @@ export class EntityManager {
 	 */
 	public destroyPendingEntities(): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
+			for (const query of this.entities[entityId].queries) {
+				query.exited.add(entityId);
+			}
 			this.entities[entityId].sparseSet.remove(entityId);
 			reusableEntityIds.add(entityId);
 			this.size--;

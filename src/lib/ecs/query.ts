@@ -166,8 +166,18 @@ export class Query {
 	}
 
 	/**
-	 * Iterate over all entities that have entered the query since the last
-	 * time this method was called.
+	 * Runs a callback for each entity that has been added to the query since
+	 * the last time this method was called.
+	 *
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.entered.dense` array
+	 * directly instead.
 	 *
 	 * This cannot be iterated over multiple times as it will clear the contents
 	 * of the entered set. If you need to iterate over the same set multiple
@@ -177,14 +187,26 @@ export class Query {
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
 			yield entityId;
+		for (const entityId of this.entered.dense) {
+			yield entityId;
 		}
 
 		this.entered.dense.clear();
 	}
 
 	/**
-	 * Iterate over all entities that have exited the query since the last
-	 * time this method was called.
+	 * Runs a callback for each entity that has been removed from the query
+	 * since the last time this method was called.
+	 *
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.exited.dense` array
+	 * directly instead.
 	 *
 	 * This cannot be iterated over multiple times as it will clear the contents
 	 * of the entered set. If you need to iterate over the same set multiple
@@ -192,6 +214,8 @@ export class Query {
 	 * array directly instead.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
+		for (const entityId of this.exited.dense) {
+			yield entityId;
 		for (const entityId of this.exited.dense) {
 			yield entityId;
 		}
@@ -232,6 +256,7 @@ export class Query {
 		let size = 0;
 
 		for (const archetype of this.archetypes) {
+			size += archetype.entities.size();
 			size += archetype.entities.size();
 		}
 
