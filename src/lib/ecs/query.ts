@@ -187,8 +187,6 @@ export class Query {
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
 			yield entityId;
-		for (const entityId of this.entered.dense) {
-			yield entityId;
 		}
 
 		this.entered.dense.clear();
@@ -214,8 +212,6 @@ export class Query {
 	 * array directly instead.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
-		for (const entityId of this.exited.dense) {
-			yield entityId;
 		for (const entityId of this.exited.dense) {
 			yield entityId;
 		}
@@ -256,7 +252,6 @@ export class Query {
 		let size = 0;
 
 		for (const archetype of this.archetypes) {
-			size += archetype.entities.size();
 			size += archetype.entities.size();
 		}
 
