@@ -1,9 +1,10 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { ScriptContext } from "@rbxts/services";
+
 import { Query } from "./query";
 import { createEvent } from "./storage/event";
-import { System, SystemManager } from "./system";
+import { StorageObject, System, SystemManager } from "./system";
 import { World, WorldOptions } from "./world";
 
 function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
@@ -19,19 +20,20 @@ world.flush = (): void => {};
 
 let manager = {} as SystemManager;
 
-/**
- * Normally these would be initialized by the abstract class, but as we are
- * using a mock here, we need to initialize them ourselves.
- */
-function createSystem(): System {
-	const system = {} as System;
-	system.dt = 0;
-	system.enabled = true;
-	system.priority = 0;
-	system.storage = [];
-	system.onUpdate = (): void => {};
-	return system;
+class MockSystem extends System {
+	public dt = 0;
+	public enabled = true;
+	public priority = 0;
+	public storage: Array<StorageObject> = [];
+
+	public onUpdate(): void {}
 }
+
+class MockSystem1 extends MockSystem {}
+class MockSystem2 extends MockSystem {}
+class MockSystem3 extends MockSystem {}
+class MockSystem4 extends MockSystem {}
+class MockSystem5 extends MockSystem {}
 
 export = (): void => {
 	beforeEach(() => {
@@ -50,19 +52,18 @@ export = (): void => {
 			})();
 
 			expect(system).to.be.ok();
-			expect(tostring(getmetatable(system))).to.equal("ASystemWithAName");
 			expect(system.priority).to.equal(1000);
 		});
 
 		it("be able to be scheduled", () => {
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
 
-			void manager.scheduleSystem(system);
+			void manager.scheduleSystem(system as System);
 			void manager.start();
 
 			expect(callCount).to.equal(0);
@@ -74,12 +75,12 @@ export = (): void => {
 		it("be able to schedule multiple systems", () => {
 			let callCount = 0;
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.onUpdate = (): void => {
 				callCount += 1;
 			};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -94,7 +95,7 @@ export = (): void => {
 		});
 
 		it("be able to configure queries", () => {
-			const system = createSystem();
+			const system = new MockSystem();
 			let query;
 			system.configureQueries = (world: World): void => {
 				query = new Query(world).mask;
@@ -110,26 +111,26 @@ export = (): void => {
 		it("call systems in correct priority order", () => {
 			const systemOrder: Array<number> = [];
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.priority = 1;
 			system1.onUpdate = (): void => {
 				systemOrder.push(4);
 			};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.priority = 1000;
 			system2.onUpdate = (): void => {
 				systemOrder.push(1);
 			};
 
-			const system3 = createSystem();
+			const system3 = new MockSystem2();
 			system3.priority = 25;
 
 			system3.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
-			const system4 = createSystem();
+			const system4 = new MockSystem3();
 			system4.priority = 100;
 			system4.onUpdate = (): void => {
 				systemOrder.push(2);
@@ -149,7 +150,7 @@ export = (): void => {
 
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.executionGroup = tempBindableEvent.Event;
 			system.onUpdate = (): void => {
 				callCount += 1;
@@ -169,12 +170,12 @@ export = (): void => {
 
 			let callCount = 0;
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.onUpdate = (): void => {
 				callCount += 1;
 			};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.onUpdate = (): void => {
 				callCount += 10;
 			};
@@ -203,14 +204,14 @@ export = (): void => {
 
 			const event = tempBindableEvent.Event;
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.priority = 1;
 			system1.executionGroup = event;
 			system1.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.priority = 100;
 
 			system2.executionGroup = event;
@@ -218,26 +219,26 @@ export = (): void => {
 				systemOrder.push(1);
 			};
 
-			const system3 = createSystem();
+			const system3 = new MockSystem2();
 			system3.priority = 5;
 			system3.executionGroup = event;
 			system3.onUpdate = (): void => {
 				systemOrder.push(2);
 			};
 
-			const system4 = createSystem();
+			const system4 = new MockSystem3();
 			system4.priority = 1;
 			system4.onUpdate = (): void => {
 				systemOrder.push(6);
 			};
 
-			const system5 = createSystem();
+			const system5 = new MockSystem4();
 			system5.priority = 5;
 			system5.onUpdate = (): void => {
 				systemOrder.push(5);
 			};
 
-			const system6 = createSystem();
+			const system6 = new MockSystem5();
 			system6.priority = 100;
 			system6.onUpdate = (): void => {
 				systemOrder.push(4);
@@ -259,20 +260,20 @@ export = (): void => {
 		it("be able to call systems in order", () => {
 			const systemOrder: Array<number> = [];
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.onUpdate = (): void => {
 				systemOrder.push(3);
 			};
 
-			const system2 = createSystem();
-			system2.after = [system1];
+			const system2 = new MockSystem1();
+			system2.after = [MockSystem];
 
 			system2.onUpdate = (): void => {
 				systemOrder.push(2);
 			};
 
-			const system3 = createSystem();
-			system3.after = [system2];
+			const system3 = new MockSystem2();
+			system3.after = [MockSystem1];
 			system3.onUpdate = (): void => {
 				systemOrder.push(1);
 			};
@@ -288,19 +289,19 @@ export = (): void => {
 
 			const systemOrder1: Array<number> = [];
 
-			const system4 = createSystem();
+			const system4 = new MockSystem3();
 			system4.onUpdate = (): void => {
 				systemOrder1.push(3);
 			};
 
-			const system5 = createSystem();
-			system5.after = [system4];
+			const system5 = new MockSystem4();
+			system5.after = [MockSystem3];
 			system5.onUpdate = (): void => {
 				systemOrder1.push(2);
 			};
 
-			const system6 = createSystem();
-			system6.after = [system4, system5];
+			const system6 = new MockSystem5();
+			system6.after = [MockSystem3, MockSystem4];
 			system6.onUpdate = (): void => {
 				systemOrder1.push(1);
 			};
@@ -321,14 +322,14 @@ export = (): void => {
 
 			const event = tempBindableEvent.Event;
 
-			const system1 = createSystem();
+			const system1 = new MockSystem();
 			system1.priority = 1;
 			system1.onUpdate = (): void => {};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.executionGroup = event;
 			system2.priority = 100;
-			system2.after = [system1];
+			system2.after = [MockSystem];
 			system2.onUpdate = (): void => {};
 
 			let errored = false;
@@ -348,7 +349,7 @@ export = (): void => {
 		it("be able to disable and enable a system", () => {
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -361,11 +362,11 @@ export = (): void => {
 			bindableEvent.Fire();
 			expect(callCount).to.equal(1);
 
-			manager.disableSystem(system);
+			manager.disableSystem(MockSystem);
 			bindableEvent.Fire();
 			expect(callCount).to.equal(1);
 
-			manager.enableSystem(system);
+			manager.enableSystem(MockSystem);
 			bindableEvent.Fire();
 			expect(callCount).to.equal(2);
 		});
@@ -373,7 +374,7 @@ export = (): void => {
 		it("be able to unschedule a system", () => {
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -394,7 +395,7 @@ export = (): void => {
 		it("not allow yielding in a system", () => {
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
 				callCount += 1;
 				task.wait();
@@ -412,12 +413,12 @@ export = (): void => {
 		it("should not be called more than once if a system is scheduled later", () => {
 			let callCount = 0;
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
 				callCount += 1;
 			};
 
-			const system2 = createSystem();
+			const system2 = new MockSystem1();
 			system2.onUpdate = (): void => {
 				callCount += 1;
 			};
@@ -435,7 +436,7 @@ export = (): void => {
 			const tempBindableEvent = new Instance("BindableEvent");
 			const event = createEvent(tempBindableEvent.Event);
 
-			const system = createSystem();
+			const system = new MockSystem();
 			system.storage.push(event);
 
 			let callCount = 0;
@@ -460,14 +461,14 @@ export = (): void => {
 
 			expect(callCount).to.equal(1);
 
-			manager.disableSystem(system);
+			manager.disableSystem(MockSystem);
 
 			tempBindableEvent.Fire();
 			bindableEvent.Fire();
 
 			expect(callCount).to.equal(1);
 
-			manager.enableSystem(system);
+			manager.enableSystem(MockSystem);
 
 			tempBindableEvent.Fire();
 			bindableEvent.Fire();
@@ -485,13 +486,13 @@ export = (): void => {
 		});
 
 		it("should not send multiple duplicate errors to the console", () => {
-			const system = createSystem();
+			const system = new MockSystem();
 			system.onUpdate = (): void => {
-				throw ("test");
+				throw "test";
 			};
 
-			manager.scheduleSystem(system);
-			manager.start();
+			void manager.scheduleSystem(system);
+			void manager.start();
 
 			let errorCount = 0;
 

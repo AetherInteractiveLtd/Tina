@@ -1,6 +1,6 @@
 {
   "name": "@rbxts/tina",
-  "version": "0.2.4",
+  "version": "0.2.6-revert",
   "description": "",
   "main": "out/init.lua",
   "scripts": {

@@ -11,6 +11,9 @@ export type StorageObject = {
 	setup: () => void;
 };
 
+export type SystemConstructor = new () => System;
+export type SystemName = string;
+
 interface SystemInternal extends System {
 	/**
 	 * Storage for errors that have occurred recently in the system. This is
@@ -32,7 +35,7 @@ export interface System {
 	cleanup(): void;
 	/**
 	 * The configureQueries method is optionally called when the system is
-	 * first run. This is a good place to setup any queries that the system
+	 * first run. This is where you should setup any queries that the system
 	 * will use.
 	 *
 	 * @param world The world that this system belongs to. This will be passed
@@ -73,7 +76,7 @@ export interface System {
  */
 export abstract class System {
 	/** An optional set of systems that must be executed before this system */
-	public after?: Array<System>;
+	public after?: Array<SystemConstructor>;
 	/** The time since the system was last called. */
 	public dt = 0;
 	/**
@@ -142,9 +145,10 @@ export class SystemManager {
 	private executionDefault: ExecutionGroup;
 	private executionGroupSignals: Map<ExecutionGroup, ConnectionLike> = new Map();
 	private executionGroups: Set<ExecutionGroup> = new Set();
+	// private systemArgs?: Array<unknown>;
+	private nameToSystem: Map<SystemName, System> = new Map();
 	/** Whether or not the system manager has began execution. */
 	private started = false;
-	// private systemArgs?: Array<unknown>;
 	private systems: Array<System> = [];
 	private systemsByExecutionGroup: Map<ExecutionGroup, Array<System>> = new Map();
 	private world: World;
@@ -163,7 +167,8 @@ export class SystemManager {
 	 *
 	 * @param system The system that should be disabled.
 	 */
-	public disableSystem(system: System): void {
+	public disableSystem(ctor: SystemConstructor): void {
+		const system = this.getSystem(ctor);
 		system.enabled = false;
 
 		for (const storage of system.storage) {
@@ -181,7 +186,8 @@ export class SystemManager {
 	 *
 	 * @param system The system that should be enabled.
 	 */
-	public enableSystem(system: System): void {
+	public enableSystem(ctor: SystemConstructor): void {
+		const system = this.getSystem(ctor);
 		system.enabled = true;
 
 		for (const storage of system.storage) {
@@ -191,6 +197,49 @@ export class SystemManager {
 		// TODO: Should we also be enabling systems that depend here? Likely just
 		// issue a warning to the dev that it hasn't been enabled.
 		// do we include dev-only logging for things like this?
+	}
+
+	/**
+	 * Replaces a system with a new system. This is useful for hot-reloading.
+	 * This will not work in non-studio environments. Storage will not persist
+	 * between the old and new system, and instead will be cleaned up and set
+	 * up again.
+	 *
+	 * @param oldSystem The system to replace
+	 * @param newSystem The system to replace it with
+	 */
+	public replaceSystem(oldSystem: System, newSystem: System): void {
+		assert(RunService.IsStudio(), "replaceSystem can only be called in Studio");
+
+		const index = this.systems.indexOf(oldSystem);
+		if (index === -1) {
+			throw `System ${tostring(getmetatable(oldSystem))} not found`;
+		}
+
+		for (const storage of oldSystem.storage) {
+			storage.cleanup();
+		}
+
+		this.nameToSystem.set(tostring(getmetatable(oldSystem)), newSystem);
+		this.systems[index] = newSystem;
+
+		newSystem.configureQueries(this.world);
+		this.setupSystemStorage(newSystem);
+
+		const executionIndex = this.systemsByExecutionGroup
+			.get(oldSystem.executionGroup ?? this.executionDefault)
+			?.indexOf(oldSystem);
+		if (executionIndex === undefined) {
+			throw `System ${tostring(
+				getmetatable(oldSystem),
+			)} not found in execution group ${tostring(oldSystem.executionGroup)}`;
+		}
+
+		this.systemsByExecutionGroup
+			.get(oldSystem.executionGroup ?? this.executionDefault)
+			?.remove(executionIndex);
+
+		this.sortSystems(this.systems);
 	}
 
 	/**
@@ -234,6 +283,12 @@ export class SystemManager {
 				}
 
 				this.systems.push(system);
+
+				if (this.nameToSystem.has(tostring(getmetatable(system)))) {
+					throw `System ${tostring(getmetatable(system))} has already been scheduled!`;
+				}
+
+				this.nameToSystem.set(tostring(getmetatable(system)), system);
 			}
 
 			this.sortSystems(systems);
@@ -276,7 +331,7 @@ export class SystemManager {
 	 *
 	 * This will run through the system lifecycle.
 	 *
-	 * Prepare (Async) -> Initialize -> Setup -> Execute
+	 * Prepare (Async) -> ConfigureQueries -> Initialize -> Execute
 	 *
 	 * Prepare will be called on all systems in parallel, and is the only step
 	 * that is allowed to be asynchronous.
@@ -292,11 +347,11 @@ export class SystemManager {
 		return Promise.allSettled(promises)
 			.andThen(() => {
 				for (const system of systems) {
-					this.initializeSystem(system);
+					this.setupSystem(system);
 				}
 
 				for (const system of systems) {
-					this.setupSystem(system);
+					this.initializeSystem(system);
 				}
 
 				for (const system of systems) {
@@ -346,6 +401,7 @@ export class SystemManager {
 	public unscheduleSystems(systems: Array<System>): void {
 		for (const system of systems) {
 			this.systems.remove(this.systems.indexOf(system));
+			this.nameToSystem.delete(tostring(getmetatable(system)));
 
 			const systemInExecutionGroup = this.systemsByExecutionGroup.get(
 				system.executionGroup ?? this.executionDefault,
@@ -430,6 +486,21 @@ export class SystemManager {
 	}
 
 	/**
+	 * Given a system constructor, returns the system instance if it exists.
+	 * @param ctor The system constructor.
+	 * @returns The system instance, or undefined if it doesn't exist.
+	 */
+	private getSystem(ctor: SystemConstructor): System {
+		const systemName = tostring(ctor);
+		const systemInstance = this.nameToSystem.get(systemName);
+		if (!systemInstance) {
+			throw `System ${systemName} does not exist!`;
+		}
+
+		return systemInstance;
+	}
+
+	/**
 	 * Initializes a given system.
 	 *
 	 * This will call the `initialize` method on the system, if it exists.
@@ -459,8 +530,11 @@ export class SystemManager {
 		this.validateSystems(unscheduledSystems);
 
 		unscheduledSystems.sort((a, b) => {
-			if (a.after !== undefined && a.after.includes(b)) {
-				if (b.after !== undefined && b.after.includes(a)) {
+			if (a.after !== undefined && a.after.includes(getmetatable(b) as SystemConstructor)) {
+				if (
+					b.after !== undefined &&
+					b.after.includes(getmetatable(a) as SystemConstructor)
+				) {
 					throw error(
 						`Systems ${tostring(getmetatable(a))} and ${tostring(
 							getmetatable(b),
@@ -470,7 +544,7 @@ export class SystemManager {
 				return false;
 			}
 
-			if (b.after !== undefined && b.after.includes(a)) {
+			if (b.after !== undefined && b.after.includes(getmetatable(a) as SystemConstructor)) {
 				return true;
 			}
 
@@ -528,10 +602,6 @@ export class SystemManager {
 	 * @param system The system to initialize.
 	 */
 	private setupSystem(system: System): void {
-		if (!system.onUpdate) {
-			throw `System ${tostring(getmetatable(system))} does not have an onUpdate method`;
-		}
-
 		if (system.configureQueries !== undefined) {
 			this.ensure(system, () => {
 				system.configureQueries(this.world);
@@ -544,8 +614,7 @@ export class SystemManager {
 	/**
 	 * Initializes all the system storages.
 	 *
-	 * @param system
-	 * @returns
+	 * @param system The system to setup.
 	 */
 	private setupSystemStorage(system: System): void {
 		if (!system.enabled) {
@@ -592,9 +661,10 @@ export class SystemManager {
 			}
 
 			for (const afterSystem of system.after) {
-				if (system.executionGroup !== afterSystem.executionGroup) {
+				const afterSystemInstance = this.getSystem(afterSystem);
+				if (system.executionGroup !== afterSystemInstance.executionGroup) {
 					const msg = `System ${tostring(getmetatable(system))} and ${tostring(
-						getmetatable(afterSystem),
+						afterSystem,
 					)} are in different execution groups`;
 					throw msg;
 				}
