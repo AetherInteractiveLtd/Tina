@@ -48,6 +48,8 @@ export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 				this.values.delete(player);
 			};
 
+			for (const player of Players.GetPlayers()) added(player);
+
 			Players.PlayerAdded.Connect(added);
 			Players.PlayerRemoving.Connect(removing);
 		}
