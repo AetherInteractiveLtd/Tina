@@ -21,7 +21,7 @@ import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
-import { ExecutionGroup, System, SystemManager } from "./system";
+import { ExecutionGroup, System, SystemConstructor, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
@@ -237,12 +237,12 @@ export class World {
 	 * this can be used for systems that are expected to be reenabled at a
 	 * later point.
 	 *
-	 * @param system The system that should be disabled.
+	 * @param ctor The constructor of the system that should be enabled.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public disableSystem(system: System): this {
-		this.scheduler.disableSystem(system);
+	public disableSystem(ctor: SystemConstructor): this {
+		this.scheduler.disableSystem(ctor);
 
 		return this;
 	}
@@ -253,12 +253,12 @@ export class World {
 	 * This will not error if a system that is already enabled is enabled
 	 * again.
 	 *
-	 * @param system The system that should be enabled.
+	 * @param ctor The constructor of the system that should be enabled.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public enableSystem(system: System): this {
-		this.scheduler.enableSystem(system);
+	public enableSystem(ctor: SystemConstructor): this {
+		this.scheduler.enableSystem(ctor);
 
 		return this;
 	}
@@ -467,6 +467,19 @@ export class World {
 	 */
 	public removeTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
 		return this.removeComponent(entityId, tag as unknown as AnyComponent);
+	}
+
+	/**
+	 * Replaces a system with a new system. This is useful for hot-reloading.
+	 * This will not work in non-studio environments. Storage will not persist
+	 * between the old and new system, and instead will be cleaned up and set
+	 * up again.
+	 *
+	 * @param oldSystem The system to replace
+	 * @param newSystem The system to replace it with
+	 */
+	public replaceSystem(oldSystem: System, newSystem: System): void {
+		this.scheduler.replaceSystem(oldSystem, newSystem);
 	}
 
 	/**
