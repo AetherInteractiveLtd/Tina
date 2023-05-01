@@ -1,5 +1,6 @@
-import { GlobalState } from "./states/global";
-import { PlayerState } from "./states/player";
+import { LocalState } from "./local";
+import { GlobalState } from "./replicated/global";
+import { PlayerState } from "./replicated/player";
 
 /**
  * Valid types for changing/mutating state (callback or direct set).
@@ -21,7 +22,7 @@ export declare type StateSetter<T> = T | ((oldValue?: T) => T);
  * ```
  */
 export declare type ValidStateScheme<T extends object> = {
-	[K in keyof T]: T[K] extends GlobalState | PlayerState
+	[K in keyof T]: T[K] extends GlobalState | PlayerState | LocalState
 		? T[K]
 		: T[K] extends object
 		? ValidStateScheme<T[K]>

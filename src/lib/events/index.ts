@@ -43,9 +43,7 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	public await(): LuaTuple<T> {
 		this.yieldThreads.push(coroutine.running());
 
-		let data = coroutine.yield() as LuaTuple<T>;
-
-		return data;
+		return coroutine.yield() as LuaTuple<T>;
 	}
 
 	/**
