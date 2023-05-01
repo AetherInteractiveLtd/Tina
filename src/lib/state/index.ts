@@ -1,7 +1,7 @@
 import { LocalState } from "./local";
-import { StateSetter, ValidStateScheme } from "./types";
 import { GlobalState } from "./replicated/global";
 import { PlayerState } from "./replicated/player";
+import { StateSetter, ValidStateScheme } from "./types";
 
 export namespace State {
 	let states = 0;

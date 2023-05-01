@@ -81,4 +81,8 @@ export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 	public get(player: Player = Players.LocalPlayer): T | undefined {
 		return this.values.get(player);
 	}
+
+	public items(): Map<Player, T> {
+		return this.values;
+	}
 }
