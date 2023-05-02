@@ -128,8 +128,8 @@ export class World {
 			) {
 				this.updateArchetype(entityId, componentId);
 
-				if (component.defaults !== undefined) {
-					component.set(entityId, component.defaults);
+				if (component.setDefaults !== undefined) {
+					component.set(entityId, component.setDefaults(entityId));
 				}
 
 				if (data !== undefined) {
