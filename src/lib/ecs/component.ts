@@ -29,7 +29,7 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	 * component to an entity; each property that is specified in this object
 	 * will be given to the entity.
 	 */
-	setDefaults: (entityId: EntityId) => Partial<OptionalKeys<T>>;
+	setDefaults: () => Partial<OptionalKeys<T>>;
 	/**
 	 * Clones all the data from one entity to another. This will
 	 * overwrite any existing data for the target entity. If you want
