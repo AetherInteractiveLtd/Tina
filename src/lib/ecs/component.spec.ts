@@ -50,13 +50,14 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
+			
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
-			world.removeComponent(entity, component);
+			world.disableComponent(entity, component);
 			world.flush();
 			expect(world.hasComponent(entity, component)).to.equal(false);
-		});
+		})
 
 		it("be able to update its data", () => {
 			const component = ComponentInternalCreation.createComponent({
@@ -71,8 +72,11 @@ export = (): void => {
 			world.addComponent(entity, component);
 			world.flush();
 			component.set(entity, {
-				x: 1,
-			});
+				x: 1
+			}); 
+  
+			print(component.x, entity)
+			
 			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
 
 			const entity2 = world.add();
@@ -81,18 +85,6 @@ export = (): void => {
 			});
 			world.flush();
 			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
-		});
-
-		it("be able to hold a single value", () => {
-			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
-			const entity = world.add();
-			world.addComponent(entity, component);
-			component[entity] = 1;
-			world.flush();
-			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(1);
-
-			component[entity] = 2;
-			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(2);
 		});
 
 		it("be able to have a default value", () => {
@@ -218,7 +210,7 @@ export = (): void => {
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
-			world.removeComponent(entity, component);
+			world.disableComponent(entity, component);
 			world.flush();
 			expect(world.hasComponent(entity, component)).to.equal(false);
 		});

@@ -1,4 +1,4 @@
-import Sift, { None } from "@rbxts/sift";
+import Sift from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
 import { ComponentId, EntityId } from "../types/ecs";
@@ -6,30 +6,28 @@ import { Immutable } from "../types/readonly";
 import { getNextComponentId, internal_getGlobalEntityId } from "./entity-manager";
 import { Observer } from "./observer";
 
-type Mutable<T> = {
-	-readonly [P in keyof T]: T[P];
-};
-
 export type AllComponentTypes = AnyComponent | TagComponent | AnyFlyweight;
 
-export type AnyComponent = Component<Tree<Type>>;
-export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
+export type ComponentDataBase = Record<string, Array<unknown>>;
+
+export type AnyComponent = Component<{}>;
+export type AnyComponentInternal = ComponentInternal<{}>;
 
 export type AnyFlyweight = Flyweight<object>;
 
 export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
 
-export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Array<U> : T;
+export type ComponentData<T extends ComponentDataBase> = T extends Array<infer U> ? Array<U> : T;
 
-export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
+export type PartialArrayToKeys<T extends ComponentDataBase> = { [K in keyof T]?: T[K][EntityId] };
 
-export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
+export type Component<T extends ComponentDataBase> = ComponentData<T> & {
 	/**
 	 * The default values for this component. This is used when adding a
 	 * component to an entity; each property that is specified in this object
 	 * will be given to the entity.
 	 */
-	defaults?: Partial<OptionalKeys<T>>;
+	defaults?: PartialArrayToKeys<T>;
 	/**
 	 * Clones all the data from one entity to another. This will
 	 * overwrite any existing data for the target entity. If you want
@@ -59,11 +57,12 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	 * @param entityId The entity to update.
 	 * @param data The data to update.
 	 */
-	set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void;
+	set(entityId: EntityId, data: PartialArrayToKeys<T>): void;
 };
 
-export type ComponentInternal<T extends Tree<Type>> = Component<T> &
+export type ComponentInternal<T extends ComponentDataBase> = Component<T> &
 	ComponentIdField & {
+		componentData: ComponentData<T>;
 		observers: Array<Observer>;
 	};
 
@@ -80,20 +79,6 @@ export type Flyweight<T extends object> = Immutable<T> & {
 };
 
 export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
-
-export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
-
-export type Type = ArrayConstructor | Array<unknown>;
-
-export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
-	? T
-	: T extends ArrayConstructor
-	? Array<typeof ComponentTypes>
-	: T extends Exclude<Type, Array<unknown>>
-	? InstanceType<T>
-	: {
-			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
-	  };
 
 type ComponentIdField = { readonly componentId: ComponentId };
 
@@ -158,10 +143,10 @@ export namespace ComponentInternalCreation {
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentDataBase>(schema: T): Component<T> {
 		componentInstantiationCheck();
 
-		const componentData = createComponentArray<T>(schema as T, 10000);
+		const componentData = createComponentArray(schema as T, 10000);
 		const observers = new Array<Observer>();
 		return Sift.Dictionary.merge(componentData, {
 			componentId: getNextComponentId(),
@@ -178,9 +163,8 @@ export namespace ComponentInternalCreation {
 			 */
 			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
 				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key] of pairs(componentData)) {
-					componentData[key as never][toEntityId as never] =
-						componentData[key as never][fromEntityId as never];
+				for (const [key] of pairs(componentData as ComponentDataBase)) {
+					componentData[key][toEntityId] = componentData[key][fromEntityId];
 				}
 			},
 
@@ -196,8 +180,8 @@ export namespace ComponentInternalCreation {
 				}
 
 				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(this.defaults)) {
-					componentData[key as never][entityId as never] = value as never;
+				for (const [key, value] of pairs(this.defaults as ComponentDataBase)) {
+					componentData[key][entityId] = value;
 				}
 			},
 
@@ -214,16 +198,13 @@ export namespace ComponentInternalCreation {
 			 * @param entityId The entity to update.
 			 * @param data The data to update.
 			 */
-			set<U extends Partial<OptionalKeys<T>>>(entityId: EntityId, data: U): void {
+			set(entityId: EntityId, data: PartialArrayToKeys<T>): void {
 				for (const observer of observers) {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
 
-				// TODO: This currently does not support nested fields.
-
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(data)) {
-					componentData[key as never][entityId as never] = value as never;
+				for (const [key, value] of pairs(data as ComponentDataBase)) {
+					componentData[key][entityId] = value;
 				}
 			},
 		}) as unknown as ComponentInternal<T>;
@@ -294,34 +275,26 @@ export namespace ComponentInternalCreation {
  * Creates an array of the given size, and fills it with the given default
  * value.
  *
- * @param defaultValue The default value to fill the array with.
+ * @param componentData The default value to fill the array with.
  * @param arraySize The size of the array to create (the total number of
  * allowed entities).
  *
  * @returns The pre-allocated array.
  */
-function createComponentArray<T extends Tree<Type>>(
-	defaultValue: T,
+function createComponentArray(
+	componentData: ComponentDataBase,
 	arraySize: number,
-): ComponentArray<T> {
-	if (typeOf(defaultValue) === "function") {
-		return new (defaultValue as ArrayConstructor)(arraySize) as ComponentArray<T>;
-	}
+): ComponentData<ComponentDataBase> {
+	const result: ComponentData<ComponentDataBase> = {};
 
-	if (t.array(t.any)(defaultValue) === true) {
-		if ((defaultValue as Array<T>).size() > 0) {
-			return new Array<T>(arraySize, (defaultValue as Array<T>)[0]) as ComponentArray<T>;
+	for (const [key, value] of pairs(componentData)) {
+		if (typeOf(value) === "function" || t.array(t.any)(value) === true) {
+			result[key] = new Array<typeof value>(arraySize);
+			continue;
 		}
 
-		return new Array<T>(arraySize) as ComponentArray<T>;
+		throw `Invalid component data key: ${key}`;
 	}
 
-	const result: ComponentArray = {};
-
-	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
-		// TODO: key should be the user-defined object key
-		result[key] = createComponentArray(value, arraySize);
-	}
-
-	return result as never;
+	return result;
 }

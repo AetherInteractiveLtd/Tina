@@ -1,4 +1,5 @@
 import { HttpService } from "@rbxts/services";
+import { None } from "@rbxts/sift";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Tina from "../..";
@@ -11,9 +12,10 @@ import {
 	AnyComponent,
 	AnyComponentInternal,
 	AnyFlyweight,
+	ComponentInternalCreation,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	GetComponentSchema,
-	OptionalKeys,
+	PartialArrayToKeys,
 	TagComponent,
 } from "./component";
 import { EntityManager } from "./entity-manager";
@@ -65,6 +67,16 @@ export class World {
 	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
 
+	/**
+	 * Entities that have been queued to have their component data removed from this frame.
+	 * @hidden
+	 */
+	public componentDataToRemoveLater: Array<[EntityId, AnyComponentInternal]> = [];
+	/**
+	 * Entities that have been queued to have their component data removed from last frame.
+	 * @hidden
+	 */
+	public componentDataToRemoveNow: Array<[EntityId, AnyComponentInternal]> = [];
 	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
 	/**
@@ -106,13 +118,13 @@ export class World {
 	public addComponent<C extends AnyComponent>(
 		entityId: EntityId,
 		component: C,
-		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+		data?: PartialArrayToKeys<GetComponentSchema<C>>,
 	): this;
 	public addComponent(entityId: EntityId, component: AnyFlyweight): this;
 	public addComponent<C extends AnyComponent>(
 		entityId: EntityId,
 		component: C,
-		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+		data?: PartialArrayToKeys<GetComponentSchema<C>>,
 	): this {
 		if (!this.has(entityId)) {
 			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
@@ -122,7 +134,7 @@ export class World {
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = (component as AnyComponentInternal).componentId;
+			const componentId = (component as unknown as AnyComponentInternal).componentId;
 			if (
 				!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
@@ -151,6 +163,14 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
+		const someComp = ComponentInternalCreation.createComponent({
+			x: [0],
+		});
+
+		this.addComponent(1, someComp, {
+			x: 1,
+		});
+
 		return this.addComponent(entityId, tag as unknown as AnyComponent);
 	}
 
@@ -228,6 +248,64 @@ export class World {
 
 		this.flush();
 	}
+
+	/**
+	 * Disables a component on an entity.
+	 *
+	 * This will keep the component on the entity, but will prevent it from
+	 * being matched by queries. This is useful when you wish to preserve the
+	 * state of a component.
+	 *
+	 * @param entityId The id of the entity to disable the component on.
+	 * @param component The component to disable.
+	 *
+	 * @returns The world instance to allow for method chaining.
+	 */
+	public disableComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+		}
+
+		this.componentsToUpdate.add(entityId);
+
+		debug.profilebegin("World:disableComponent");
+		{
+			const componentId = (component as AnyComponentInternal).componentId;
+			if (
+				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
+			) {
+				this.updateArchetype(entityId, componentId);
+			}
+		}
+		debug.profileend();
+
+		return this;
+	}
+
+	/**
+	 * Disables a component on an entity.
+	 *
+	 * This will keep the component on the entity, but will prevent it from
+	 * being matched by queries. This is useful when you wish to preserve the
+	 * state of a component.
+	 *
+	 * @param entityId The id of the entity to disable the component on.
+	 * @param component The component to disable.
+	 *
+	 * @returns The world instance to allow for method chaining.
+	 */
+	// public disableComponent<C extends AnyComponent>(entityId: EntityId, component: C): this {
+	// 	if (!this.has(entityId)) {
+	// 		throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+	// 	}
+
+	// 	const componentId = (component as AnyComponentInternal).componentId;
+	// 	if (!this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId)) {
+	// 		throw `Entity ${entityId} does not have component ${componentId}`;
+	// 	}
+
+	// 	return this;
+	// }
 
 	/**
 	 * Disables the given system. This will prevent the system from being
@@ -417,22 +495,15 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
-		if (!this.has(entityId)) {
-			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
-		}
+		this.disableComponent(entityId, component);
 
-		this.componentsToUpdate.add(entityId);
-
-		debug.profilebegin("World:removeComponent");
-		{
-			const componentId = (component as AnyComponentInternal).componentId;
-			if (
-				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
-			) {
-				this.updateArchetype(entityId, componentId);
-			}
+		if ((component as AnyComponentInternal).componentData === undefined) {
+			// Component is a Flyweight
+			return this;
 		}
-		debug.profileend();
+		// schedule data to be removed somewhere else
+
+		this.componentDataToRemoveLater.push([entityId, component as AnyComponentInternal]);
 
 		return this;
 	}
@@ -466,7 +537,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		return this.removeComponent(entityId, tag as unknown as AnyComponent);
+		return this.disableComponent(entityId, tag as unknown as AnyComponent);
 	}
 
 	/**
@@ -672,7 +743,7 @@ export class World {
 	 */
 	private updatePendingComponents(): void {
 		this.entityManager.updatePending(this.componentsToUpdate.dense);
-		this.componentsToUpdate.dense = [];
+		this.componentsToUpdate.dense.clear();
 	}
 
 	/**

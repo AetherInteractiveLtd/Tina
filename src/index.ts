@@ -4,11 +4,10 @@ import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
 import {
 	Component,
+	ComponentDataBase,
 	ComponentInternalCreation,
 	Flyweight,
 	TagComponent,
-	Tree,
-	Type,
 } from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
@@ -162,7 +161,7 @@ namespace Tina {
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentDataBase>(schema: T): Component<T> {
 		return ComponentInternalCreation.createComponent(schema);
 	}
 
