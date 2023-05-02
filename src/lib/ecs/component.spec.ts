@@ -101,9 +101,11 @@ export = (): void => {
 				y: ComponentTypes.Boolean,
 			});
 
-			component.defaults = {
-				x: 100,
-			};
+			component.setDefaults = () => {
+				return {
+					x: 100,
+				}
+			}
 
 			const entity = world.add();
 			const entity2 = world.add();
@@ -122,8 +124,10 @@ export = (): void => {
 				y: ComponentTypes.Boolean,
 			});
 
-			component.defaults = {
-				x: 10,
+			component.setDefaults = () => {
+				return {
+					x: 10,
+				}
 			};
 
 			const entity = world.add();
