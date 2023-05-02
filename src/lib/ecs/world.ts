@@ -163,14 +163,6 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		const someComp = ComponentInternalCreation.createComponent({
-			x: [0],
-		});
-
-		this.addComponent(1, someComp, {
-			x: 1,
-		});
-
 		return this.addComponent(entityId, tag as unknown as AnyComponent);
 	}
 
