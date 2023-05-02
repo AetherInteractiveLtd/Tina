@@ -179,14 +179,17 @@ export class Query {
 	 * although unconventional, you can use the `Query.entered.dense` array
 	 * directly instead.
 	 *
-	 * @param callback The callback to run for each entity.
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
 			yield entityId;
 		}
 
-		this.entered = new SparseSet();
+		this.entered.dense.clear();
 	}
 
 	/**
@@ -203,14 +206,17 @@ export class Query {
 	 * although unconventional, you can use the `Query.exited.dense` array
 	 * directly instead.
 	 *
-	 * @param callback The callback to run for each entity.
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
 		for (const entityId of this.exited.dense) {
 			yield entityId;
 		}
 
-		this.exited = new SparseSet();
+		this.exited.dense.clear();
 	}
 
 	/**
@@ -228,11 +234,10 @@ export class Query {
 
 	/**
 	 * Runs a callback for each entity that matches the query.
-	 *
-	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
-	 * that is supported.
 	 */
 	public *iter(): Generator<EntityId> {
+		// TODO: This should be turned into a *[Symbol.iterator] method whenever
+		// that is supported.
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
 				yield entityId;

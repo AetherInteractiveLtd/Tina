@@ -21,7 +21,7 @@ import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
-import { ExecutionGroup, System, SystemManager } from "./system";
+import { ExecutionGroup, System, SystemConstructor, SystemManager } from "./system";
 
 export interface WorldOptions {
 	/**
@@ -128,10 +128,12 @@ export class World {
 			) {
 				this.updateArchetype(entityId, componentId);
 
+				if (component.setDefaults !== undefined) {
+					component.set(entityId, component.setDefaults());
+				}
+
 				if (data !== undefined) {
 					component.set(entityId, data);
-				} else if (component.defaults !== undefined) {
-					component.set(entityId, component.defaults);
 				}
 			}
 		}
@@ -235,12 +237,12 @@ export class World {
 	 * this can be used for systems that are expected to be reenabled at a
 	 * later point.
 	 *
-	 * @param system The system that should be disabled.
+	 * @param ctor The constructor of the system that should be enabled.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public disableSystem(system: System): this {
-		this.scheduler.disableSystem(system);
+	public disableSystem(ctor: SystemConstructor): this {
+		this.scheduler.disableSystem(ctor);
 
 		return this;
 	}
@@ -251,12 +253,12 @@ export class World {
 	 * This will not error if a system that is already enabled is enabled
 	 * again.
 	 *
-	 * @param system The system that should be enabled.
+	 * @param ctor The constructor of the system that should be enabled.
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public enableSystem(system: System): this {
-		this.scheduler.enableSystem(system);
+	public enableSystem(ctor: SystemConstructor): this {
+		this.scheduler.enableSystem(ctor);
 
 		return this;
 	}
@@ -468,6 +470,19 @@ export class World {
 	}
 
 	/**
+	 * Replaces a system with a new system. This is useful for hot-reloading.
+	 * This will not work in non-studio environments. Storage will not persist
+	 * between the old and new system, and instead will be cleaned up and set
+	 * up again.
+	 *
+	 * @param oldSystem The system to replace
+	 * @param newSystem The system to replace it with
+	 */
+	public replaceSystem(oldSystem: System, newSystem: System): void {
+		this.scheduler.replaceSystem(oldSystem, newSystem);
+	}
+
+	/**
 	 * Schedules an individual system to be executed in the world.
 	 *
 	 * Calling this function is a potentially expensive operation. It is best
@@ -626,13 +641,22 @@ export class World {
 	 */
 	private updateArchetype(entityId: EntityId, componentId: ComponentId): void {
 		const oldArchetype = this.entityManager.updateTo[entityId];
+		const newArchetype = this.archetypeChange(oldArchetype, componentId);
+
 		for (const query of oldArchetype.queries) {
+			if (newArchetype.queries.includes(query)) {
+				continue;
+			}
+
 			query.entered.remove(entityId);
 			query.exited.add(entityId);
 		}
 
-		const newArchetype = this.archetypeChange(oldArchetype, componentId);
 		for (const query of newArchetype.queries) {
+			if (oldArchetype.queries.includes(query)) {
+				continue;
+			}
+
 			query.exited.remove(entityId);
 			query.entered.add(entityId);
 		}

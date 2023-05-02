@@ -1,6 +1,6 @@
 import { COND } from "../conditions";
 import { Condition } from "../conditions/types";
-import { ArrayOrNever, CondFunc, Default, EventNode } from "./types";
+import { ArrayOrNever, CondFunc, Default, StepFunc } from "./types";
 
 export enum EAction {
 	COND = "c",
@@ -8,7 +8,7 @@ export enum EAction {
 }
 
 export class EventListener<T extends Array<unknown> = Array<unknown>> {
-	private _head!: EventNode;
+	private listeners: Array<CondFunc | StepFunc> = [];
 
 	protected readonly yieldThreads: Array<thread> = [];
 
@@ -20,11 +20,8 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @param func
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever this function returned.
 	 */
-	public do<X>(func: (...args: [...T]) => X): EventListener<[X]> {
-		this._head = {
-			value: [func, EAction.DO],
-			_next: this._head,
-		};
+	public do<X>(func: (...args: T) => X): EventListener<[X]> {
+		this.listeners.push([func, EAction.DO]);
 
 		return this as unknown as EventListener<[X]>;
 	}
@@ -35,37 +32,37 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 	 * @returns The same EventListener chain, any following functions will receive as parameters whatever the last do function returned.
 	 */
 	public condition(condition: Condition<T>): EventListener<T> {
-		this._head = {
-			value: [condition, EAction.COND] as CondFunc,
-			_next: this._head,
-		};
+		this.listeners.push([condition, EAction.COND] as CondFunc);
 
 		return this as unknown as EventListener<T>;
 	}
 
 	/**
-	 * Yields current thread until resumption (emit call).
+	 * Awaits for the final result on the last do of this chain.
 	 */
-	public await(): LuaTuple<Array<unknown>> {
+	public await(): LuaTuple<T> {
 		this.yieldThreads.push(coroutine.running());
 
-		return coroutine.yield();
+		return coroutine.yield() as LuaTuple<T>;
+	}
+
+	/**
+	 * Clears all the binded conditions and dos to this specific EventListener.
+	 */
+	public disconnect(): void {
+		table.clear(this.listeners);
 	}
 
 	/** @hidden */
-	public async call<T extends Array<unknown>>(...args: T): Promise<void> {
-		let item = this._head;
-
+	public async call<X extends Array<unknown> = Array<unknown>>(...args: X): Promise<void> {
 		let lastArgument = args;
 		let lastCondition = true;
 
-		while (item !== undefined) {
-			const [handler, _type] = item.value;
-
+		for (const [handler, _type] of this.listeners) {
 			if (_type === EAction.DO) {
 				if (lastCondition === true) {
 					try {
-						lastArgument = [handler(...lastArgument)] as T;
+						lastArgument = [handler(...lastArgument)] as X;
 					} catch (e) {
 						warn(`[Tina:Event]: There has been an error, more information. ${e}`);
 					}
@@ -73,34 +70,30 @@ export class EventListener<T extends Array<unknown> = Array<unknown>> {
 			} else {
 				lastCondition = COND.eval(handler, ...lastArgument);
 			}
-
-			item = item._next;
 		}
 
 		if (this.yieldThreads.size() > 0) {
-			for (const thread of this.yieldThreads) coroutine.resume(thread);
+			for (const thread of this.yieldThreads) coroutine.resume(thread, ...lastArgument);
 		}
 	}
 }
 
 export abstract class EventEmitter<Events extends Default | {}> {
-	protected readonly events: Record<string, Array<EventListener<[]>>> = {};
+	protected readonly events: Record<string, Array<EventListener>> = {};
 
 	/**
-	 * Lets you listen to a specific event from your Events interface definition.
+	 * Binds an EventListener to your Event, from where you can bind callbacks to be invoked when even is emitted.
 	 *
-	 * @param token as string, should be the event to connect to.
-	 * @returns an EventListener of type T which are the parameters passed to the function.
+	 * @param token Event to bind to.
+	 * @returns An EventListener.
 	 */
-	public when<T extends keyof Events, U extends Events[T]>(
-		token?: T,
+	public when<X extends keyof Events, U extends Events[X]>(
+		token?: X,
 	): typeof token extends void
 		? EventListener<Events extends Default ? Events["_default"] : never>
 		: EventListener<U extends Array<unknown> ? U : never>;
 
-	public when<T extends keyof Events>(token: T): EventListener<ArrayOrNever<Events[T]>>;
-
-	// Implementation
+	public when<X extends keyof Events>(token: X): EventListener<ArrayOrNever<Events[X]>>;
 
 	public when(token = "_default"): unknown {
 		const event = new EventListener();
@@ -120,19 +113,30 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	/**
 	 * Emits the event, either resuming the yeilded threads or invoking the do's chain.
 	 *
-	 * @param token event to emit.
-	 * @param args of type T which are the parameters passed to the function definition.
-	 *
-	 * @returns a promise.
+	 * @param token Event to emit.
+	 * @param args Type `T`, a single object.
 	 */
-	public emit<T extends keyof Events, S extends ArrayOrNever<Events[T]>>(
-		token: T,
+	public emit<X extends keyof Events, S extends ArrayOrNever<Events[X]>>(
+		token: X,
 		...args: S
 	): void {
 		if (token in this.events) {
 			for (const thread of this.events[token as string]) {
 				void thread.call(...(token === "_default" ? [] : args));
 			}
+		}
+	}
+
+	/**
+	 * It clears an Event, deletes and disconnects every event listener binded to it.
+	 *
+	 * @param token Event to remove EventListeners from.
+	 */
+	public clear<X extends keyof Events>(token: X): void;
+
+	public clear(token = "_default"): void {
+		if (token in this.events) {
+			return void table.clear(this.events[token]);
 		}
 	}
 }

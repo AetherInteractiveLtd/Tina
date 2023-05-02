@@ -1,4 +1,5 @@
 import { EntityId } from "../types/ecs";
+import { SparseSet } from "./collections/sparse-set";
 import { AllComponentTypes, AnyComponent, AnyComponentInternal } from "./component";
 import { World } from "./world";
 
@@ -38,7 +39,7 @@ export class Observer {
 	 * If an entity matches an event more than once before the observer is
 	 * called, it will only be stored once.
 	 */
-	public storage: Set<EntityId> = new Set();
+	public storage: SparseSet = new SparseSet();
 
 	constructor(world: World, component: AllComponentTypes) {
 		this.world = world;
@@ -52,7 +53,7 @@ export class Observer {
 	 * @param callback The callback to run for each entity.
 	 */
 	public *iter(): Generator<EntityId> {
-		for (const entityId of this.storage) {
+		for (const entityId of this.storage.dense) {
 			let valid = true;
 
 			for (const component of this.requiredComponents) {
@@ -68,7 +69,7 @@ export class Observer {
 			yield entityId;
 		}
 
-		this.storage.clear();
+		this.storage.dense = [];
 	}
 
 	/**

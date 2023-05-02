@@ -319,6 +319,44 @@ export = (): void => {
 
 				expect(callCount).to.equal(1);
 			});
+
+			it("should not enter the query if the entity already exists in the query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const component1 = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(component);
+
+				tempWorld.addComponent(id, component);
+
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				for (const _entityId of query.enteredQuery()) {
+					callCount += 1;
+				}
+
+				expect(callCount).to.equal(1);
+
+				tempWorld.addComponent(id, component1);
+				tempWorld.flush();
+
+				for (const _entityId of query.enteredQuery()) {
+					callCount += 1;
+				}
+
+				expect(callCount).to.equal(1);
+			});
 		});
 
 		describe("exitedQuery", () => {
@@ -416,6 +454,44 @@ export = (): void => {
 				}
 
 				expect(callCount).to.equal(1);
+			});
+
+			it("should not exit the query if the entity already exists in the query", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const component1 = ComponentInternalCreation.createComponent({
+					componentData: [],
+				});
+
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(component);
+
+				tempWorld.addComponent(id, component);
+
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				for (const _entityId of query.exitedQuery()) {
+					callCount += 1;
+				}
+
+				expect(callCount).to.equal(0);
+
+				tempWorld.addComponent(id, component1);
+				tempWorld.flush();
+
+				for (const _entityId of query.exitedQuery()) {
+					callCount += 1;
+				}
+
+				expect(callCount).to.equal(0);
 			});
 		});
 	});
