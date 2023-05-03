@@ -2,7 +2,7 @@
  * Offers a variety of table utility methods that can be used to interact, modify or anything really
  * that has to do with tables.
  *
- * Some of the most usefuls are `.filter()` and `.deepCopy()`.
+ * Some of the most usefuls are `.filter()` and `.reconcile()`.
  */
 export namespace TableUtil {
 	export function deepCopy(t: { [x: string]: unknown }): typeof t {
@@ -35,12 +35,12 @@ export namespace TableUtil {
 
 	export function filter(
 		t: { [x: string]: unknown } | Map<string, unknown>,
-		filterFunc: (item: unknown) => boolean,
+		filterFunc: (key: string, item: unknown) => boolean,
 	): typeof t {
 		const filteredT: { [x: string]: unknown } = {};
 
 		for (const [key, value] of pairs(t)) {
-			if (!filterFunc(value)) continue;
+			if (!filterFunc(key, value)) continue;
 
 			filteredT[key] = value;
 		}
