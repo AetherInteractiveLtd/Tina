@@ -2,7 +2,7 @@ import { EventListener } from "../../../events";
 import { DefaultUserDeclaration } from "../../../user/default/types";
 import { StateSetter } from "../../types";
 
-export declare interface PlayerStateImplementation<T = unknown> {
+export declare interface PlayerStateImplementation<T extends object> {
 	/**
 	 * Replicates state through the network, fires all subscriptions and updates its value for the specified player.
 	 *

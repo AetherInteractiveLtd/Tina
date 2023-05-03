@@ -1,7 +1,7 @@
 import { EventListener } from "../../../events";
 import { StateSetter } from "../../types";
 
-export declare interface GlobalStateImplementation<T = unknown> {
+export declare interface GlobalStateImplementation<T extends object> {
 	/**
 	 * Replicates state through the network, fires all subscriptions and updates its value.
 	 *

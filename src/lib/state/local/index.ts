@@ -1,9 +1,9 @@
 import { EventListener } from "../../events";
 import { FunctionUtil } from "../../util/functions";
-import { StateSetter } from "../types";
+import { PartialStateSetter, StateSetter } from "../types";
 import { LocalStateImplementation } from "./types";
 
-export class LocalState<T = unknown> implements LocalStateImplementation<T> {
+export class LocalState<T extends object = object> implements LocalStateImplementation<T> {
 	private readonly subscription = new EventListener<[T]>();
 
 	private value: T;
@@ -16,12 +16,15 @@ export class LocalState<T = unknown> implements LocalStateImplementation<T> {
 		return this.subscription;
 	}
 
-	public set(setter: StateSetter<T>): void {
+	public set(setter: PartialStateSetter<T>): void {
+		let value: Partial<T>;
 		if (FunctionUtil.isFunction(setter)) {
-			this.value = setter(this.value);
+			value = setter(this.value);
 		} else {
-			this.value = setter;
+			value = setter;
 		}
+
+		this.value = { ...this.value, ...value };
 
 		return void this.subscription.call(this.value);
 	}

@@ -166,49 +166,57 @@ export class Query {
 	}
 
 	/**
-	 * Iterate over all entities that have entered the query since the last
-	 * time this method was called.
+	 * Runs a callback for each entity that has been added to the query since
+	 * the last time this method was called.
 	 *
-	 * @note This cannot be iterated over multiple times as it will clear the
-	 * contents of the entered set. If you need to iterate over the same set
-	 * multiple times, although unconventional, you can do:
-	 * ```ts
-	 * const entered = query.entered.dense;
-	 * for (const i of $range(0, query.entered.size - 1)) {
-	 *     yield entered[i];
-	 * }
-	 * ```
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.entered.dense` array
+	 * directly instead.
+	 *
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *enteredQuery(): Generator<EntityId> {
-		const entered = this.entered.dense;
-		for (const i of $range(0, this.entered.size - 1)) {
-			yield entered[i];
+		for (const entityId of this.entered.dense) {
+			yield entityId;
 		}
 
-		this.entered.clear();
+		this.entered.dense.clear();
 	}
 
 	/**
-	 * Iterate over all entities that have exited the query since the last
-	 * time this method was called.
+	 * Runs a callback for each entity that has been removed from the query
+	 * since the last time this method was called.
 	 *
-	 * @note This cannot be iterated over multiple times as it will clear the
-	 * contents of the exited set. If you need to iterate over the same set
-	 * multiple times, although unconventional, you can do:
-	 * ```ts
-	 * const exited = query.exited.dense;
-	 * for (const i of $range(0, query.exited.size - 1)) {
-	 *     yield exited[i];
-	 * }
-	 * ```
+	 * If the callback returns `false`, the iteration will stop, and no other
+	 * entities in this query will be iterated over. Please note that this will
+	 * still flush the contents of the query, so the next call to this method
+	 * will not iterate over the same entities.
+	 *
+	 * As this method flushes the contents of the query, it can only be used
+	 * once. If you need to iterate over the same entities multiple times,
+	 * although unconventional, you can use the `Query.exited.dense` array
+	 * directly instead.
+	 *
+	 * This cannot be iterated over multiple times as it will clear the contents
+	 * of the entered set. If you need to iterate over the same set multiple
+	 * times, although unconventional, you can can use the `Query.entered.dense`
+	 * array directly instead.
 	 */
 	public *exitedQuery(): Generator<EntityId> {
-		const exited = this.exited.dense;
-		for (const i of $range(0, this.exited.size - 1)) {
-			yield exited[i];
+		for (const entityId of this.exited.dense) {
+			yield entityId;
 		}
 
-		this.exited.clear();
+		this.exited.dense.clear();
 	}
 
 	/**
@@ -226,11 +234,10 @@ export class Query {
 
 	/**
 	 * Runs a callback for each entity that matches the query.
-	 *
-	 * TODO: This should be turned into a *[Symbol.iterator] method whenever
-	 * that is supported.
 	 */
 	public *iter(): Generator<EntityId> {
+		// TODO: This should be turned into a *[Symbol.iterator] method whenever
+		// that is supported.
 		for (const archetype of this.archetypes) {
 			for (const entityId of archetype.entities) {
 				yield entityId;
@@ -245,7 +252,7 @@ export class Query {
 		let size = 0;
 
 		for (const archetype of this.archetypes) {
-			size += archetype.sparseSet.size;
+			size += archetype.entities.size();
 		}
 
 		return size;

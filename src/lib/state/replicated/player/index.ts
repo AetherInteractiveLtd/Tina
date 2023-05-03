@@ -4,10 +4,10 @@ import { EventListener } from "../../../events";
 import { Internals } from "../../../net/internal";
 import { DefaultUserDeclaration } from "../../../user/default/types";
 import { FunctionUtil } from "../../../util/functions";
-import { StateSetter } from "../../types";
+import { PartialStateSetter, StateSetter } from "../../types";
 import { PlayerStateImplementation } from "./types";
 
-export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
+export class PlayerState<T extends object = object> implements PlayerStateImplementation<T> {
 	private readonly isServer = RunService.IsServer();
 	private readonly values: Map<Player, T> = new Map();
 
@@ -48,6 +48,8 @@ export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 				this.values.delete(player);
 			};
 
+			for (const player of Players.GetPlayers()) added(player);
+
 			Players.PlayerAdded.Connect(added);
 			Players.PlayerRemoving.Connect(removing);
 		}
@@ -57,28 +59,30 @@ export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
 		return this.subscription;
 	}
 
-	public set({ player }: DefaultUserDeclaration, setter: StateSetter<T>): void {
+	public set({ player }: DefaultUserDeclaration, setter: PartialStateSetter<T>): void {
 		if (!this.isServer) {
 			throw `[PlayerState:Client]: State can only be set from the server.`;
 		}
 
-		let value: T;
+		let value: Partial<T>;
+		const oldValue = this.values.get(player)!;
 
 		if (FunctionUtil.isFunction(setter)) {
-			const oldValue = this.values.get(player);
 			value = setter(oldValue);
-
-			this.values.set(player, value);
 		} else {
 			value = setter;
-
-			this.values.set(player, value);
 		}
+
+		this.values.set(player, { ...oldValue, ...value });
 
 		return void this.replicator.call(player, value);
 	}
 
 	public get(player: Player = Players.LocalPlayer): T | undefined {
 		return this.values.get(player);
+	}
+
+	public items(): Map<Player, T> {
+		return this.values;
 	}
 }

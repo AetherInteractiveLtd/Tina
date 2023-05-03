@@ -9,8 +9,6 @@
 export class SparseSet {
 	/** The elements stored in the sparse set. */
 	public dense: Array<number> = [];
-	/** The size of the sparse set. */
-	public size = 0;
 	/** An array that maps the set's items to their indices in the dense. */
 	public sparse: Array<number> = [];
 
@@ -23,19 +21,8 @@ export class SparseSet {
 			return;
 		}
 
-		this.sparse[x] = this.size;
-		this.dense[this.size] = x;
-		this.size++;
-	}
-
-	/**
-	 * Clears the sparse set.
-	 *
-	 * This will not free any memory allocated by the sparse set, and will
-	 * instead reset the size to 0 for quick reuse.
-	 */
-	public clear(): void {
-		this.size = 0;
+		this.sparse[x] = this.dense.size();
+		this.dense.push(x);
 	}
 
 	/**
@@ -46,7 +33,7 @@ export class SparseSet {
 	 */
 	public has(x: number): boolean {
 		const sparse = this.sparse[x] ?? math.huge;
-		return sparse < this.size && this.dense[sparse] === x;
+		return sparse < this.dense.size() && this.dense[sparse] === x;
 	}
 
 	/**
@@ -58,9 +45,10 @@ export class SparseSet {
 			return;
 		}
 
-		const last = this.dense[this.size - 1];
-		this.sparse[last] = this.sparse[x];
-		this.dense[this.sparse[x]] = last;
-		this.size--;
+		const last = this.dense.pop()!;
+		if (x !== last) {
+			this.sparse[last] = this.sparse[x];
+			this.dense[this.sparse[x]] = last;
+		}
 	}
 }

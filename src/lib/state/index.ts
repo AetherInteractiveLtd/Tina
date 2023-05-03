@@ -1,7 +1,7 @@
 import { LocalState } from "./local";
-import { StateSetter, ValidStateScheme } from "./types";
 import { GlobalState } from "./replicated/global";
 import { PlayerState } from "./replicated/player";
+import { StateSetter, ValidStateScheme } from "./types";
 
 export namespace State {
 	let states = 0;
@@ -21,7 +21,7 @@ export namespace State {
 	 * @param value initial value for LocalState.
 	 * @returns a LocalState build.
 	 */
-	export function localState<T>(value: StateSetter<T>): LocalState<T> {
+	export function localState<T extends object>(value: StateSetter<T>): LocalState<T> {
 		return new LocalState(value);
 	}
 
@@ -31,7 +31,7 @@ export namespace State {
 	 * @param value initial value for GlobalState.
 	 * @returns a GlobalState build.
 	 */
-	export function globalState<T>(value: StateSetter<T>): GlobalState<T> {
+	export function globalState<T extends object>(value: StateSetter<T>): GlobalState<T> {
 		return new GlobalState(tostring(++states), value);
 	}
 
@@ -41,7 +41,7 @@ export namespace State {
 	 * @param value initial value for PlayerState.
 	 * @returns a PlayerState build.
 	 */
-	export function playerState<T>(value: StateSetter<T>): PlayerState<T> {
+	export function playerState<T extends object>(value: StateSetter<T>): PlayerState<T> {
 		return new PlayerState(tostring(++states), value);
 	}
 }

@@ -1,7 +1,7 @@
 import { EventListener } from "../../events";
 import { StateSetter } from "../types";
 
-export declare interface LocalStateImplementation<T = unknown> {
+export declare interface LocalStateImplementation<T extends object> {
 	/**
 	 * Changes state, notifies all subscriptions.
 	 *

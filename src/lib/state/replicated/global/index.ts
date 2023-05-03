@@ -3,10 +3,10 @@ import { RunService } from "@rbxts/services";
 import { EventListener } from "../../../events";
 import { Internals } from "../../../net/internal";
 import { FunctionUtil } from "../../../util/functions";
-import { StateSetter } from "../../types";
+import { PartialStateSetter, StateSetter } from "../../types";
 import { GlobalStateImplementation } from "./types";
 
-export class GlobalState<T = unknown> implements GlobalStateImplementation<T> {
+export class GlobalState<T extends object = object> implements GlobalStateImplementation<T> {
 	private readonly isServer = RunService.IsServer();
 
 	private readonly subscription = new EventListener<[T]>();
@@ -35,16 +35,20 @@ export class GlobalState<T = unknown> implements GlobalStateImplementation<T> {
 		return this.subscription;
 	}
 
-	public set(setter: StateSetter<T>): void {
+	public set(setter: PartialStateSetter<T>): void {
 		if (!this.isServer) {
 			throw `[GlobalState:Client]: State can only be set from the server.`;
 		}
 
+		let value: Partial<T>;
+
 		if (FunctionUtil.isFunction(setter)) {
-			this.value = setter(this.value);
+			value = setter(this.value);
 		} else {
-			this.value = setter;
+			value = setter;
 		}
+
+		this.value = { ...this.value, ...value };
 
 		void this.subscription.call(this.value);
 		return void this.replicator.call(this.value);
