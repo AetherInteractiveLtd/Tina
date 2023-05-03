@@ -132,14 +132,15 @@ export = (): void => {
 
 			const entity = world.add();
 
-			world.addComponent(entity, component, { x: 200 });
+			world.addComponent(entity, component, { x: 200, y: true });
 			world.flush();
 
 			expect(component.x[entity]).to.equal(200);
-
+			
 			component.reset(entity);
-
+			
 			expect(component.x[entity]).to.equal(10);
+			expect(component.y[entity]).to.equal(undefined);
 		});
 
 		it("be able to clone its data from another entity", () => {

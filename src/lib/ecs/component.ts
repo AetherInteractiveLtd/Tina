@@ -197,9 +197,13 @@ export namespace ComponentInternalCreation {
 						return;
 					}
 
+					const data = this.setDefaults();
+
 					// eslint-disable-next-line roblox-ts/no-array-pairs
-					for (const [key, value] of pairs(this.setDefaults())) {
-						componentData[key as never][entityId as never] = value as never;
+					for (const [key, value] of pairs(componentData)) {
+						print(key, value);
+						// TODO: I hate this
+						value[(entityId + 1) as never] = data[key as never];
 					}
 				},
 
