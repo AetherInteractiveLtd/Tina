@@ -35,6 +35,21 @@ export namespace TableUtil {
 
 	export function filter(
 		t: { [x: string]: unknown } | Map<string, unknown>,
+		filterFunc: (item: unknown) => boolean,
+	): typeof t {
+		const filteredT: { [x: string]: unknown } = {};
+
+		for (const [key, value] of pairs(t)) {
+			if (!filterFunc(value)) continue;
+
+			filteredT[key] = value;
+		}
+
+		return filteredT;
+	}
+
+	export function filterWithKeys(
+		t: { [x: string]: unknown } | Map<string, unknown>,
 		filterFunc: (key: string, item: unknown) => boolean,
 	): typeof t {
 		const filteredT: { [x: string]: unknown } = {};
