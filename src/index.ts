@@ -239,3 +239,4 @@ export { Logger } from "./lib/logger/Logger";
 
 /** Util exports */
 export { FunctionUtil } from "./lib/util/functions";
+export { TableUtil } from "./lib/util/tables";
