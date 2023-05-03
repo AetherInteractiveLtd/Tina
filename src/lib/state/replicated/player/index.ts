@@ -16,7 +16,7 @@ export class PlayerState<T extends object = object> implements PlayerStateImplem
 
 	private initialValue: T;
 
-	constructor(public readonly name: string, initialValue: StateSetter<T>) {
+	constructor(public readonly name: string, initialValue: StateSetter<object & T>) {
 		this.initialValue = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
 
 		if (!this.isServer) {

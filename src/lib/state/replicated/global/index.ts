@@ -14,7 +14,7 @@ export class GlobalState<T extends object = object> implements GlobalStateImplem
 
 	private value: T;
 
-	constructor(public readonly name: string, initialValue: StateSetter<T>) {
+	constructor(public readonly name: string, initialValue: StateSetter<object & T>) {
 		this.value = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
 
 		if (!this.isServer) {
