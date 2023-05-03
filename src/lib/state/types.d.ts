@@ -5,8 +5,10 @@ import { PlayerState } from "./replicated/player";
 /**
  * Valid types for changing/mutating state (callback or direct set).
  */
-export declare type StateSetter<T> = T | ((oldValue?: T) => T);
-export declare type PartialStateSetter<T> = Partial<T> | ((oldValue?: T) => Partial<T>);
+export declare type PartialStateSetter<T> = Partial<State<T>> | ((oldValue?: State<T>) => Partial<State<T>>);
+export declare type StateSetter<T> = T | ((oldValue?: State<T>) => State<T>);
+
+export declare type State<T> = { [K in keyof T]: T[K] };
 
 /**
  * Checks if the scheme provided is valid.

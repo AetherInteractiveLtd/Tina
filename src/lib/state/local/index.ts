@@ -8,7 +8,7 @@ export class LocalState<T extends object = object> implements LocalStateImplemen
 
 	private value: T;
 
-	constructor(initialValue: StateSetter<T>) {
+	constructor(initialValue: StateSetter<object & T>) {
 		this.value = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
 	}
 
