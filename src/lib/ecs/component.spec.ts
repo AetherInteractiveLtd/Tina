@@ -150,9 +150,20 @@ export = (): void => {
 			});
 
 			const entity = world.add();
-			const entity2 = world.add();
-
 			world.addComponent(entity, component, { x: 200, y: true });
+			
+			world.flush();
+			
+			for (const i of $range(1,10)) {
+				const spacer = world.add();
+				world.addComponent(spacer,component, {x: 100, y: false});
+			}
+
+			world.flush();
+			
+			const entity2 = world.add();
+			
+		
 			world.flush();
 
 			component.clone(entity, entity2);

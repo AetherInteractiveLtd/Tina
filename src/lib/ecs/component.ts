@@ -203,7 +203,7 @@ export namespace ComponentInternalCreation {
 					for (const [key, value] of pairs(componentData)) {
 						print(key, value);
 						// TODO: I hate this
-						value[(entityId + 1) as never] = data[key as never];
+						componentData[key as never][entityId as never] = data[key as never];
 					}
 				},
 
