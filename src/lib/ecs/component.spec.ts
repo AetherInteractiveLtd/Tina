@@ -54,7 +54,7 @@ export = (): void => {
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
-			world.disableComponent(entity, component);
+			world.removeComponent(entity, component);
 			world.flush();
 			expect(world.hasComponent(entity, component)).to.equal(false);
 		})
@@ -210,7 +210,7 @@ export = (): void => {
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
-			world.disableComponent(entity, component);
+			world.removeComponent(entity, component);
 			world.flush();
 			expect(world.hasComponent(entity, component)).to.equal(false);
 		});

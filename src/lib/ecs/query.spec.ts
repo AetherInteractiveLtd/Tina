@@ -162,13 +162,13 @@ export = (): void => {
 
 				expect(query.size()).to.equal(2);
 
-				tempWorld.disableComponent(id1, component);
+				tempWorld.removeComponent(id1, component);
 
 				tempWorld.flush();
 
 				expect(query.size()).to.equal(1);
 
-				tempWorld.disableComponent(id2, component);
+				tempWorld.removeComponent(id2, component);
 
 				tempWorld.flush();
 
@@ -374,7 +374,7 @@ export = (): void => {
 
 				tempWorld.addComponent(id, component);
 				tempWorld.flush();
-				tempWorld.disableComponent(id, component);
+				tempWorld.removeComponent(id, component);
 				tempWorld.flush();
 
 				let callCount = 0;
@@ -410,8 +410,8 @@ export = (): void => {
 
 				tempWorld.flush();
 
-				tempWorld.disableComponent(id1, component);
-				tempWorld.disableComponent(id2, component);
+				tempWorld.removeComponent(id1, component);
+				tempWorld.removeComponent(id2, component);
 
 				tempWorld.flush();
 
@@ -438,7 +438,7 @@ export = (): void => {
 
 				tempWorld.addComponent(id, component);
 				tempWorld.flush();
-				tempWorld.disableComponent(id, component);
+				tempWorld.removeComponent(id, component);
 				tempWorld.flush();
 
 				let callCount = 0;

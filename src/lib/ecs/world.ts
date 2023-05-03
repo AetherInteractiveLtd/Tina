@@ -275,31 +275,6 @@ export class World {
 	}
 
 	/**
-	 * Disables a component on an entity.
-	 *
-	 * This will keep the component on the entity, but will prevent it from
-	 * being matched by queries. This is useful when you wish to preserve the
-	 * state of a component.
-	 *
-	 * @param entityId The id of the entity to disable the component on.
-	 * @param component The component to disable.
-	 *
-	 * @returns The world instance to allow for method chaining.
-	 */
-	// public disableComponent<C extends AnyComponent>(entityId: EntityId, component: C): this {
-	// 	if (!this.has(entityId)) {
-	// 		throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
-	// 	}
-
-	// 	const componentId = (component as AnyComponentInternal).componentId;
-	// 	if (!this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId)) {
-	// 		throw `Entity ${entityId} does not have component ${componentId}`;
-	// 	}
-
-	// 	return this;
-	// }
-
-	/**
 	 * Disables the given system. This will prevent the system from being
 	 * executed, but will not remove it from the scheduler.
 	 *
@@ -489,13 +464,9 @@ export class World {
 	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
 		this.disableComponent(entityId, component);
 
-		if ((component as AnyComponentInternal).componentData === undefined) {
-			// Component is a Flyweight
-			return this;
+		if ((component as AnyComponentInternal).componentData !== undefined) {
+			this.componentDataToRemoveLater.push([entityId, component as AnyComponentInternal]);
 		}
-		// schedule data to be removed somewhere else
-
-		this.componentDataToRemoveLater.push([entityId, component as AnyComponentInternal]);
 
 		return this;
 	}
