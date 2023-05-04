@@ -222,7 +222,6 @@ export = (): void => {
 				});
 
 				const id1 = tempWorld.add();
-				const id2 = tempWorld.add();
 
 				tempWorld.addComponent(id1, component);
 

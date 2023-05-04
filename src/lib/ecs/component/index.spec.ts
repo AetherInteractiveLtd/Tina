@@ -46,7 +46,6 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
-
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
