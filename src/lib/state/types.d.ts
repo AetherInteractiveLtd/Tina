@@ -14,8 +14,8 @@ export declare interface PlayerStateEventEmitter<T> {
  */
 export declare type PartialStateSetter<T extends object> =
 	| Partial<T>
-	| ((oldValue: T) => Partial<T>);
-export declare type StateSetter<T> = T | ((oldValue: T) => T);
+	| ((oldValue?: T) => Partial<T>);
+export declare type StateSetter<T> = T | ((oldValue?: T) => T);
 
 /**
  * Infers the type of setter depending on T, either if it's an object or any other type.

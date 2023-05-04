@@ -6,7 +6,7 @@ import Tina, { State } from "../..";
  * For now it only tests Local State, we will figure out something along the way.
  */
 export = (): void => {
-	describe("State functioning", () => {
+	describe("State", () => {
 		it("should build State correctly", () => {
 			expect(() => {
 				return Tina.buildState({
@@ -55,11 +55,11 @@ export = (): void => {
 			});
 
 			expect(() => {
-				testingState.local.game_ticks.set((t: number) => {
-					return tick() - t;
-				});
-
 				testingState.local.game_data.set({ plain_data: "Lol" }); // No need on setting all the object once again.
+
+				testingState.local.game_ticks.set(t => {
+					return t !== undefined ? tick() - t : 0;
+				});
 			}).never.to.throw();
 		});
 	});

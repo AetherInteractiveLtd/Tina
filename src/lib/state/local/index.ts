@@ -1,3 +1,5 @@
+import { t } from "@rbxts/t";
+
 import { EventEmitter } from "../../events";
 import { FunctionUtil } from "../../util/functions";
 import { InferredSetter, StateEventEmitter } from "../types";
@@ -21,7 +23,11 @@ export class LocalState<T>
 		if (FunctionUtil.isFunction(setter)) {
 			this.value = setter(this.value);
 		} else {
-			this.value = setter as T;
+			if (t.table(setter)) {
+				this.value = { ...this.value, ...setter };
+			} else {
+				this.value = setter as T;
+			}
 		}
 
 		return void this.emit("_default", this.value);
