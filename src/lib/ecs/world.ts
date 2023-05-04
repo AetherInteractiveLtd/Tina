@@ -6,16 +6,18 @@ import { ComponentId, EntityId } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
+import { ComponentType } from "./component";
 import {
 	AllComponentTypes,
 	AnyComponent,
-	AnyComponentInternal,
 	AnyFlyweight,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	GetComponentSchema,
-	OptionalKeys,
+	Component,
+	ComponentData,
+	FlyweightData,
+	Internal,
+	PartialComponentToKeys,
 	TagComponent,
-} from "./component";
+} from "./component/types";
 import { EntityManager } from "./entity-manager";
 import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,6 +67,16 @@ export class World {
 	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
 
+	/**
+	 * Entities that have been queued to have their component data removed from this frame.
+	 * @hidden
+	 */
+	public componentDataToRemoveLater: Array<[EntityId, Internal<AllComponentTypes>]> = [];
+	/**
+	 * Entities that have been queued to have their component data removed from last frame.
+	 * @hidden
+	 */
+	public componentDataToRemoveNow: Array<[EntityId, Internal<AllComponentTypes>]> = [];
 	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
 	/**
@@ -103,16 +115,21 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public addComponent<C extends AnyComponent>(
+	public addComponent<T extends ComponentData>(
 		entityId: EntityId,
-		component: C,
-		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+		component: Component<T>,
+		data?: PartialComponentToKeys<T>,
 	): this;
-	public addComponent(entityId: EntityId, component: AnyFlyweight): this;
-	public addComponent<C extends AnyComponent>(
+	public addComponent<T extends FlyweightData>(
 		entityId: EntityId,
-		component: C,
-		data?: Partial<OptionalKeys<GetComponentSchema<C>>>,
+		component: AnyFlyweight<T>,
+	): this;
+
+	public addComponent(entityId: EntityId, component: TagComponent): this;
+	public addComponent<T extends ComponentData>(
+		entityId: EntityId,
+		component: Component<T>,
+		data?: PartialComponentToKeys<T>,
 	): this {
 		if (!this.has(entityId)) {
 			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
@@ -122,7 +139,7 @@ export class World {
 
 		debug.profilebegin("World:addComponent");
 		{
-			const componentId = (component as AnyComponentInternal).componentId;
+			const componentId: number = (component as Internal<Component<T>>).componentId;
 			if (
 				!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
 			) {
@@ -150,8 +167,8 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public addTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		return this.addComponent(entityId, tag as unknown as AnyComponent);
+	public addTag(entityId: EntityId, tag: TagComponent): this {
+		return this.addComponent(entityId, tag);
 	}
 
 	/**
@@ -169,7 +186,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver<C extends AnyComponent>(component: C): Observer {
+	public createObserver(component: AnyComponent): Observer {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 
@@ -228,6 +245,64 @@ export class World {
 
 		this.flush();
 	}
+
+	/**
+	 * Disables a component on an entity.
+	 *
+	 * This will keep the component on the entity, but will prevent it from
+	 * being matched by queries. This is useful when you wish to preserve the
+	 * state of a component.
+	 *
+	 * @param entityId The id of the entity to disable the component on.
+	 * @param component The component to disable.
+	 *
+	 * @returns The world instance to allow for method chaining.
+	 */
+	public disableComponent(entityId: EntityId, component: AllComponentTypes): this {
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+		}
+
+		this.componentsToUpdate.add(entityId);
+
+		debug.profilebegin("World:disableComponent");
+		{
+			const componentId: number = (component as Internal<AllComponentTypes>).componentId;
+			if (
+				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
+			) {
+				this.updateArchetype(entityId, componentId);
+			}
+		}
+		debug.profileend();
+
+		return this;
+	}
+
+	/**
+	 * Disables a component on an entity.
+	 *
+	 * This will keep the component on the entity, but will prevent it from
+	 * being matched by queries. This is useful when you wish to preserve the
+	 * state of a component.
+	 *
+	 * @param entityId The id of the entity to disable the component on.
+	 * @param component The component to disable.
+	 *
+	 * @returns The world instance to allow for method chaining.
+	 */
+	// public disableComponent<C extends AnyComponent>(entityId: EntityId, component: C): this {
+	// 	if (!this.has(entityId)) {
+	// 		throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+	// 	}
+
+	// 	const componentId = (component as AnyComponentInternal).componentId;
+	// 	if (!this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId)) {
+	// 		throw `Entity ${entityId} does not have component ${componentId}`;
+	// 	}
+
+	// 	return this;
+	// }
 
 	/**
 	 * Disables the given system. This will prevent the system from being
@@ -304,7 +379,7 @@ export class World {
 	 */
 	public hasAllOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (!this.hasComponent(entityId, component as AnyComponent)) {
+			if (!this.hasComponent(entityId, component)) {
 				return false;
 			}
 		}
@@ -324,7 +399,7 @@ export class World {
 	 */
 	public hasAnyOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
-			if (this.hasComponent(entityId, component as AnyComponent)) {
+			if (this.hasComponent(entityId, component)) {
 				return true;
 			}
 		}
@@ -340,8 +415,8 @@ export class World {
 	 *
 	 * @returns true if the entity has the given component.
 	 */
-	public hasComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): boolean {
-		const componentId = (component as AnyComponentInternal).componentId;
+	public hasComponent(entityId: EntityId, component: AllComponentTypes): boolean {
+		const componentId: number = (component as Internal<AllComponentTypes>).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
 
@@ -353,7 +428,7 @@ export class World {
 	 *
 	 * @returns true if the entity has none of the given components.
 	 */
-	public hasNoneOf(entityId: EntityId, ...components: Array<AnyComponent>): boolean {
+	public hasNoneOf(entityId: EntityId, ...components: Array<AllComponentTypes>): boolean {
 		for (const component of components) {
 			if (this.hasComponent(entityId, component)) {
 				return false;
@@ -371,8 +446,8 @@ export class World {
 	 *
 	 * @returns True if the entity has the tag.
 	 */
-	public hasTag<C extends TagComponent>(entityId: EntityId, tag: C): boolean {
-		return this.hasComponent(entityId, tag as unknown as AnyComponent);
+	public hasTag(entityId: EntityId, tag: TagComponent): boolean {
+		return this.hasComponent(entityId, tag);
 	}
 
 	/**
@@ -417,22 +492,15 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
-		if (!this.has(entityId)) {
-			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
-		}
+		this.disableComponent(entityId, component);
 
-		this.componentsToUpdate.add(entityId);
-
-		debug.profilebegin("World:removeComponent");
-		{
-			const componentId = (component as AnyComponentInternal).componentId;
-			if (
-				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
-			) {
-				this.updateArchetype(entityId, componentId);
-			}
+		if ((component as Internal<AllComponentTypes>).componentType !== ComponentType.Component) {
+			// Component is a Flyweight
+			return this;
 		}
-		debug.profileend();
+		// schedule data to be removed somewhere else
+
+		this.componentDataToRemoveLater.push([entityId, component as Internal<AllComponentTypes>]);
 
 		return this;
 	}
@@ -465,8 +533,8 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public removeTag<C extends TagComponent>(entityId: EntityId, tag: C): this {
-		return this.removeComponent(entityId, tag as unknown as AnyComponent);
+	public removeTag(entityId: EntityId, tag: TagComponent): this {
+		return this.disableComponent(entityId, tag);
 	}
 
 	/**
@@ -672,7 +740,7 @@ export class World {
 	 */
 	private updatePendingComponents(): void {
 		this.entityManager.updatePending(this.componentsToUpdate.dense);
-		this.componentsToUpdate.dense = [];
+		this.componentsToUpdate.dense.clear();
 	}
 
 	/**

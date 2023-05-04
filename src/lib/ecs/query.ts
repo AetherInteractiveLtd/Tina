@@ -1,7 +1,7 @@
 import { ComponentId, EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { AllComponentTypes, AnyComponentInternal } from "./component";
+import { AllComponentTypes, Internal } from "./component/types";
 import { World } from "./world";
 
 export type RawQuery =
@@ -298,7 +298,8 @@ export class Query {
 		const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: [] }] as [MLeaf];
 		for (const i of raw.dt as Array<RawQuery>) {
 			if ("componentId" in i) {
-				const componentId = (i as unknown as AnyComponentInternal).componentId;
+				const componentId: number = (i as unknown as Internal<AllComponentTypes>)
+					.componentId;
 				if (componentId !== undefined) {
 					numbers.push(componentId);
 				} else {

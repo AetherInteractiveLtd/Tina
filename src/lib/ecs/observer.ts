@@ -1,6 +1,6 @@
 import { EntityId } from "../types/ecs";
 import { SparseSet } from "./collections/sparse-set";
-import { AllComponentTypes, AnyComponent, AnyComponentInternal } from "./component";
+import { AllComponentTypes, AnyComponent, Internal } from "./component/types";
 import { World } from "./world";
 
 /**
@@ -29,7 +29,7 @@ export class Observer {
 	public readonly world: World;
 
 	/** The primary component that the observer is watching. */
-	public primaryComponent: AllComponentTypes;
+	public primaryComponent: AnyComponent;
 	/**
 	 * A cache of all entities that match the observer.
 	 *
@@ -41,10 +41,10 @@ export class Observer {
 	 */
 	public storage: SparseSet = new SparseSet();
 
-	constructor(world: World, component: AllComponentTypes) {
+	constructor(world: World, component: AnyComponent) {
 		this.world = world;
 		this.primaryComponent = component;
-		(component as AnyComponentInternal).observers.push(this);
+		(component as Internal<AnyComponent>).observers.push(this);
 	}
 
 	/**
@@ -57,7 +57,7 @@ export class Observer {
 			let valid = true;
 
 			for (const component of this.requiredComponents) {
-				if (valid && !this.world.hasComponent(entityId, component as AnyComponent)) {
+				if (valid && !this.world.hasComponent(entityId, component)) {
 					valid = false;
 				}
 			}

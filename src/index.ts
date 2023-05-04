@@ -2,14 +2,14 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
+import { ComponentInternalCreation } from "./lib/ecs/component";
 import {
 	Component,
-	ComponentInternalCreation,
+	ComponentData,
 	Flyweight,
+	FlyweightData,
 	TagComponent,
-	Tree,
-	Type,
-} from "./lib/ecs/component";
+} from "./lib/ecs/component/types";
 import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents } from "./lib/events/internal";
@@ -162,7 +162,7 @@ namespace Tina {
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentData>(schema: T): Component<T> {
 		return ComponentInternalCreation.createComponent(schema);
 	}
 
@@ -196,7 +196,7 @@ namespace Tina {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
 		return ComponentInternalCreation.createFlyweight(schema);
 	}
 }
@@ -217,7 +217,8 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** ECS Library  */
-export { Component, ComponentTypes, GetComponentSchema } from "./lib/ecs/component";
+export { ComponentTypes } from "./lib/ecs/component";
+export { Component, GetComponentSchema } from "./lib/ecs/component/types";
 export { Observer } from "./lib/ecs/observer";
 export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
 export { bindEvent, Event } from "./lib/ecs/storage/event";
