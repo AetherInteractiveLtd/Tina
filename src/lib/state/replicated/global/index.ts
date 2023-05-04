@@ -14,15 +14,15 @@ export class GlobalState<T>
 {
 	private value: T;
 
-	constructor(public readonly name: string, initialValue: InferredSetter<T>) {
+	constructor(public readonly id: number, initialValue?: InferredSetter<T>) {
 		super();
 
 		{
 			this.value = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
 
 			if (!RunService.IsServer()) {
-				Internals.when("state:replicated").do(({ stateName, value }) => {
-					if (stateName === name) {
+				Internals.when("state:replicated").do(({ id: stateName, value }) => {
+					if (stateName === id) {
 						this.value = value as T;
 
 						return void this.emit("_default", this.value);
@@ -30,7 +30,7 @@ export class GlobalState<T>
 				});
 			} else {
 				this.when().do(value => {
-					Internals.updateAll("state:replicated", { stateName: name, value });
+					Internals.updateAll("state:replicated", { stateName: id, value });
 
 					return value;
 				});

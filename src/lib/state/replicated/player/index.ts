@@ -16,7 +16,7 @@ export class PlayerState<T>
 
 	private initialValue: T;
 
-	constructor(public readonly name: string, initialValue: InferredSetter<T>) {
+	constructor(public readonly name: number, initialValue?: InferredSetter<T>) {
 		super();
 
 		{
@@ -27,8 +27,8 @@ export class PlayerState<T>
 			if (!RunService.IsServer()) {
 				const player = Players.LocalPlayer;
 
-				Internals.when("state:replicated").do(({ stateName, value }) => {
-					if (stateName === name) {
+				Internals.when("state:replicated").do(({ id, value }) => {
+					if (id === name) {
 						this.values.set(player, value as T);
 
 						return void this.emit("_default", player, value as T);

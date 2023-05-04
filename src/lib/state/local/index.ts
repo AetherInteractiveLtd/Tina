@@ -3,13 +3,13 @@ import { FunctionUtil } from "../../util/functions";
 import { InferredSetter, StateEventEmitter } from "../types";
 import { LocalStateImplementation } from "./types";
 
-export class State<T>
+export class LocalState<T>
 	extends EventEmitter<StateEventEmitter<T>>
 	implements LocalStateImplementation<T>
 {
 	private value: T;
 
-	constructor(initialValue: InferredSetter<T>) {
+	constructor(initialValue?: InferredSetter<T>) {
 		super();
 
 		{

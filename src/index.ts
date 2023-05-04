@@ -123,7 +123,15 @@ namespace Tina {
 	}
 
 	/**
-	 * `Tina.Mirror` defines any built-in classes that can be replaced.
+	 * Used to build state from the specified State Tree, it is **recommended** to build once.
+	 *
+	 * @param stateTree the state tree to build from.
+	 */
+	export function buildState(stateTree: object): typeof stateTree {
+		return stateTree;
+	}
+
+	/**
 	 * Create a new ECS World.
 	 *
 	 * The world is the main access point for the ECS functionality, along with
