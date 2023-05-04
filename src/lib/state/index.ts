@@ -9,11 +9,11 @@ import { InferredSetter } from "./types";
 export namespace State {
 	let numberOfStates = 0;
 
-	export function namespace(stateTree: object): typeof stateTree {
+	export function namespace<T>(stateTree: T): T {
 		return stateTree;
 	}
 
-	export function local<T>(initialValue?: InferredSetter<T>): LocalStateImplementation<T> {
+	export function create<T>(initialValue?: InferredSetter<T>): LocalStateImplementation<T> {
 		return new LocalState(initialValue);
 	}
 

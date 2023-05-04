@@ -127,7 +127,7 @@ namespace Tina {
 	 *
 	 * @param stateTree the state tree to build from.
 	 */
-	export function buildState(stateTree: object): typeof stateTree {
+	export function buildState<T extends {}>(stateTree: T): T {
 		return stateTree;
 	}
 
@@ -235,6 +235,9 @@ export { ComponentId, EntityId } from "./lib/types/ecs";
 
 /** Users namespace */
 export { User, Users } from "./lib/user";
+
+/** State namespace */
+export { State } from "./lib/state";
 
 /** Container export */
 export { Container } from "./lib/container";
