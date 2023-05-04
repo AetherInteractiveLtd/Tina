@@ -42,6 +42,16 @@ export = (): void => {
 			}).never.to.throw();
 		});
 
+		it("should retrieve State correctly", () => {
+			const testingState = Tina.buildState({
+				local: State.namespace({
+					data: State.create({ value: 0 }),
+				}),
+			});
+
+			expect(testingState.local.data.get().value).to.equal(0);
+		});
+
 		it("should set State correctly", () => {
 			const testingState = Tina.buildState({
 				local: State.namespace({
@@ -61,6 +71,8 @@ export = (): void => {
 					return t !== undefined ? tick() - t : 0;
 				});
 			}).never.to.throw();
+
+			expect(testingState.local.game_data.get().plain_data).to.equal("Lol");
 		});
 	});
 };
