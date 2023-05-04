@@ -118,12 +118,12 @@ export namespace Users {
 	export function init(): void {
 		if (!isServer) {
 			Internals.when("user:added").do(({ id }) => {
-				TinaEvents.emit("user:added", Users.get(id));
+				TinaEvents.fire("user:added", Users.get(id));
 			});
 
 			Internals.when("user:removing").do(({ id }) => {
 				const user = Users.get(id);
-				TinaEvents.emit("user:removing", user);
+				TinaEvents.fire("user:removing", user);
 
 				Users.remove(user.player);
 			});
@@ -132,7 +132,7 @@ export namespace Users {
 				const user = Users.get(player);
 
 				Internals.update(player, "user:added", { id: player.UserId });
-				TinaEvents.emit("user:added", user);
+				TinaEvents.fire("user:added", user);
 
 				return void Users.set(player, user);
 			});
@@ -142,7 +142,7 @@ export namespace Users {
 
 				if (user !== undefined) {
 					Internals.update(player, "user:removing", { id: player.UserId });
-					TinaEvents.emit("user:removing", user);
+					TinaEvents.fire("user:removing", user);
 
 					return void Users.remove(player);
 				}

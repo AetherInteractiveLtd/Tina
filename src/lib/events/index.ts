@@ -116,7 +116,7 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 * @param token Event to emit.
 	 * @param args Type `T`, a single object.
 	 */
-	public emit<X extends keyof Events, S extends ArrayOrNever<Events[X]>>(
+	protected emit<X extends keyof Events, S extends ArrayOrNever<Events[X]>>(
 		token: X,
 		...args: S
 	): void {
@@ -132,9 +132,9 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	 *
 	 * @param token Event to remove EventListeners from.
 	 */
-	public clear<X extends keyof Events>(token: X): void;
+	protected clear<X extends keyof Events>(token: X): void;
 
-	public clear(token = "_default"): void {
+	protected clear(token = "_default"): void {
 		if (token in this.events) {
 			return void table.clear(this.events[token]);
 		}

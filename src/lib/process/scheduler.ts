@@ -47,7 +47,7 @@ export class ProcessScheduler {
 			// Run active processes
 			if (process.isSuspended) continue;
 			try {
-				process.emit("_default", dt);
+				process.tick(dt);
 			} catch (error) {
 				// TODO: log any errors properly.
 			}

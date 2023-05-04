@@ -34,4 +34,8 @@ export class Process extends EventEmitter<Events> {
 		this.suspensionTime = ticks;
 		this.isSuspended = true;
 	}
+
+	public tick(dt: number): void {
+		return this.emit("_default", dt);
+	}
 }

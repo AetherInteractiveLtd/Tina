@@ -1,20 +1,16 @@
-import { EventListener } from "../../../events";
+import { EventEmitter } from "../../../events";
 import { DefaultUserDeclaration } from "../../../user/default/types";
-import { StateSetter } from "../../types";
+import { InferredSetter } from "../../types";
 
-export declare interface PlayerStateImplementation<T = unknown> {
+export declare interface PlayerStateImplementation<T>
+	extends EventEmitter<PlayerStateImplementation<T>> {
 	/**
 	 * Replicates state through the network, fires all subscriptions and updates its value for the specified player.
 	 *
 	 * @param user to who set the value.
 	 * @param setter a value or a function.
 	 */
-	set(user: DefaultUserDeclaration, setter: StateSetter<T>): void;
-
-	/**
-	 * Returns an event listener to which you can bind callback functions to hear for mutations (changes) on state.
-	 */
-	subscribe(): EventListener<[Player, T]>;
+	set(user: DefaultUserDeclaration, setter: InferredSetter<T>): void;
 
 	/**
 	 * Returns the value.

@@ -231,9 +231,6 @@ export { User, Users } from "./lib/user";
 /** Container export */
 export { Container } from "./lib/container";
 
-/* State exports */
-export { State } from "./lib/state";
-
 /** Logger export */
 export { Logger } from "./lib/logger/Logger";
 
