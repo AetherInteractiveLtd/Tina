@@ -2,13 +2,7 @@ import { RunService } from "@rbxts/services";
 
 import TinaCore from "./lib/core";
 import TinaGame from "./lib/core/game";
-import {
-	Component,
-	ComponentDataBase,
-	ComponentInternalCreation,
-	Flyweight,
-	TagComponent,
-} from "./lib/ecs/component";
+import { ComponentInternalCreation } from "./lib/ecs/component";
 import { World, WorldOptions } from "./lib/ecs/world";
 import { EventListener } from "./lib/events";
 import { TinaEvents } from "./lib/events/internal";
@@ -20,6 +14,7 @@ import { Identifiers } from "./lib/net/util/identifiers";
 import { Server } from "./lib/net/util/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
+import { Component, ComponentData, Flyweight, FlyweightData, TagComponent } from "./lib/types/ecs";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
 
@@ -161,7 +156,7 @@ namespace Tina {
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends ComponentDataBase>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentData>(schema: T): Component<T> {
 		return ComponentInternalCreation.createComponent(schema);
 	}
 
@@ -195,7 +190,7 @@ namespace Tina {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
 		return ComponentInternalCreation.createFlyweight(schema);
 	}
 }
@@ -216,13 +211,13 @@ export { Network } from "./lib/net";
 export { Audience } from "./lib/audience/audience";
 
 /** ECS Library  */
-export { Component, ComponentTypes, GetComponentSchema } from "./lib/ecs/component";
+export { ComponentTypes } from "./lib/ecs/component";
 export { Observer } from "./lib/ecs/observer";
 export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
-export { createEvent, Event } from "./lib/ecs/storage/event";
+export { bindEvent, Event } from "./lib/ecs/storage/event";
 export { StorageObject, System } from "./lib/ecs/system";
 export { type World } from "./lib/ecs/world";
-export { ComponentId, EntityId } from "./lib/types/ecs";
+export * from "./lib/types/ecs";
 
 /** Users namespace */
 export { User, Users } from "./lib/user";

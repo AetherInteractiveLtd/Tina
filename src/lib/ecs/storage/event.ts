@@ -27,7 +27,7 @@ export type Event<E> = StorageObject & {
  * ### Example
  * ```ts
  *class MySystem extends System {
- *    private mouseButtonScrolled = createEvent(UserInputService.InputBegan, (inputObject) => {
+ *    private mouseButtonScrolled = bindEvent(UserInputService.InputBegan, (inputObject) => {
  *        return inputObject.UserInputType === Enum.UserInputType.MouseButton1);
  *    });
  *
@@ -49,7 +49,7 @@ export type Event<E> = StorageObject & {
  * the fired event
  * @returns
  */
-export function createEvent<E extends SignalLike>(
+export function bindEvent<E extends SignalLike>(
 	event: E,
 	predicate?: (...args: InferSignalParameters<E>) => boolean,
 ): Event<E> {

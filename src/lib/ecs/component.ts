@@ -1,33 +1,58 @@
 import Sift from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
-import { ComponentId, EntityId } from "../types/ecs";
-import { Immutable } from "../types/readonly";
+import {
+	Component,
+	ComponentData,
+	ComponentId,
+	EntityId,
+	Flyweight,
+	FlyweightData,
+	PartialComponentToKeys,
+	TagComponent,
+} from "../types/ecs";
 import { getNextComponentId, internal_getGlobalEntityId } from "./entity-manager";
 import { Observer } from "./observer";
 
-export type AllComponentTypes = AnyComponent | TagComponent | AnyFlyweight;
+export type ComponentBitmask = Array<number>;
 
-export type ComponentDataBase = Record<string, Array<unknown>>;
+export type Internal<T> = T extends Component<infer K>
+	? ComponentInternal<K>
+	: T extends Flyweight<infer K>
+	? FlyweightInternal<K>
+	: T extends TagComponent
+	? TagComponentInternal
+	: T extends object
+	? object & ComponentIdField
+	: never;
 
-export type AnyComponent = Component<{}>;
-export type AnyComponentInternal = ComponentInternal<{}>;
+export type ComponentInternal<T extends ComponentData> = Component<T> &
+	ComponentIdField & {
+		observers: Array<Observer>;
+	};
+export type FlyweightInternal<T extends FlyweightData> = Flyweight<T> & ComponentIdField;
+export type TagComponentInternal = object & ComponentIdField;
 
-export type AnyFlyweight = Flyweight<object>;
+export type ComponentIdField = {
+	readonly componentId: ComponentId;
+	readonly componentType: ComponentType;
+};
 
-export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
+export type ComponentInternalFields<T extends ComponentData> = ComponentMethods<T> &
+	ComponentIdField & {
+		observers: Array<Observer>;
+	};
 
-export type ComponentData<T extends ComponentDataBase> = T extends Array<infer U> ? Array<U> : T;
+export type FlyweightInternalFields<T extends FlyweightData> = FlyweightMethods<T> &
+	ComponentIdField;
 
-export type PartialArrayToKeys<T extends ComponentDataBase> = { [K in keyof T]?: T[K][EntityId] };
-
-export type Component<T extends ComponentDataBase> = ComponentData<T> & {
+export type ComponentMethods<T extends ComponentData> = {
 	/**
 	 * The default values for this component. This is used when adding a
 	 * component to an entity; each property that is specified in this object
 	 * will be given to the entity.
 	 */
-	defaults?: PartialArrayToKeys<T>;
+	setDefaults?: () => PartialComponentToKeys<T>;
 	/**
 	 * Clones all the data from one entity to another. This will
 	 * overwrite any existing data for the target entity. If you want
@@ -57,35 +82,21 @@ export type Component<T extends ComponentDataBase> = ComponentData<T> & {
 	 * @param entityId The entity to update.
 	 * @param data The data to update.
 	 */
-	set(entityId: EntityId, data: PartialArrayToKeys<T>): void;
+	set(entityId: EntityId, data: PartialComponentToKeys<T>): void;
 };
 
-export type ComponentInternal<T extends ComponentDataBase> = Component<T> &
-	ComponentIdField & {
-		componentData: ComponentData<T>;
-		observers: Array<Observer>;
-	};
-
-export type TagComponent = {
-	[index: string]: never;
+export type FlyweightMethods<T extends FlyweightData> = {
+	set(data: Partial<T>): void;
 };
 
-export type TagComponentInternal = ComponentIdField & {
-	[index: string]: never;
-};
+export enum ComponentType {
+	Component,
+	Flyweight,
+	Tag,
+}
 
-export type Flyweight<T extends object> = Immutable<T> & {
-	set<U extends Partial<T>>(data: U): void;
-};
-
-export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
-
-type ComponentIdField = { readonly componentId: ComponentId };
-
-function Custom<T>(init: () => T): [() => T];
-function Custom<T>(): Array<T>;
-function Custom<T>(init?: () => T): Array<() => T> {
-	return init ? [init] : [];
+function Custom<T>(): Array<T> {
+	return new Array<T>();
 }
 
 /**
@@ -135,24 +146,21 @@ export namespace ComponentInternalCreation {
 	 * one component per world. EntityIds are global, therefore the index of a
 	 * given entity will always match the index of the component data.
 	 *
-	 * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
-	 * this to be configurable? It should also be possible to resize the array if
-	 * required (although this would not be desirable).
-	 *
 	 * @param schema The properties of the component.
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends ComponentDataBase>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentData>(schema: T): Component<T> {
 		componentInstantiationCheck();
 
+		// TODO: Remove hard coded size in favor of tina manifest.
 		const componentData = createComponentArray(schema as T, 10000);
 		const observers = new Array<Observer>();
-		return Sift.Dictionary.merge(componentData, {
+		return Sift.Dictionary.merge<[T, ComponentInternalFields<T>]>(componentData, {
 			componentId: getNextComponentId(),
-			defaults: undefined,
+			componentType: ComponentType.Component,
 			observers: observers,
-
+			setDefaults: undefined,
 			/**
 			 * Clones all the data from one entity to another. This will
 			 * overwrite any existing data for the target entity. If you want
@@ -163,7 +171,7 @@ export namespace ComponentInternalCreation {
 			 */
 			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
 				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key] of pairs(componentData as ComponentDataBase)) {
+				for (const [key] of pairs(componentData as ComponentData)) {
 					componentData[key][toEntityId] = componentData[key][fromEntityId];
 				}
 			},
@@ -175,13 +183,15 @@ export namespace ComponentInternalCreation {
 			 * @param entityId The entity to reset.
 			 */
 			reset(entityId: EntityId): void {
-				if (this.defaults === undefined) {
+				if (this.setDefaults === undefined) {
 					return;
 				}
 
+				const data = this.setDefaults();
+
 				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(this.defaults as ComponentDataBase)) {
-					componentData[key][entityId] = value;
+				for (const [key] of pairs(componentData as ComponentData)) {
+					componentData[key][entityId] = data[key];
 				}
 			},
 
@@ -198,16 +208,16 @@ export namespace ComponentInternalCreation {
 			 * @param entityId The entity to update.
 			 * @param data The data to update.
 			 */
-			set(entityId: EntityId, data: PartialArrayToKeys<T>): void {
+			set(entityId: EntityId, data: PartialComponentToKeys<T>): void {
 				for (const observer of observers) {
 					observer.world.observersToUpdate.push([entityId, observer]);
 				}
 
-				for (const [key, value] of pairs(data as ComponentDataBase)) {
+				for (const [key, value] of pairs(data as ComponentData)) {
 					componentData[key][entityId] = value;
 				}
 			},
-		}) as unknown as ComponentInternal<T>;
+		}) as ComponentInternal<T>;
 	}
 
 	/**
@@ -227,9 +237,12 @@ export namespace ComponentInternalCreation {
 	export function createTag(): TagComponent {
 		componentInstantiationCheck();
 
-		return {
+		const tag: TagComponentInternal = {
 			componentId: getNextComponentId(),
-		} as TagComponentInternal;
+			componentType: ComponentType.Tag,
+		};
+
+		return tag as TagComponent;
 	}
 
 	/**
@@ -244,12 +257,12 @@ export namespace ComponentInternalCreation {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
 		componentInstantiationCheck();
 
-		const flyweight = Sift.Dictionary.merge(schema, {
+		const flyweight = Sift.Dictionary.merge<[T, FlyweightInternalFields<T>]>(schema, {
 			componentId: getNextComponentId(),
-
+			componentType: ComponentType.Flyweight,
 			/**
 			 * Sets the data for the flyweight.
 			 *
@@ -259,10 +272,10 @@ export namespace ComponentInternalCreation {
 			 *
 			 * @param data The data to update.
 			 */
-			set<U extends Partial<T>>(data: U): void {
+			set(data: Partial<T>): void {
 				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(data)) {
-					flyweight[key as never] = value as never;
+				for (const [key, value] of pairs(data as FlyweightData)) {
+					(flyweight as FlyweightData)[key] = value;
 				}
 			},
 		}) as FlyweightInternal<T>;
@@ -281,20 +294,16 @@ export namespace ComponentInternalCreation {
  *
  * @returns The pre-allocated array.
  */
-function createComponentArray(
-	componentData: ComponentDataBase,
-	arraySize: number,
-): ComponentData<ComponentDataBase> {
-	const result: ComponentData<ComponentDataBase> = {};
+function createComponentArray<T extends ComponentData>(componentData: T, arraySize: number): T {
+	const result: ComponentData = {};
 
-	for (const [key, value] of pairs(componentData)) {
-		if (typeOf(value) === "function" || t.array(t.any)(value) === true) {
-			result[key] = new Array<typeof value>(arraySize);
-			continue;
+	for (const [key, value] of pairs(componentData as ComponentData)) {
+		if (!t.array(t.any)(value)) {
+			throw `Invalid component data key: ${key}`;
 		}
 
-		throw `Invalid component data key: ${key}`;
+		result[key] = new Array<typeof value>(arraySize);
 	}
 
-	return result;
+	return result as T;
 }
