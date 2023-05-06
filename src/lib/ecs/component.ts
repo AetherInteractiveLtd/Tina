@@ -48,11 +48,10 @@ export type FlyweightInternalFields<T extends FlyweightData> = FlyweightMethods<
 
 export type ComponentMethods<T extends ComponentData> = {
 	/**
-	 * The default values for this component. This is used when adding a
-	 * component to an entity; each property that is specified in this object
-	 * will be given to the entity.
+	 * Clears the data for the given entity.
+	 * @param entityId The entity to clear.
 	 */
-	setDefaults?: () => PartialComponentToKeys<T>;
+	clear(entityId: EntityId): void;
 	/**
 	 * Clones all the data from one entity to another. This will
 	 * overwrite any existing data for the target entity. If you want
@@ -83,6 +82,12 @@ export type ComponentMethods<T extends ComponentData> = {
 	 * @param data The data to update.
 	 */
 	set(entityId: EntityId, data: PartialComponentToKeys<T>): void;
+	/**
+	 * The default values for this component. This is used when adding a
+	 * component to an entity; each property that is specified in this object
+	 * will be given to the entity.
+	 */
+	setDefaults?: () => PartialComponentToKeys<T>;
 };
 
 export type FlyweightMethods<T extends FlyweightData> = {
@@ -162,6 +167,16 @@ export namespace ComponentInternalCreation {
 			observers: observers,
 			setDefaults: undefined,
 			/**
+			 * Clears the data for the given entity.
+			 * @param entityId The entity to clear.
+			 */
+			clear(entityId: EntityId): void {
+				for (const [key] of pairs(componentData as ComponentData)) {
+					componentData[key][entityId] = undefined;
+				}
+			},
+
+			/**
 			 * Clones all the data from one entity to another. This will
 			 * overwrite any existing data for the target entity. If you want
 			 * to copy specific properties, then you should do this manually.
@@ -170,7 +185,6 @@ export namespace ComponentInternalCreation {
 			 * @param toEntityId The entity to copy to.
 			 */
 			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
-				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key] of pairs(componentData as ComponentData)) {
 					componentData[key][toEntityId] = componentData[key][fromEntityId];
 				}
@@ -189,7 +203,6 @@ export namespace ComponentInternalCreation {
 
 				const data = this.setDefaults();
 
-				// eslint-disable-next-line roblox-ts/no-array-pairs
 				for (const [key] of pairs(componentData as ComponentData)) {
 					componentData[key][entityId] = data[key];
 				}

@@ -1,4 +1,5 @@
 import { HttpService } from "@rbxts/services";
+import { Stack } from "@rbxts/stacks-and-queues";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Tina from "../..";
@@ -11,6 +12,8 @@ import {
 	ComponentId,
 	EntityId,
 	FlyweightData,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	GetComponentSchema,
 	PartialComponentToKeys,
 	TagComponent,
 } from "../types/ecs";
@@ -25,6 +28,14 @@ import type { ANY, NOT } from "./query";
 import { ALL, Query, RawQuery } from "./query";
 import { ExecutionGroup, System, SystemConstructor, SystemManager } from "./system";
 
+export interface WorldOptionsInternal extends WorldOptions {
+	/**
+	 * Whether or not to clear component data when an entity is destroyed.
+	 * This is used internally to avoid binding to PostSimulation during unit
+	 * tests.
+	 */
+	clearComponentData: boolean;
+}
 export interface WorldOptions {
 	/**
 	 * The default execution group for systems. Defaults to `PostSimulation `.
@@ -67,16 +78,18 @@ export class World {
 	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
 
+	/** The number of frame data that is stored by the world. */
+	public static STORED_FRAMES = 2;
+
 	/**
-	 * Entities that have been queued to have their component data removed from this frame.
-	 * @hidden
+	 * Data held by the system for the current and previous frame.
 	 */
-	public componentDataToRemoveLater: Array<[EntityId, Internal<AllComponentTypes>]> = [];
-	/**
-	 * Entities that have been queued to have their component data removed from last frame.
-	 * @hidden
-	 */
-	public componentDataToRemoveNow: Array<[EntityId, Internal<AllComponentTypes>]> = [];
+	public frameData = new Stack<{
+		/** Pending component data to be removed from entities. */
+		componentData: Array<[EntityId, Internal<AnyComponent>]>;
+		/** Entities that have been removed from the world. */
+		entities: SparseSet;
+	}>();
 	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
 	/**
@@ -88,6 +101,10 @@ export class World {
 	constructor(options?: WorldOptions) {
 		this.options = options ?? {};
 		this.scheduler = new SystemManager(this);
+
+		for (const _ of $range(0, World.STORED_FRAMES - 1)) {
+			this.frameData.push({ componentData: new Array(), entities: new SparseSet() });
+		}
 	}
 
 	/**
@@ -233,15 +250,12 @@ export class World {
 	public destroy(): void {
 		this.scheduler.stop();
 
-		// TODO: Remove the need to `defer` this.
 		const entities = this.entityManager.entities;
-		for (const i of $range(0, entities.size() - 1)) {
-			if (entities[i] !== undefined) {
-				this.entityManager.removeEntity(i);
+		for (const entityId of $range(0, entities.size() - 1)) {
+			if (entities[entityId] !== undefined) {
+				EntityManager.returnEntityId(entityId);
 			}
 		}
-
-		this.flush();
 	}
 
 	/**
@@ -324,7 +338,7 @@ export class World {
 	public flush(): void {
 		debug.profilebegin("World:flush");
 		{
-			this.entityManager.destroyPendingEntities();
+			this.entityManager.destroyPendingEntities(this.frameData.peek()!.entities);
 			this.updatePendingComponents();
 			this.updatePendingObservers();
 		}
@@ -467,13 +481,14 @@ export class World {
 	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
 		this.disableComponent(entityId, component);
 
-		if ((component as Internal<AllComponentTypes>).componentType !== ComponentType.Component) {
-			// Component is a Flyweight
-			return this;
+		if (
+			(component as Internal<AnyComponent | AnyFlyweight>).componentType ===
+			ComponentType.Component
+		) {
+			this.frameData
+				.peek()!
+				.componentData.push([entityId, component as Internal<AnyComponent>]);
 		}
-		// schedule data to be removed somewhere else
-
-		this.componentDataToRemoveLater.push([entityId, component as Internal<AllComponentTypes>]);
 
 		return this;
 	}
@@ -626,9 +641,9 @@ export class World {
 	 */
 	private archetypeChange(arch: Archetype, componentId: ComponentId): Archetype {
 		if (!arch.change[componentId]) {
-			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
+			arch.mask[math.floor(componentId / 32)] ^= 1 << componentId % 32;
 			arch.change[componentId] = this.getArchetype(arch.mask);
-			arch.mask[~~(componentId / 32)] ^= 1 << componentId % 32;
+			arch.mask[math.floor(componentId / 32)] ^= 1 << componentId % 32;
 		}
 
 		return arch.change[componentId];
@@ -670,7 +685,7 @@ export class World {
 	 * @returns Whether or not the entity has the given component.
 	 */
 	private hasComponentInternal(mask: ComponentBitmask, componentId: ComponentId): boolean {
-		return (mask[~~(componentId / 32)] & (1 << componentId % 32)) >= 1;
+		return (mask[math.floor(componentId / 32)] & (1 << componentId % 32)) >= 1;
 	}
 
 	/**

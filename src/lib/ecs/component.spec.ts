@@ -2,15 +2,17 @@
 
 import { ComponentInternalCreation, ComponentTypes } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
-import { World } from "./world";
+import { SystemManager } from "./system";
+import { World, WorldOptionsInternal } from "./world";
 
 let world: World;
 
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-
-		world = new World();
+		world = new World({
+			clearComponentData: false,
+		} as WorldOptionsInternal);
 	});
 
 	describe("a component should", () => {
@@ -45,6 +47,7 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
+
 			const entity = world.add();
 			world.addComponent(entity, component);
 			world.flush();
@@ -98,6 +101,37 @@ export = (): void => {
 			expect(component.x[entity]).to.equal(10);
 			expect(component.y[entity]).to.equal("String");
 			expect(component.custom[entity].test).to.equal(100);
+		});
+
+		it("be able to remove its data", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+			});
+
+			const entity = world.add();
+
+			world.addComponent(entity, component, { x: 1 });
+			world.flush();
+
+			expect(component.x[entity]).to.equal(1);
+
+			world.removeComponent(entity, component);
+
+			(
+				(world as unknown as { scheduler: SystemManager }).scheduler as unknown as {
+					clearPendingComponentData(): void;
+				}
+			).clearPendingComponentData();
+
+			expect(component.x[entity]).to.equal(1);
+
+			(
+				(world as unknown as { scheduler: SystemManager }).scheduler as unknown as {
+					clearPendingComponentData(): void;
+				}
+			).clearPendingComponentData();
+
+			expect(component.x[entity]).to.equal(undefined);
 		});
 
 		it("be able to have a default value", () => {

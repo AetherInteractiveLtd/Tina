@@ -1,8 +1,8 @@
 import { ComponentMethods, FlyweightMethods } from "../ecs/component";
 import { Immutable } from "./readonly";
 
-export type EntityId = number;
-export type ComponentId = number;
+export declare type EntityId = number;
+export declare type ComponentId = number;
 
 export declare type PartialComponentToKeys<T extends ComponentData> = {
 	[K in keyof T]?: T[K][EntityId];

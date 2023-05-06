@@ -1,14 +1,17 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { internal_resetGlobalState } from "./entity-manager";
-import { World } from "./world";
+import { SystemManager } from "./system";
+import { World, WorldOptionsInternal } from "./world";
 
 let world: World;
 
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-		world = new (World as any)() as World;
+		world = new World({
+			clearComponentData: false,
+		} as WorldOptionsInternal);
 	});
 
 	describe("An entity should", () => {
@@ -32,8 +35,20 @@ export = (): void => {
 			world.flush();
 			world.remove(entityId);
 			world.flush();
+			(
+				(world as unknown as { scheduler: SystemManager }).scheduler as unknown as {
+					clearPendingComponentData(): void;
+				}
+			).clearPendingComponentData();
 			const entityId2 = world.add();
-			expect(entityId).to.equal(entityId2);
+			expect(entityId).to.never.equal(entityId2);
+			(
+				(world as unknown as { scheduler: SystemManager }).scheduler as unknown as {
+					clearPendingComponentData(): void;
+				}
+			).clearPendingComponentData();
+			const entityId3 = world.add();
+			expect(entityId).to.equal(entityId3);
 		});
 
 		it("be able to check if it's alive", () => {

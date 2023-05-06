@@ -2,18 +2,20 @@
 
 import { ComponentInternalCreation, ComponentTypes } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
-import { World } from "./world";
+import { World, WorldOptionsInternal } from "./world";
 
 function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
 	return a.join() === b.join();
 }
 
-let world = new (World as any)() as World;
+let world: World;
 
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-		world = world = new (World as any)() as World;
+		world = new World({
+			clearComponentData: false,
+		} as WorldOptionsInternal);
 	});
 
 	describe("An observer should", () => {

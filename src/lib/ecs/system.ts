@@ -2,7 +2,11 @@ import { RunService } from "@rbxts/services";
 
 import { insertionSort } from "../util/array-utils";
 import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
-import { World } from "./world";
+import { SparseSet } from "./collections/sparse-set";
+import { EntityManager } from "./entity-manager";
+import { World, WorldOptionsInternal } from "./world";
+
+const POST_SIMULATION = RunService.PostSimulation;
 
 export type ExecutionGroup = SignalLike;
 
@@ -154,8 +158,17 @@ export class SystemManager {
 	private world: World;
 
 	constructor(world: World) {
-		this.executionDefault = world.options.defaultExecutionGroup ?? RunService.PostSimulation;
+		this.executionDefault = world.options.defaultExecutionGroup ?? POST_SIMULATION;
 		this.world = world;
+
+		// We don't want to clear data at the end of a "frame" while in testing.
+		if ((world.options as WorldOptionsInternal).clearComponentData === false) {
+			return;
+		}
+
+		this.executionGroups.add(POST_SIMULATION);
+		this.systemsByExecutionGroup.set(POST_SIMULATION, []);
+		this.systemsByExecutionGroup.get(POST_SIMULATION)!.push(this.clearComponentDataAsSystem());
 	}
 
 	/**
@@ -428,6 +441,42 @@ export class SystemManager {
 		// removed a system from one of them.
 	}
 
+	private clearComponentDataAsSystem(): System {
+		const fn = (): void => {
+			this.clearPendingComponentData();
+		};
+
+		return {
+			onUpdate(): void {
+				fn();
+			},
+			enabled: true,
+			priority: math.huge,
+			dt: 0,
+			lastCalled: 0,
+		} as unknown as System;
+	}
+
+	/**
+	 *
+	 */
+	private clearPendingComponentData(): void {
+		const previousFrameData = this.world.frameData.linkedList.peekValueAtTail();
+		for (const [entityId, component] of previousFrameData!.componentData) {
+			component.clear(entityId);
+		}
+
+		for (const entityId of previousFrameData!.entities.dense) {
+			EntityManager.returnEntityId(entityId);
+		}
+
+		this.world.frameData.linkedList.popTailValue();
+		this.world.frameData.push({
+			componentData: new Array(),
+			entities: new SparseSet(),
+		});
+	}
+
 	/**
 	 * A helper function that will ensure that a system runs correctly.
 	 *
@@ -483,6 +532,8 @@ export class SystemManager {
 
 			this.executionGroupSignals.set(executionGroup, connection);
 		}
+
+		this.clearPendingComponentData();
 	}
 
 	/**

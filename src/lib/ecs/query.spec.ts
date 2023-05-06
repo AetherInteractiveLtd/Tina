@@ -3,7 +3,7 @@
 import { ComponentInternalCreation } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
 import { ALL, ANY, NOT, Query } from "./query";
-import { World } from "./world";
+import { World, WorldOptionsInternal } from "./world";
 
 const components = new Array<MockComponent>(32);
 
@@ -144,7 +144,9 @@ export = (): void => {
 
 			it("multiple entities", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -179,7 +181,9 @@ export = (): void => {
 		describe("items", () => {
 			it("get all entities", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -211,7 +215,9 @@ export = (): void => {
 
 			it("have a size of 0 when no entities match", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -238,7 +244,9 @@ export = (): void => {
 		describe("enteredQuery", () => {
 			it("allow for entities to enter the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -263,7 +271,9 @@ export = (): void => {
 
 			it("allow for multiple entities to enter the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -290,7 +300,9 @@ export = (): void => {
 
 			it("not be present on next iteration of query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -321,7 +333,9 @@ export = (): void => {
 
 			it("should not enter the query if the entity already exists in the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -361,7 +375,9 @@ export = (): void => {
 		describe("exitedQuery", () => {
 			it("allow for entities to exit the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -393,7 +409,9 @@ export = (): void => {
 
 			it("allow for multiple entities to exit the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -425,7 +443,9 @@ export = (): void => {
 
 			it("not be present on next iteration of query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],
@@ -457,7 +477,9 @@ export = (): void => {
 
 			it("should not exit the query if the entity already exists in the query", () => {
 				internal_resetGlobalState();
-				const tempWorld = new World();
+				const tempWorld = new World({
+					clearComponentData: false,
+				} as WorldOptionsInternal);
 
 				const component = ComponentInternalCreation.createComponent({
 					componentData: [],

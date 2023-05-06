@@ -55,6 +55,14 @@ export class EntityManager {
 	}
 
 	/**
+	 * Adds an entity back to the reusable entity ids.
+	 * @param entityId The entity id to return.
+	 */
+	public static returnEntityId(entityId: EntityId): void {
+		reusableEntityIds.add(entityId);
+	}
+
+	/**
 	 * @returns True if the entity id is currently in the world.
 	 */
 	public alive(entityId: EntityId): boolean {
@@ -86,13 +94,13 @@ export class EntityManager {
 	 * Removes any entities from the world that has been marked for removal.
 	 * @hidden
 	 */
-	public destroyPendingEntities(): void {
+	public destroyPendingEntities(pendingEntities: SparseSet): void {
 		for (const entityId of this.entitiesToDestroy.dense) {
 			for (const query of this.entities[entityId].queries) {
 				query.exited.add(entityId);
 			}
 			this.entities[entityId].sparseSet.remove(entityId);
-			reusableEntityIds.add(entityId);
+			pendingEntities.add(entityId);
 			this.size--;
 		}
 		this.entitiesToDestroy.dense.clear();

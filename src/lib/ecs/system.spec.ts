@@ -1,11 +1,13 @@
 /// <reference types="@rbxts/testez/globals" />
 
 import { ScriptContext } from "@rbxts/services";
+import { Stack } from "@rbxts/stacks-and-queues";
 
+import { SparseSet } from "./collections/sparse-set";
 import { Query } from "./query";
 import { bindEvent } from "./storage/event";
 import { StorageObject, System, SystemManager } from "./system";
-import { World, WorldOptions } from "./world";
+import { World, WorldOptionsInternal } from "./world";
 
 function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
 	return a.join() === b.join();
@@ -14,8 +16,14 @@ function shallowEquals<T extends defined>(a: Array<T>, b: Array<T>): boolean {
 const bindableEvent = new Instance("BindableEvent");
 
 const world = {} as World;
-(world.options as WorldOptions) = {};
+(world.options as WorldOptionsInternal) = {
+	clearComponentData: false,
+};
 world.options.defaultExecutionGroup = bindableEvent.Event;
+world.frameData = new Stack();
+for (const _ of $range(0, World.STORED_FRAMES - 1)) {
+	world.frameData.push({ componentData: new Array(), entities: new SparseSet() });
+}
 world.flush = (): void => {};
 
 let manager = {} as SystemManager;
