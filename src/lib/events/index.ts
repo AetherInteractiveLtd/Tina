@@ -122,7 +122,7 @@ export abstract class EventEmitter<Events extends Default | {}> {
 	): void {
 		if (token in this.events) {
 			for (const thread of this.events[token as string]) {
-				void thread.call(...(token === "_default" ? [] : args));
+				void thread.call(...args);
 			}
 		}
 	}

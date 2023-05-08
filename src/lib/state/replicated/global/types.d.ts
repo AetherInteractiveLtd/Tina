@@ -1,18 +1,12 @@
-import { EventListener } from "../../../events";
-import { StateSetter } from "../../types";
+import { InferredSetter } from "../../types";
 
-export declare interface GlobalStateImplementation<T = unknown> {
+export declare interface GlobalStateImplementation<T> {
 	/**
 	 * Replicates state through the network, fires all subscriptions and updates its value.
 	 *
 	 * @param setter a value or a function.
 	 */
-	set(setter: StateSetter<T>): void;
-
-	/**
-	 * Returns an event listener to which you can bind callback functions to hear for mutations (changes) on state.
-	 */
-	subscribe(): EventListener<[T]>;
+	set(setter: InferredSetter<T>): void;
 
 	/**
 	 * Returns the value.

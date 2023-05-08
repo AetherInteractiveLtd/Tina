@@ -1,53 +1,59 @@
 import { RunService } from "@rbxts/services";
+import { t } from "@rbxts/t";
 
-import { EventListener } from "../../../events";
+import { EventEmitter } from "../../../events";
 import { Internals } from "../../../net/internal";
+import { InferredSetter } from "../../../state/types";
 import { FunctionUtil } from "../../../util/functions";
-import { StateSetter } from "../../types";
+import { StateEventEmitter } from "../../types";
 import { GlobalStateImplementation } from "./types";
 
-export class GlobalState<T = unknown> implements GlobalStateImplementation<T> {
-	private readonly isServer = RunService.IsServer();
-
-	private readonly subscription = new EventListener<[T]>();
-	private readonly replicator = new EventListener<[T]>();
-
+export class GlobalState<T>
+	extends EventEmitter<StateEventEmitter<T>>
+	implements GlobalStateImplementation<T>
+{
 	private value: T;
 
-	constructor(public readonly name: string, initialValue: StateSetter<T>) {
-		this.value = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
+	constructor(public readonly id: number, initialValue?: InferredSetter<T>) {
+		super();
 
-		if (!this.isServer) {
-			Internals.when("state:replicated").do(({ stateName, value }) => {
-				if (stateName !== name) return;
-				this.value = value as T;
+		{
+			this.value = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
 
-				void this.subscription.call(value);
-			});
-		} else {
-			this.replicator.do((value: T) => {
-				return void Internals.updateAll("state:replicated", { stateName: name, value });
-			});
+			if (!RunService.IsServer()) {
+				Internals.when("state:replicated").do(({ id: stateName, value }) => {
+					if (stateName === id) {
+						this.value = value as T;
+
+						return void this.emit("_default", this.value);
+					}
+				});
+			} else {
+				this.when().do(value => {
+					Internals.updateAll("state:replicated", { stateName: id, value });
+
+					return value;
+				});
+			}
 		}
 	}
 
-	public subscribe(): EventListener<[T]> {
-		return this.subscription;
-	}
-
-	public set(setter: StateSetter<T>): void {
-		if (!this.isServer) {
-			throw `[GlobalState:Client]: State can only be set from the server.`;
+	public set(setter: InferredSetter<T>): void {
+		if (!RunService.IsServer()) {
+			throw "[GlobalState:Client]: State can only be set from the server.";
 		}
 
 		if (FunctionUtil.isFunction(setter)) {
 			this.value = setter(this.value);
 		} else {
-			this.value = setter;
+			if (t.table(setter)) {
+				this.value = { ...this.value, ...setter };
+			} else {
+				this.value = setter as T;
+			}
 		}
 
-		void this.subscription.call(this.value);
-		return void this.replicator.call(this.value);
+		return void this.emit("_default", this.value);
 	}
 
 	public get(): T {

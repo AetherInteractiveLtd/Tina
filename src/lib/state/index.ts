@@ -1,47 +1,31 @@
 import { LocalState } from "./local";
+import { LocalStateImplementation } from "./local/types";
 import { GlobalState } from "./replicated/global";
+import { GlobalStateImplementation } from "./replicated/global/types";
 import { PlayerState } from "./replicated/player";
-import { StateSetter, ValidStateScheme } from "./types";
+import { PlayerStateImplementation } from "./replicated/player/types";
+import { InferredSetter } from "./types";
 
 export namespace State {
-	let states = 0;
+	let numberOfStates = 0;
 
-	/**
-	 * Builds a state tree as specified.
-	 *
-	 * @param stateTree as an object for the State tree wished to be built.
-	 */
-	export function build<T extends object, U extends ValidStateScheme<T>>(stateTree: U): U {
+	export function namespace<T>(stateTree: T): T {
 		return stateTree;
 	}
 
-	/**
-	 * Builds LocalState, changes to its value won't be replicated through the network.
-	 *
-	 * @param value initial value for LocalState.
-	 * @returns a LocalState build.
-	 */
-	export function localState<T>(value: StateSetter<T>): LocalState<T> {
-		return new LocalState(value);
+	export function create<T>(initialValue?: InferredSetter<T>): LocalStateImplementation<T> {
+		return new LocalState(initialValue);
 	}
 
-	/**
-	 * Builds GlobalState, changes to its value will be replicated to every single User on the server.
-	 *
-	 * @param value initial value for GlobalState.
-	 * @returns a GlobalState build.
-	 */
-	export function globalState<T>(value: StateSetter<T>): GlobalState<T> {
-		return new GlobalState(tostring(++states), value);
+	export function global<T>(initialValue?: InferredSetter<T>): GlobalStateImplementation<T> {
+		const id = ++numberOfStates;
+
+		return new GlobalState(id, initialValue);
 	}
 
-	/**
-	 * Builds PlayerState, changes to its value will be replicated to the specified User (within the `.set()` method).
-	 *
-	 * @param value initial value for PlayerState.
-	 * @returns a PlayerState build.
-	 */
-	export function playerState<T>(value: StateSetter<T>): PlayerState<T> {
-		return new PlayerState(tostring(++states), value);
+	export function player<T>(initialValue?: InferredSetter<T>): PlayerStateImplementation<T> {
+		const id = ++numberOfStates;
+
+		return new PlayerState(id, initialValue);
 	}
 }

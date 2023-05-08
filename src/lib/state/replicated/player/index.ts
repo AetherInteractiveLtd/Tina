@@ -1,90 +1,95 @@
 import { Players, RunService } from "@rbxts/services";
+import { t } from "@rbxts/t";
 
-import { EventListener } from "../../../events";
+import { EventEmitter } from "../../../events";
 import { Internals } from "../../../net/internal";
-import { DefaultUserDeclaration } from "../../../user/default/types";
+import { User } from "../../../user";
 import { FunctionUtil } from "../../../util/functions";
-import { StateSetter } from "../../types";
+import { InferredSetter, PlayerStateEventEmitter } from "../../types";
 import { PlayerStateImplementation } from "./types";
 
-export class PlayerState<T = unknown> implements PlayerStateImplementation<T> {
-	private readonly isServer = RunService.IsServer();
+export class PlayerState<T>
+	extends EventEmitter<PlayerStateEventEmitter<T>>
+	implements PlayerStateImplementation<T>
+{
 	private readonly values: Map<Player, T> = new Map();
-
-	private readonly subscription: EventListener<[Player, T]> = new EventListener();
-	private readonly replicator: EventListener<[Player, T]> = new EventListener();
 
 	private initialValue: T;
 
-	constructor(public readonly name: string, initialValue: StateSetter<T>) {
-		this.initialValue = FunctionUtil.isFunction(initialValue) ? initialValue() : initialValue;
+	constructor(public readonly name: number, initialValue?: InferredSetter<T>) {
+		super();
 
-		if (!this.isServer) {
-			Internals.when("state:replicated").do(({ stateName, value }) => {
-				if (stateName !== name) return;
+		{
+			this.initialValue = FunctionUtil.isFunction(initialValue)
+				? initialValue()
+				: initialValue;
 
+			if (!RunService.IsServer()) {
 				const player = Players.LocalPlayer;
-				this.values.set(player, value as T);
 
-				void this.subscription.call(player, value);
-			});
+				Internals.when("state:replicated").do(({ id, value }) => {
+					if (id === name) {
+						this.values.set(player, value as T);
 
-			this.values.set(Players.LocalPlayer, this.initialValue);
-		} else {
-			const added = (player: Player): void => {
-				if (this.values.has(player)) return;
+						return void this.emit("_default", player, value as T);
+					}
+				});
 
 				this.values.set(player, this.initialValue);
-				this.replicator.do((player: Player, value: T) => {
-					void this.subscription.call(player, value);
-					return void Internals.update(player, "state:replicated", {
+			} else {
+				const added = (player: Player): void => {
+					if (this.values.has(player)) return;
+
+					this.values.set(player, this.initialValue);
+				};
+
+				const removing = (player: Player): void => {
+					return void this.values.delete(player);
+				};
+
+				for (const player of Players.GetPlayers()) {
+					added(player);
+				}
+
+				Players.PlayerAdded.Connect(added);
+				Players.PlayerRemoving.Connect(removing);
+
+				this.when().do((player, value) => {
+					Internals.update(player, "state:replicated", {
 						stateName: name,
 						value,
 					});
+
+					return value;
 				});
-			};
-
-			const removing = (player: Player): void => {
-				this.values.delete(player);
-			};
-
-			for (const player of Players.GetPlayers()) added(player);
-
-			Players.PlayerAdded.Connect(added);
-			Players.PlayerRemoving.Connect(removing);
+			}
 		}
 	}
 
-	public subscribe(): EventListener<[Player, T]> {
-		return this.subscription;
-	}
-
-	public set({ player }: DefaultUserDeclaration, setter: StateSetter<T>): void {
-		if (!this.isServer) {
+	public set({ player }: User, setter: InferredSetter<T>): void {
+		if (!RunService.IsServer()) {
 			throw `[PlayerState:Client]: State can only be set from the server.`;
 		}
 
+		const oldValue = this.values.get(player);
+
 		let value: T;
-
 		if (FunctionUtil.isFunction(setter)) {
-			const oldValue = this.values.get(player);
 			value = setter(oldValue);
-
-			this.values.set(player, value);
 		} else {
-			value = setter;
-
-			this.values.set(player, value);
+			if (t.table(setter)) {
+				value = { ...oldValue, ...setter } as T;
+			} else {
+				value = setter as T;
+			}
 		}
 
-		return void this.replicator.call(player, value);
+		this.values.set(player, value);
+
+		return void this.emit("_default", player, value);
 	}
 
-	public get(player: Player = Players.LocalPlayer): T | undefined {
+	public get(player: Player): T | undefined {
 		return this.values.get(player);
-	}
-
-	public items(): Map<Player, T> {
-		return this.values;
 	}
 }
