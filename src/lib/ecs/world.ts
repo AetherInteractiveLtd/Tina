@@ -271,6 +271,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public disableComponent(entityId: EntityId, component: AllComponentTypes): this {
+		// TODO: should this accept all component types? Probably just components and flyweights.
 		if (!this.has(entityId)) {
 			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
 		}
@@ -305,6 +306,27 @@ export class World {
 	 */
 	public disableSystem(ctor: SystemConstructor): this {
 		this.scheduler.disableSystem(ctor);
+
+		return this;
+	}
+
+	public enableComponent(entityId: EntityId, component: AllComponentTypes): this {
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+		}
+
+		this.componentsToUpdate.add(entityId);
+
+		debug.profilebegin("World:enableComponent");
+		{
+			const componentId = (component as Internal<AllComponentTypes>).componentId;
+			if (
+				!this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
+			) {
+				this.updateArchetype(entityId, componentId);
+			}
+		}
+		debug.profileend();
 
 		return this;
 	}
@@ -741,5 +763,7 @@ export class World {
 		for (const [entityId, observer] of this.observersToUpdate) {
 			observer.storage.add(entityId);
 		}
+
+		this.observersToUpdate = [];
 	}
 }
