@@ -532,8 +532,6 @@ export class SystemManager {
 
 			this.executionGroupSignals.set(executionGroup, connection);
 		}
-
-		this.clearPendingComponentData();
 	}
 
 	/**
