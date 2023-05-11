@@ -257,7 +257,7 @@ export = (): void => {
 			tempBindableEvent.Destroy();
 		});
 
-		it("be able to call systems in order", () => {
+		it("be able to call after systems in order", () => {
 			let systemOrder: Array<number> = [];
 
 			const system1 = new MockSystem();
@@ -279,8 +279,8 @@ export = (): void => {
 			};
 
 			const order1 = [system1, system2, system3];
-			const order2 = [system3, system2, system1]; // 2 1 0
-			const order3 = [system2, system3, system1]; // 1 2 0
+			const order2 = [system3, system2, system1];
+			const order3 = [system2, system3, system1];
 			const order4 = [system1, system3, system2];
 			const order5 = [system3, system1, system2];
 			const order6 = [system2, system1, system3];
@@ -344,6 +344,99 @@ export = (): void => {
 				bindableEvent.Fire();
 
 				expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
+				manager.stop();
+			}
+		});
+
+		it("be able to call before systems in order", () => {
+			let systemOrder: Array<number> = [];
+
+			const system1 = new MockSystem();
+			system1.onUpdate = (): void => {
+				systemOrder.push(3);
+			};
+
+			const system2 = new MockSystem1();
+			system2.before = [MockSystem];
+
+			system2.onUpdate = (): void => {
+				systemOrder.push(2);
+			};
+
+			const system3 = new MockSystem2();
+			system3.before = [MockSystem1];
+			system3.onUpdate = (): void => {
+				systemOrder.push(1);
+			};
+
+			const order1 = [system1, system2, system3];
+			const order2 = [system3, system2, system1];
+			const order3 = [system2, system3, system1];
+			const order4 = [system1, system3, system2];
+			const order5 = [system3, system1, system2];
+			const order6 = [system2, system1, system3];
+
+			for (const systems of [order1, order2, order3, order4, order5, order6]) {
+				systemOrder = [];
+				manager = new SystemManager(world);
+				void manager.scheduleSystems(systems);
+				void manager.start();
+
+				expect(shallowEquals(systemOrder, [])).to.equal(true);
+
+				bindableEvent.Fire();
+
+				expect(shallowEquals(systemOrder, [1, 2, 3])).to.equal(true);
+				manager.stop();
+			}
+
+			let systemOrder1: Array<number> = [];
+
+			const system4 = new MockSystem3();
+			system4.onUpdate = (): void => {
+				systemOrder1.push(3);
+			};
+
+			const system5 = new MockSystem4();
+			system5.before = [MockSystem3];
+			system5.onUpdate = (): void => {
+				systemOrder1.push(2);
+			};
+
+			const system6 = new MockSystem5();
+			system6.before = [MockSystem3, MockSystem4];
+			system6.onUpdate = (): void => {
+				systemOrder1.push(1);
+			};
+
+			const otherOrder1 = [system4, system5, system6];
+			const otherOrder2 = [system6, system5, system4];
+			const otherOrder3 = [system5, system6, system4];
+			const otherOrder4 = [system4, system6, system5];
+			const otherOrder5 = [system6, system4, system5];
+			const otherOrder6 = [system5, system4, system6];
+
+			for (const systems of [
+				otherOrder1,
+				otherOrder2,
+				otherOrder3,
+				otherOrder4,
+				otherOrder5,
+				otherOrder6,
+			]) {
+				systemOrder1 = [];
+
+				manager = new SystemManager(world);
+				void manager.scheduleSystems(systems);
+				void manager.start();
+
+				expect(shallowEquals(systemOrder1, [])).to.equal(true);
+
+				bindableEvent.Fire();
+
+				print(systemOrder1);
+
+				expect(shallowEquals(systemOrder1, [1, 2, 3])).to.equal(true);
 				manager.stop();
 			}
 		});
