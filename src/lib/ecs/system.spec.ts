@@ -258,7 +258,7 @@ export = (): void => {
 		});
 
 		it("be able to call systems in order", () => {
-			const systemOrder: Array<number> = [];
+			let systemOrder: Array<number> = [];
 
 			const system1 = new MockSystem();
 			system1.onUpdate = (): void => {
@@ -278,16 +278,28 @@ export = (): void => {
 				systemOrder.push(1);
 			};
 
-			void manager.scheduleSystems([system2, system1, system3]);
-			void manager.start();
+			const order1 = [system1, system2, system3];
+			const order2 = [system3, system2, system1]; // 2 1 0
+			const order3 = [system2, system3, system1]; // 1 2 0
+			const order4 = [system1, system3, system2];
+			const order5 = [system3, system1, system2];
+			const order6 = [system2, system1, system3];
 
-			expect(shallowEquals(systemOrder, [])).to.equal(true);
+			for (const systems of [order1, order2, order3, order4, order5, order6]) {
+				systemOrder = [];
+				manager = new SystemManager(world);
+				void manager.scheduleSystems(systems);
+				void manager.start();
 
-			bindableEvent.Fire();
+				expect(shallowEquals(systemOrder, [])).to.equal(true);
 
-			expect(shallowEquals(systemOrder, [3, 2, 1])).to.equal(true);
+				bindableEvent.Fire();
 
-			const systemOrder1: Array<number> = [];
+				expect(shallowEquals(systemOrder, [3, 2, 1])).to.equal(true);
+				manager.stop();
+			}
+
+			let systemOrder1: Array<number> = [];
 
 			const system4 = new MockSystem3();
 			system4.onUpdate = (): void => {
@@ -306,15 +318,34 @@ export = (): void => {
 				systemOrder1.push(1);
 			};
 
-			manager = new SystemManager(world);
-			void manager.scheduleSystems([system5, system4, system6]);
-			void manager.start();
+			const otherOrder1 = [system4, system5, system6];
+			const otherOrder2 = [system6, system5, system4];
+			const otherOrder3 = [system5, system6, system4];
+			const otherOrder4 = [system4, system6, system5];
+			const otherOrder5 = [system6, system4, system5];
+			const otherOrder6 = [system5, system4, system6];
 
-			expect(shallowEquals(systemOrder1, [])).to.equal(true);
+			for (const systems of [
+				otherOrder1,
+				otherOrder2,
+				otherOrder3,
+				otherOrder4,
+				otherOrder5,
+				otherOrder6,
+			]) {
+				systemOrder1 = [];
 
-			bindableEvent.Fire();
+				manager = new SystemManager(world);
+				void manager.scheduleSystems(systems);
+				void manager.start();
 
-			expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
+				expect(shallowEquals(systemOrder1, [])).to.equal(true);
+
+				bindableEvent.Fire();
+
+				expect(shallowEquals(systemOrder1, [3, 2, 1])).to.equal(true);
+				manager.stop();
+			}
 		});
 
 		it("not allow systems to be scheduled after each other on different execution groups", async () => {
