@@ -201,7 +201,6 @@ export namespace ComponentInternalCreation {
 
 					// eslint-disable-next-line roblox-ts/no-array-pairs
 					for (const [key, value] of pairs(componentData)) {
-						print(key, value);
 						// TODO: I hate this
 						componentData[key as never][entityId as never] = data[key as never];
 					}
