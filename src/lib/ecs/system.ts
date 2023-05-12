@@ -1,7 +1,7 @@
 import { RunService } from "@rbxts/services";
 
 import { insertionSort } from "../util/array-utils";
-import { BitwiseUtils } from "../util/bitwise-utils";
+import { BitUtils } from "../util/bitwise-utils";
 import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
 
@@ -504,8 +504,14 @@ export class SystemManager {
 	}
 
 	private getSystemDependencies(systems: Array<System>): Array<Array<number>> {
+		// Each system has a mask that represents which systems it depends on.
+		// This is used to determine the order in which systems should be
+		// executed. The mask is stored as an array of numbers, where each
+		// number is a represented as a 32-bit integer. This is because Roblox
+		// doesn't support bitwise operations on numbers larger than 32 bits.
+		// Each bit in the number represents a system, and if the bit is set,
+		// then the system at that index is a dependency of the system.
 		const masks = new Array<Array<number>>(systems.size());
-
 		for (const i of $range(0, systems.size() - 1)) {
 			masks[i] = new Array<number>(math.ceil(systems.size() / 32), 0);
 		}
@@ -539,6 +545,25 @@ export class SystemManager {
 
 					masks[dependencyIndex][math.floor(dependencyIndex / 32)] |= 1 << i % 32;
 				}
+			}
+		}
+
+		const deepDependencies = [...masks];
+		const mergeDependencies = (mask: Array<number>, i: number): void => {
+			for (const bit of BitUtils.bits(mask)) {
+				mergeDependencies(deepDependencies[bit], bit);
+				deepDependencies[i][math.floor(i / 32)] |=
+					deepDependencies[bit][math.floor(bit / 32)];
+			}
+		};
+
+		deepDependencies.forEach((mask, i) => {
+			mergeDependencies(mask, i);
+		});
+
+		for (const i of $range(0, deepDependencies.size() - 1)) {
+			for (const j of $range(0, deepDependencies[i].size() - 1)) {
+				assert((deepDependencies[i][j] & (1 << i)) === 0, `Circular dependency detected!`);
 			}
 		}
 
@@ -577,7 +602,7 @@ export class SystemManager {
 		const dependencies = this.getSystemDependencies(unscheduledSystems);
 
 		const addSystem = (acc: Array<number>, val: Array<number>, i: number): Array<number> => {
-			for (const bit of BitwiseUtils.bits(val)) {
+			for (const bit of BitUtils.bits(val)) {
 				addSystem(acc, dependencies[bit], bit);
 			}
 

@@ -1,6 +1,6 @@
 type Int32 = number;
 
-export namespace BitwiseUtils {
+export namespace BitUtils {
 	/**
 	 * Takes an array of numbers, representative of one large string of bits,
 	 * and iterates over these bits in ascending order, returning the index

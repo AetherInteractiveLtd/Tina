@@ -434,14 +434,71 @@ export = (): void => {
 
 				bindableEvent.Fire();
 
-				print(systemOrder1);
-
 				expect(shallowEquals(systemOrder1, [1, 2, 3])).to.equal(true);
 				manager.stop();
 			}
 		});
 
-		it("not allow systems to be scheduled after each other on different execution groups", async () => {
+		it("not allow cyclic dependencies", () => {
+			const system1 = new MockSystem();
+			system1.after = [MockSystem];
+			system1.onUpdate = (): void => {};
+
+			let errored = false;
+			const promise = manager.scheduleSystems([system1]).catch(() => {
+				errored = true;
+			});
+
+			promise.await();
+
+			expect(promise).to.be.ok();
+			expect(errored).to.equal(true);
+			manager.stop();
+
+			const system2 = new MockSystem1();
+			system2.before = [MockSystem2];
+			system2.onUpdate = (): void => {};
+
+			const system3 = new MockSystem2();
+			system3.before = [MockSystem1];
+			system3.onUpdate = (): void => {};
+
+			let errored1 = false;
+			const promise1 = manager.scheduleSystems([system2, system3]).catch(() => {
+				errored1 = true;
+			});
+
+			promise1.await();
+
+			expect(promise1).to.be.ok();
+			expect(errored1).to.equal(true);
+			manager.stop();
+
+			const system4 = new MockSystem3();
+			system4.before = [MockSystem4];
+			system4.onUpdate = (): void => {};
+
+			const system5 = new MockSystem4();
+			system5.before = [MockSystem5];
+			system5.onUpdate = (): void => {};
+
+			const system6 = new MockSystem5();
+			system6.before = [MockSystem3];
+			system6.onUpdate = (): void => {};
+
+			let errored2 = false;
+			const promise2 = manager.scheduleSystems([system4, system5, system6]).catch(() => {
+				errored2 = true;
+			});
+
+			promise2.await();
+
+			expect(promise2).to.be.ok();
+			expect(errored2).to.equal(true);
+			manager.stop();
+		});
+
+		it("not allow systems to be scheduled after each other on different execution groups", () => {
 			const tempBindableEvent = new Instance("BindableEvent");
 
 			const event = tempBindableEvent.Event;
@@ -458,11 +515,10 @@ export = (): void => {
 
 			let errored = false;
 			const promise = manager.scheduleSystems([system1, system2]).catch(() => {
-				// do nothing
 				errored = true;
 			});
 
-			await promise;
+			promise.await();
 
 			expect(promise).to.be.ok();
 			expect(errored).to.equal(true);
