@@ -225,7 +225,20 @@ export { type Query, ALL, ANY, NOT } from "./lib/ecs/query";
 export { bindEvent, Event } from "./lib/ecs/storage/event";
 export { StorageObject, System } from "./lib/ecs/system";
 export { type World } from "./lib/ecs/world";
-export * from "./lib/types/ecs";
+export {
+	AllComponentTypes,
+	AnyComponent,
+	AnyFlyweight,
+	Component,
+	ComponentData,
+	ComponentId,
+	EntityId,
+	Flyweight,
+	FlyweightData,
+	GetComponentSchema,
+	PartialComponentToKeys,
+	TagComponent,
+} from "./lib/types/ecs";
 
 /** Users namespace */
 export { User, Users } from "./lib/user";

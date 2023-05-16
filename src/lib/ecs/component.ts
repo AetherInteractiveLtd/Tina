@@ -26,11 +26,8 @@ export type Internal<T> = T extends Component<infer K>
 	? object & ComponentIdField
 	: never;
 
-export type ComponentInternal<T extends ComponentData> = Component<T> &
-	ComponentIdField & {
-		observers: Array<Observer>;
-	};
-export type FlyweightInternal<T extends FlyweightData> = Flyweight<T> & ComponentIdField;
+export type ComponentInternal<T extends ComponentData> = Component<T> & ComponentInternalFields;
+export type FlyweightInternal<T extends FlyweightData> = Flyweight<T> & ComponentInternalFields;
 export type TagComponentInternal = object & ComponentIdField;
 
 export type ComponentIdField = {
@@ -38,13 +35,9 @@ export type ComponentIdField = {
 	readonly componentType: ComponentType;
 };
 
-export type ComponentInternalFields<T extends ComponentData> = ComponentMethods<T> &
-	ComponentIdField & {
-		observers: Array<Observer>;
-	};
-
-export type FlyweightInternalFields<T extends FlyweightData> = FlyweightMethods<T> &
-	ComponentIdField;
+export type ComponentInternalFields = ComponentIdField & {
+	observers: Array<Observer>;
+};
 
 export type ComponentMethods<T extends ComponentData> = {
 	/**
@@ -156,68 +149,71 @@ export namespace ComponentInternalCreation {
 		// TODO: Remove hard coded size in favor of tina manifest.
 		const componentData = createComponentArray(schema as T, 10000);
 		const observers = new Array<Observer>();
-		return Sift.Dictionary.merge<[T, ComponentInternalFields<T>]>(componentData, {
-			componentId: getNextComponentId(),
-			componentType: ComponentType.Component,
-			observers: observers,
-			setDefaults: undefined,
-			/**
-			 * Clones all the data from one entity to another. This will
-			 * overwrite any existing data for the target entity. If you want
-			 * to copy specific properties, then you should do this manually.
-			 *
-			 * @param fromEntityId The entity to copy from.
-			 * @param toEntityId The entity to copy to.
-			 */
-			clone(fromEntityId: EntityId, toEntityId: EntityId): void {
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key] of pairs(componentData as ComponentData)) {
-					componentData[key][toEntityId] = componentData[key][fromEntityId];
-				}
+		return Sift.Dictionary.merge<[T, ComponentInternalFields & ComponentMethods<T>]>(
+			componentData,
+			{
+				componentId: getNextComponentId(),
+				componentType: ComponentType.Component,
+				observers: observers,
+				setDefaults: undefined,
+				/**
+				 * Clones all the data from one entity to another. This will
+				 * overwrite any existing data for the target entity. If you want
+				 * to copy specific properties, then you should do this manually.
+				 *
+				 * @param fromEntityId The entity to copy from.
+				 * @param toEntityId The entity to copy to.
+				 */
+				clone(fromEntityId: EntityId, toEntityId: EntityId): void {
+					// eslint-disable-next-line roblox-ts/no-array-pairs
+					for (const [key] of pairs(componentData as ComponentData)) {
+						componentData[key][toEntityId] = componentData[key][fromEntityId];
+					}
+				},
+
+				/**
+				 * Resets the data for the given entity to the default values if
+				 * they are defined.
+				 *
+				 * @param entityId The entity to reset.
+				 */
+				reset(entityId: EntityId): void {
+					if (this.setDefaults === undefined) {
+						return;
+					}
+
+					const data = this.setDefaults();
+
+					// eslint-disable-next-line roblox-ts/no-array-pairs
+					for (const [key] of pairs(componentData as ComponentData)) {
+						componentData[key][entityId] = data[key];
+					}
+				},
+
+				/**
+				 * Sets the data for the given entity.
+				 *
+				 * The set function is used to update any observers that are
+				 * watching the given component. If there are no observers, then it
+				 * is recommended to use the component data directly.
+				 *
+				 * There is no equality check, so it is recommended to only use this
+				 * function when the data has changed.
+				 *
+				 * @param entityId The entity to update.
+				 * @param data The data to update.
+				 */
+				set(entityId: EntityId, data: PartialComponentToKeys<T>): void {
+					for (const observer of observers) {
+						observer.world.observersToUpdate.push([entityId, observer]);
+					}
+
+					for (const [key, value] of pairs(data as ComponentData)) {
+						componentData[key][entityId] = value;
+					}
+				},
 			},
-
-			/**
-			 * Resets the data for the given entity to the default values if
-			 * they are defined.
-			 *
-			 * @param entityId The entity to reset.
-			 */
-			reset(entityId: EntityId): void {
-				if (this.setDefaults === undefined) {
-					return;
-				}
-
-				const data = this.setDefaults();
-
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key] of pairs(componentData as ComponentData)) {
-					componentData[key][entityId] = data[key];
-				}
-			},
-
-			/**
-			 * Sets the data for the given entity.
-			 *
-			 * The set function is used to update any observers that are
-			 * watching the given component. If there are no observers, then it
-			 * is recommended to use the component data directly.
-			 *
-			 * There is no equality check, so it is recommended to only use this
-			 * function when the data has changed.
-			 *
-			 * @param entityId The entity to update.
-			 * @param data The data to update.
-			 */
-			set(entityId: EntityId, data: PartialComponentToKeys<T>): void {
-				for (const observer of observers) {
-					observer.world.observersToUpdate.push([entityId, observer]);
-				}
-
-				for (const [key, value] of pairs(data as ComponentData)) {
-					componentData[key][entityId] = value;
-				}
-			},
-		}) as ComponentInternal<T>;
+		) as ComponentInternal<T>;
 	}
 
 	/**
@@ -260,25 +256,30 @@ export namespace ComponentInternalCreation {
 	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
 		componentInstantiationCheck();
 
-		const flyweight = Sift.Dictionary.merge<[T, FlyweightInternalFields<T>]>(schema, {
-			componentId: getNextComponentId(),
-			componentType: ComponentType.Flyweight,
-			/**
-			 * Sets the data for the flyweight.
-			 *
-			 * The set function is used to explicitly update the flyweight
-			 * data. This a semantic choice to make it clear that the flyweight
-			 * data is being updated
-			 *
-			 * @param data The data to update.
-			 */
-			set(data: Partial<T>): void {
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(data as FlyweightData)) {
-					(flyweight as FlyweightData)[key] = value;
-				}
+		const observers = new Array<Observer>();
+		const flyweight = Sift.Dictionary.merge<[T, FlyweightMethods<T> & ComponentInternalFields]>(
+			schema,
+			{
+				componentId: getNextComponentId(),
+				componentType: ComponentType.Flyweight,
+				observers: observers,
+				/**
+				 * Sets the data for the flyweight.
+				 *
+				 * The set function is used to explicitly update the flyweight
+				 * data. This a semantic choice to make it clear that the flyweight
+				 * data is being updated
+				 *
+				 * @param data The data to update.
+				 */
+				set(data: Partial<T>): void {
+					// eslint-disable-next-line roblox-ts/no-array-pairs
+					for (const [key, value] of pairs(data as FlyweightData)) {
+						(flyweight as FlyweightData)[key] = value;
+					}
+				},
 			},
-		}) as FlyweightInternal<T>;
+		) as FlyweightInternal<T>;
 
 		return flyweight as Flyweight<T>;
 	}
