@@ -1,6 +1,5 @@
 import { RunService } from "@rbxts/services";
 
-import { insertionSort } from "../util/array-utils";
 import { BitUtils } from "../util/bitwise-utils";
 import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
@@ -548,6 +547,7 @@ export class SystemManager {
 			}
 		}
 
+		// TODO: This should just be added to a dev mode.
 		const deepDependencies = [...masks];
 		const mergeDependencies = (mask: Array<number>, i: number): void => {
 			for (const bit of BitUtils.bits(mask)) {
@@ -599,6 +599,10 @@ export class SystemManager {
 	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
 		this.validateSystems(unscheduledSystems);
 
+		unscheduledSystems.sort((a, b) => {
+			return a.priority > b.priority;
+		});
+
 		const dependencies = this.getSystemDependencies(unscheduledSystems);
 
 		const addSystem = (acc: Array<number>, val: Array<number>, i: number): Array<number> => {
@@ -619,9 +623,7 @@ export class SystemManager {
 
 		const systemsOrderedByExplicitDependency = order.map(i => unscheduledSystems[i]);
 
-		return insertionSort(systemsOrderedByExplicitDependency, (a, b) => {
-			return a.priority < b.priority;
-		});
+		return systemsOrderedByExplicitDependency;
 	}
 
 	/**
