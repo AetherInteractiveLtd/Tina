@@ -1,6 +1,5 @@
 import { RunService } from "@rbxts/services";
 
-import { insertionSort } from "../util/array-utils";
 import { BitUtils } from "../util/bitwise-utils";
 import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
