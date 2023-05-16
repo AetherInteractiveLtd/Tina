@@ -1,35 +1,51 @@
-import Sift, { None } from "@rbxts/sift";
+import Sift from "@rbxts/sift";
 import { t } from "@rbxts/t";
 
-import { ComponentId, EntityId } from "../types/ecs";
-import { Immutable } from "../types/readonly";
+import {
+	Component,
+	ComponentData,
+	ComponentId,
+	EntityId,
+	Flyweight,
+	FlyweightData,
+	PartialComponentToKeys,
+	TagComponent,
+} from "../types/ecs";
 import { getNextComponentId, internal_getGlobalEntityId } from "./entity-manager";
 import { Observer } from "./observer";
 
-type Mutable<T> = {
-	-readonly [P in keyof T]: T[P];
+export type ComponentBitmask = Array<number>;
+
+export type Internal<T> = T extends Component<infer K>
+	? ComponentInternal<K>
+	: T extends Flyweight<infer K>
+	? FlyweightInternal<K>
+	: T extends TagComponent
+	? TagComponentInternal
+	: T extends object
+	? object & ComponentIdField
+	: never;
+
+export type ComponentInternal<T extends ComponentData> = Component<T> & ComponentInternalFields;
+export type FlyweightInternal<T extends FlyweightData> = Flyweight<T> & ComponentInternalFields;
+export type TagComponentInternal = object & ComponentIdField;
+
+export type ComponentIdField = {
+	readonly componentId: ComponentId;
+	readonly componentType: ComponentType;
 };
 
-export type AllComponentTypes = AnyComponent | TagComponent | AnyFlyweight;
+export type ComponentInternalFields = ComponentIdField & {
+	observers: Array<Observer>;
+};
 
-export type AnyComponent = Component<Tree<Type>>;
-export type AnyComponentInternal = ComponentInternal<Tree<Type>>;
-
-export type AnyFlyweight = Flyweight<object>;
-
-export type GetComponentSchema<C> = C extends Component<infer T> ? T : never;
-
-export type ComponentData<T extends Tree<Type>> = T extends Array<infer U> ? Array<U> : T;
-
-export type OptionalKeys<T> = { [K in keyof T]: (T[K] extends Array<infer U> ? U : never) | None };
-
-export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
+export type ComponentMethods<T extends ComponentData> = {
 	/**
 	 * The default values for this component. This is used when adding a
 	 * component to an entity; each property that is specified in this object
 	 * will be given to the entity.
 	 */
-	setDefaults?: () => Partial<OptionalKeys<T>>;
+	setDefaults?: () => PartialComponentToKeys<T>;
 	/**
 	 * Clones all the data from one entity to another. This will
 	 * overwrite any existing data for the target entity. If you want
@@ -59,48 +75,21 @@ export type Component<T extends Tree<Type>> = Mutable<ComponentData<T>> & {
 	 * @param entityId The entity to update.
 	 * @param data The data to update.
 	 */
-	set(entityId: EntityId, data: Partial<OptionalKeys<T>>): void;
+	set(entityId: EntityId, data: PartialComponentToKeys<T>): void;
 };
 
-export type ComponentInternal<T extends Tree<Type>> = Component<T> &
-	ComponentIdField & {
-		observers: Array<Observer>;
-	};
-
-export type TagComponent = {
-	[index: string]: never;
+export type FlyweightMethods<T extends FlyweightData> = {
+	set(data: Partial<T>): void;
 };
 
-export type TagComponentInternal = ComponentIdField & {
-	[index: string]: never;
-};
+export enum ComponentType {
+	Component,
+	Flyweight,
+	Tag,
+}
 
-export type Flyweight<T extends object> = Immutable<T> & {
-	set<U extends Partial<T>>(data: U): void;
-};
-
-export type FlyweightInternal<T extends object> = Flyweight<T> & ComponentIdField;
-
-export type Tree<LeafType> = LeafType | { [key: string]: Tree<LeafType> };
-
-export type Type = ArrayConstructor | Array<unknown>;
-
-export type ComponentArray<T extends Tree<Type> = Tree<Type>> = T extends Array<unknown>
-	? T
-	: T extends ArrayConstructor
-	? Array<typeof ComponentTypes>
-	: T extends Exclude<Type, Array<unknown>>
-	? InstanceType<T>
-	: {
-			[key in keyof T]: T[key] extends Tree<Type> ? ComponentArray<T[key]> : never;
-	  };
-
-type ComponentIdField = { readonly componentId: ComponentId };
-
-function Custom<T>(init: () => T): [() => T];
-function Custom<T>(): Array<T>;
-function Custom<T>(init?: () => T): Array<() => T> {
-	return init ? [init] : [];
+function Custom<T>(): Array<T> {
+	return new Array<T>();
 }
 
 /**
@@ -150,26 +139,23 @@ export namespace ComponentInternalCreation {
 	 * one component per world. EntityIds are global, therefore the index of a
 	 * given entity will always match the index of the component data.
 	 *
-	 * TODO: Currently this is hardcoded to use 10000 entities, how can we allow
-	 * this to be configurable? It should also be possible to resize the array if
-	 * required (although this would not be desirable).
-	 *
 	 * @param schema The properties of the component.
 	 *
 	 * @returns A single component instance.
 	 */
-	export function createComponent<T extends Tree<Type>>(schema: T): Component<T> {
+	export function createComponent<T extends ComponentData>(schema: T): Component<T> {
 		componentInstantiationCheck();
 
-		const componentData = createComponentArray<T>(schema as T, 10000);
+		// TODO: Remove hard coded size in favor of tina manifest.
+		const componentData = createComponentArray(schema as T, 10000);
 		const observers = new Array<Observer>();
-		return Sift.Dictionary.merge<[ComponentArray<T>, ComponentInternal<Tree<Type>>]>(
+		return Sift.Dictionary.merge<[T, ComponentInternalFields & ComponentMethods<T>]>(
 			componentData,
 			{
 				componentId: getNextComponentId(),
-				setDefaults: undefined,
+				componentType: ComponentType.Component,
 				observers: observers,
-
+				setDefaults: undefined,
 				/**
 				 * Clones all the data from one entity to another. This will
 				 * overwrite any existing data for the target entity. If you want
@@ -180,9 +166,8 @@ export namespace ComponentInternalCreation {
 				 */
 				clone(fromEntityId: EntityId, toEntityId: EntityId): void {
 					// eslint-disable-next-line roblox-ts/no-array-pairs
-					for (const [key] of pairs(componentData)) {
-						componentData[key as never][toEntityId as never] =
-							componentData[key as never][fromEntityId as never];
+					for (const [key] of pairs(componentData as ComponentData)) {
+						componentData[key][toEntityId] = componentData[key][fromEntityId];
 					}
 				},
 
@@ -200,9 +185,8 @@ export namespace ComponentInternalCreation {
 					const data = this.setDefaults();
 
 					// eslint-disable-next-line roblox-ts/no-array-pairs
-					for (const [key, value] of pairs(componentData)) {
-						// TODO: I hate this
-						componentData[key as never][entityId as never] = data[key as never];
+					for (const [key] of pairs(componentData as ComponentData)) {
+						componentData[key][entityId] = data[key];
 					}
 				},
 
@@ -219,20 +203,17 @@ export namespace ComponentInternalCreation {
 				 * @param entityId The entity to update.
 				 * @param data The data to update.
 				 */
-				set(entityId: EntityId, data: Partial<OptionalKeys<T>>): void {
+				set(entityId: EntityId, data: PartialComponentToKeys<T>): void {
 					for (const observer of observers) {
 						observer.world.observersToUpdate.push([entityId, observer]);
 					}
 
-					// TODO: This currently does not support nested fields.
-
-					// eslint-disable-next-line roblox-ts/no-array-pairs
-					for (const [key, value] of pairs(data)) {
-						componentData[key as never][entityId as never] = value as never;
+					for (const [key, value] of pairs(data as ComponentData)) {
+						componentData[key][entityId] = value;
 					}
 				},
 			},
-		) as unknown as ComponentInternal<T>;
+		) as ComponentInternal<T>;
 	}
 
 	/**
@@ -252,9 +233,12 @@ export namespace ComponentInternalCreation {
 	export function createTag(): TagComponent {
 		componentInstantiationCheck();
 
-		return {
+		const tag: TagComponentInternal = {
 			componentId: getNextComponentId(),
-		} as TagComponentInternal;
+			componentType: ComponentType.Tag,
+		};
+
+		return tag as TagComponent;
 	}
 
 	/**
@@ -269,28 +253,33 @@ export namespace ComponentInternalCreation {
 	 *
 	 * @returns A flyweight component.
 	 */
-	export function createFlyweight<T extends object>(schema: T): Flyweight<T> {
+	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
 		componentInstantiationCheck();
 
-		const flyweight = Sift.Dictionary.merge(schema, {
-			componentId: getNextComponentId(),
-
-			/**
-			 * Sets the data for the flyweight.
-			 *
-			 * The set function is used to explicitly update the flyweight
-			 * data. This a semantic choice to make it clear that the flyweight
-			 * data is being updated
-			 *
-			 * @param data The data to update.
-			 */
-			set<U extends Partial<T>>(data: U): void {
-				// eslint-disable-next-line roblox-ts/no-array-pairs
-				for (const [key, value] of pairs(data)) {
-					flyweight[key as never] = value as never;
-				}
+		const observers = new Array<Observer>();
+		const flyweight = Sift.Dictionary.merge<[T, FlyweightMethods<T> & ComponentInternalFields]>(
+			schema,
+			{
+				componentId: getNextComponentId(),
+				componentType: ComponentType.Flyweight,
+				observers: observers,
+				/**
+				 * Sets the data for the flyweight.
+				 *
+				 * The set function is used to explicitly update the flyweight
+				 * data. This a semantic choice to make it clear that the flyweight
+				 * data is being updated
+				 *
+				 * @param data The data to update.
+				 */
+				set(data: Partial<T>): void {
+					// eslint-disable-next-line roblox-ts/no-array-pairs
+					for (const [key, value] of pairs(data as FlyweightData)) {
+						(flyweight as FlyweightData)[key] = value;
+					}
+				},
 			},
-		}) as FlyweightInternal<T>;
+		) as FlyweightInternal<T>;
 
 		return flyweight as Flyweight<T>;
 	}
@@ -300,34 +289,22 @@ export namespace ComponentInternalCreation {
  * Creates an array of the given size, and fills it with the given default
  * value.
  *
- * @param defaultValue The default value to fill the array with.
+ * @param componentData The default value to fill the array with.
  * @param arraySize The size of the array to create (the total number of
  * allowed entities).
  *
  * @returns The pre-allocated array.
  */
-function createComponentArray<T extends Tree<Type>>(
-	defaultValue: T,
-	arraySize: number,
-): ComponentArray<T> {
-	if (typeOf(defaultValue) === "function") {
-		return new (defaultValue as ArrayConstructor)(arraySize) as ComponentArray<T>;
-	}
+function createComponentArray<T extends ComponentData>(componentData: T, arraySize: number): T {
+	const result: ComponentData = {};
 
-	if (t.array(t.any)(defaultValue) === true) {
-		if ((defaultValue as Array<T>).size() > 0) {
-			return new Array<T>(arraySize, (defaultValue as Array<T>)[0]) as ComponentArray<T>;
+	for (const [key, value] of pairs(componentData as ComponentData)) {
+		if (!t.array(t.any)(value)) {
+			throw `Invalid component data key: ${key}`;
 		}
 
-		return new Array<T>(arraySize) as ComponentArray<T>;
+		result[key] = new Array<typeof value>(arraySize);
 	}
 
-	const result: ComponentArray = {};
-
-	for (const [key, value] of pairs(defaultValue as Record<keyof typeof ComponentTypes, T>)) {
-		// TODO: key should be the user-defined object key
-		result[key] = createComponentArray(value, arraySize);
-	}
-
-	return result as never;
+	return result as T;
 }

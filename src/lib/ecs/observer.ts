@@ -1,6 +1,6 @@
-import { EntityId } from "../types/ecs";
+import { AllComponentTypes, AnyComponent, AnyFlyweight, EntityId } from "../types/ecs";
 import { SparseSet } from "./collections/sparse-set";
-import { AllComponentTypes, AnyComponent, AnyComponentInternal } from "./component";
+import { Internal } from "./component";
 import { World } from "./world";
 
 /**
@@ -29,7 +29,7 @@ export class Observer {
 	public readonly world: World;
 
 	/** The primary component that the observer is watching. */
-	public primaryComponent: AllComponentTypes;
+	public primaryComponent: AnyComponent | AnyFlyweight;
 	/**
 	 * A cache of all entities that match the observer.
 	 *
@@ -41,10 +41,10 @@ export class Observer {
 	 */
 	public storage: SparseSet = new SparseSet();
 
-	constructor(world: World, component: AllComponentTypes) {
+	constructor(world: World, component: AnyComponent | AnyFlyweight) {
 		this.world = world;
 		this.primaryComponent = component;
-		(component as AnyComponentInternal).observers.push(this);
+		(component as Internal<AnyComponent>).observers.push(this);
 	}
 
 	/**

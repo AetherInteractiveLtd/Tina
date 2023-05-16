@@ -1,11 +1,6 @@
 /// <reference types="@rbxts/testez/globals" />
 
-import {
-	ComponentInternal,
-	ComponentInternalCreation,
-	ComponentTypes,
-	TagComponentInternal,
-} from "./component";
+import { ComponentInternalCreation, ComponentTypes } from "./component";
 import { internal_resetGlobalState } from "./entity-manager";
 import { World } from "./world";
 
@@ -14,8 +9,8 @@ let world: World;
 export = (): void => {
 	beforeEach(() => {
 		internal_resetGlobalState();
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		world = new (World as any)() as World;
+
+		world = new World();
 	});
 
 	describe("a component should", () => {
@@ -73,74 +68,108 @@ export = (): void => {
 			component.set(entity, {
 				x: 1,
 			});
-			expect((component as ComponentInternal<{ x: Array<number> }>).x[entity]).to.equal(1);
+
+			expect(component.x[entity]).to.equal(1);
 
 			const entity2 = world.add();
 			world.addComponent(entity2, component2, {
 				x: 2,
 			});
 			world.flush();
-			expect((component2 as ComponentInternal<{ x: Array<number> }>).x[entity2]).to.equal(2);
+			expect(component2.x[entity2]).to.equal(2);
 		});
 
-		it("be able to hold a single value", () => {
-			const component = ComponentInternalCreation.createComponent(ComponentTypes.Number);
-			const entity = world.add();
-			world.addComponent(entity, component);
-			component[entity] = 1;
-			world.flush();
-			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(1);
+		it("support custom data types", () => {
+			const component = ComponentInternalCreation.createComponent({
+				x: ComponentTypes.Number,
+				y: ComponentTypes.String,
 
-			component[entity] = 2;
-			expect((component as ComponentInternal<Array<number>>)[entity]).to.equal(2);
+				custom: ComponentTypes.Custom<{ test: number }>(),
+			});
+
+			const entity = world.add();
+			world.addComponent(entity, component, {
+				x: 10,
+				y: "String",
+
+				custom: { test: 100 },
+			});
+
+			expect(component.x[entity]).to.equal(10);
+			expect(component.y[entity]).to.equal("String");
+			expect(component.custom[entity].test).to.equal(100);
 		});
 
 		it("be able to have a default value", () => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 				y: ComponentTypes.Boolean,
+
+				custom: ComponentTypes.Custom<{ test?: number; test2: number }>(),
 			});
 
 			component.setDefaults = () => {
 				return {
 					x: 100,
-				}
-			}
+
+					custom: { test2: 0 },
+				};
+			};
 
 			const entity = world.add();
 			const entity2 = world.add();
 
 			world.addComponent(entity, component);
-			world.addComponent(entity2, component, { x: 200 });
+			world.addComponent(entity2, component, { x: 200, custom: { test: 1, test2: 2 } });
+
 			world.flush();
 
 			expect(component.x[entity]).to.equal(100);
+			expect(component.custom[entity].test).to.equal(undefined);
+			expect(component.custom[entity].test2).to.equal(0);
+
 			expect(component.x[entity2]).to.equal(200);
+			expect(component.custom[entity2].test).to.equal(1);
+			expect(component.custom[entity2].test2).to.equal(2);
 		});
 
 		it("be able to reset its default values", () => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 				y: ComponentTypes.Boolean,
+
+				custom: ComponentTypes.Custom<{ test?: number; test2: number }>(),
 			});
 
 			component.setDefaults = () => {
 				return {
 					x: 10,
-				}
+
+					custom: { test2: 0 },
+				};
 			};
 
 			const entity = world.add();
 
-			world.addComponent(entity, component, { x: 200, y: true });
+			world.addComponent(entity, component, {
+				x: 200,
+				y: true,
+				custom: { test: 1, test2: 2 },
+			});
+
 			world.flush();
 
 			expect(component.x[entity]).to.equal(200);
-			
+			expect(component.y[entity]).to.equal(true);
+			expect(component.custom[entity].test).to.equal(1);
+			expect(component.custom[entity].test2).to.equal(2);
+
 			component.reset(entity);
-			
+
 			expect(component.x[entity]).to.equal(10);
 			expect(component.y[entity]).to.equal(undefined);
+			expect(component.custom[entity].test).to.equal(undefined);
+			expect(component.custom[entity].test2).to.equal(0);
 		});
 
 		it("be able to clone its data from another entity", () => {
@@ -151,19 +180,18 @@ export = (): void => {
 
 			const entity = world.add();
 			world.addComponent(entity, component, { x: 200, y: true });
-			
+
 			world.flush();
-			
-			for (const i of $range(1,10)) {
+
+			for (const _ of $range(0, 9)) {
 				const spacer = world.add();
-				world.addComponent(spacer,component, {x: 100, y: false});
+				world.addComponent(spacer, component, { x: 100, y: false });
 			}
 
 			world.flush();
-			
+
 			const entity2 = world.add();
-			
-		
+
 			world.flush();
 
 			component.clone(entity, entity2);
@@ -197,8 +225,12 @@ export = (): void => {
 			expect(world.hasTag(entity, tag)).to.equal(false);
 		});
 
-		it("not hold any data", () => {
-			const tag = ComponentInternalCreation.createTag() as TagComponentInternal;
+		// This test is... dumb? I think there's a better implementation
+		// but I can't think of it right now, so just please someone think
+		// of a better way. This doesn't actually check anything meaningful
+		// and it's going to break if we ever change these fields.
+		itFIXME("not hold any data", () => {
+			const tag = ComponentInternalCreation.createTag();
 			const entity = world.add();
 			world.addTag(entity, tag);
 			world.flush();

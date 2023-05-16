@@ -33,13 +33,13 @@ export = (): void => {
 
 			for (const _ of observer.iter()) {
 				calledFn.push(1);
-			};
+			}
 
 			component.set(id, { x: 1 });
 
 			for (const _ of observer.iter()) {
 				calledFn.push(2);
-			};
+			}
 
 			expect(shallowEquals(calledFn, [])).to.equal(true);
 
@@ -47,7 +47,7 @@ export = (): void => {
 
 			for (const _ of observer.iter()) {
 				calledFn.push(3);
-			};
+			}
 
 			expect(shallowEquals(calledFn, [3])).to.equal(true);
 		});
@@ -58,11 +58,11 @@ export = (): void => {
 			const component = ComponentInternalCreation.createComponent({
 				x: ComponentTypes.Number,
 			});
-	
+
 			const component2 = ComponentInternalCreation.createComponent({
 				y: ComponentTypes.Number,
 			});
-	
+
 			const observer = world.createObserver(component).with(component2);
 
 			const id = world.add();
@@ -79,9 +79,9 @@ export = (): void => {
 
 			for (const entityId of observer.iter()) {
 				calledFn.push(entityId);
-			};
+			}
 
 			expect(shallowEquals(calledFn, [id2])).to.equal(true);
 		});
-	});	
+	});
 };
