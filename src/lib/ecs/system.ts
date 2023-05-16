@@ -1,6 +1,7 @@
 import { RunService } from "@rbxts/services";
 
 import { insertionSort } from "../util/array-utils";
+import { BitUtils } from "../util/bitwise-utils";
 import { ConnectionLike, ConnectionUtil, SignalLike } from "../util/connection-util";
 import { World } from "./world";
 
@@ -77,6 +78,8 @@ export interface System {
 export abstract class System {
 	/** An optional set of systems that must be executed before this system */
 	public after?: Array<SystemConstructor>;
+	/** An optional set of systems that must be executed after this system */
+	public before?: Array<SystemConstructor>;
 	/** The time since the system was last called. */
 	public dt = 0;
 	/**
@@ -500,6 +503,73 @@ export class SystemManager {
 		return systemInstance;
 	}
 
+	private getSystemDependencies(systems: Array<System>): Array<Array<number>> {
+		// Each system has a mask that represents which systems it depends on.
+		// This is used to determine the order in which systems should be
+		// executed. The mask is stored as an array of numbers, where each
+		// number is a represented as a 32-bit integer. This is because Roblox
+		// doesn't support bitwise operations on numbers larger than 32 bits.
+		// Each bit in the number represents a system, and if the bit is set,
+		// then the system at that index is a dependency of the system.
+		const masks = new Array<Array<number>>(systems.size());
+		for (const i of $range(0, systems.size() - 1)) {
+			masks[i] = new Array<number>(math.ceil(systems.size() / 32), 0);
+		}
+
+		for (const i of $range(0, systems.size() - 1)) {
+			const system = systems[i];
+
+			if (system.after !== undefined) {
+				for (const dependency of system.after) {
+					const dependencyInstance = this.getSystem(dependency);
+					const dependencyIndex = systems.findIndex(s => s === dependencyInstance);
+					if (dependencyIndex === -1) {
+						throw `System ${tostring(getmetatable(system))} must run after ${tostring(
+							getmetatable(dependency),
+						)} but ${tostring(getmetatable(dependency))} has not been scheduled.`;
+					}
+
+					masks[i][math.floor(i / 32)] |= 1 << dependencyIndex % 32;
+				}
+			}
+
+			if (system.before !== undefined) {
+				for (const dependent of system.before) {
+					const dependencyInstance = this.getSystem(dependent);
+					const dependencyIndex = systems.findIndex(s => s === dependencyInstance);
+					if (dependencyIndex === -1) {
+						throw `System ${tostring(getmetatable(system))} must run before ${tostring(
+							getmetatable(dependent),
+						)} but ${tostring(getmetatable(dependent))} has not been scheduled.`;
+					}
+
+					masks[dependencyIndex][math.floor(dependencyIndex / 32)] |= 1 << i % 32;
+				}
+			}
+		}
+
+		const deepDependencies = [...masks];
+		const mergeDependencies = (mask: Array<number>, i: number): void => {
+			for (const bit of BitUtils.bits(mask)) {
+				mergeDependencies(deepDependencies[bit], bit);
+				deepDependencies[i][math.floor(i / 32)] |=
+					deepDependencies[bit][math.floor(bit / 32)];
+			}
+		};
+
+		deepDependencies.forEach((mask, i) => {
+			mergeDependencies(mask, i);
+		});
+
+		for (const i of $range(0, deepDependencies.size() - 1)) {
+			for (const j of $range(0, deepDependencies[i].size() - 1)) {
+				assert((deepDependencies[i][j] & (1 << i)) === 0, `Circular dependency detected!`);
+			}
+		}
+
+		return masks;
+	}
+
 	/**
 	 * Initializes a given system.
 	 *
@@ -529,29 +599,27 @@ export class SystemManager {
 	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
 		this.validateSystems(unscheduledSystems);
 
-		unscheduledSystems.sort((a, b) => {
-			if (a.after !== undefined && a.after.includes(getmetatable(b) as SystemConstructor)) {
-				if (
-					b.after !== undefined &&
-					b.after.includes(getmetatable(a) as SystemConstructor)
-				) {
-					throw error(
-						`Systems ${tostring(getmetatable(a))} and ${tostring(
-							getmetatable(b),
-						)} are in a circular dependency`,
-					);
-				}
-				return false;
+		const dependencies = this.getSystemDependencies(unscheduledSystems);
+
+		const addSystem = (acc: Array<number>, val: Array<number>, i: number): Array<number> => {
+			for (const bit of BitUtils.bits(val)) {
+				addSystem(acc, dependencies[bit], bit);
 			}
 
-			if (b.after !== undefined && b.after.includes(getmetatable(a) as SystemConstructor)) {
-				return true;
+			if (!acc.includes(i)) {
+				acc.push(i);
 			}
 
-			return false;
-		});
+			return acc;
+		};
 
-		return insertionSort(unscheduledSystems, (a, b) => {
+		const order = dependencies.reduce((acc, val, i) => {
+			return addSystem(acc, val, i);
+		}, [] as Array<number>);
+
+		const systemsOrderedByExplicitDependency = order.map(i => unscheduledSystems[i]);
+
+		return insertionSort(systemsOrderedByExplicitDependency, (a, b) => {
 			return a.priority < b.priority;
 		});
 	}
@@ -657,16 +725,15 @@ export class SystemManager {
 	private validateSystems(systems: Array<System>): void {
 		for (const system of systems) {
 			if (system.after === undefined) {
-				return;
+				continue;
 			}
 
 			for (const afterSystem of system.after) {
 				const afterSystemInstance = this.getSystem(afterSystem);
 				if (system.executionGroup !== afterSystemInstance.executionGroup) {
-					const msg = `System ${tostring(getmetatable(system))} and ${tostring(
+					throw `System ${tostring(getmetatable(system))} and ${tostring(
 						afterSystem,
 					)} are in different execution groups`;
-					throw msg;
 				}
 			}
 		}
