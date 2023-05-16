@@ -548,6 +548,7 @@ export class SystemManager {
 			}
 		}
 
+		// TODO: This should just be added to a dev mode.
 		const deepDependencies = [...masks];
 		const mergeDependencies = (mask: Array<number>, i: number): void => {
 			for (const bit of BitUtils.bits(mask)) {
@@ -599,6 +600,10 @@ export class SystemManager {
 	private orderSystemsByExecutionGroup(unscheduledSystems: Array<System>): Array<System> {
 		this.validateSystems(unscheduledSystems);
 
+		unscheduledSystems.sort((a, b) => {
+			return a.priority > b.priority;
+		});
+
 		const dependencies = this.getSystemDependencies(unscheduledSystems);
 
 		const addSystem = (acc: Array<number>, val: Array<number>, i: number): Array<number> => {
@@ -619,9 +624,7 @@ export class SystemManager {
 
 		const systemsOrderedByExplicitDependency = order.map(i => unscheduledSystems[i]);
 
-		return insertionSort(systemsOrderedByExplicitDependency, (a, b) => {
-			return a.priority < b.priority;
-		});
+		return systemsOrderedByExplicitDependency;
 	}
 
 	/**

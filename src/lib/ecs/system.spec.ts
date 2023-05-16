@@ -145,6 +145,44 @@ export = (): void => {
 			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
 		});
 
+		it("have its explicit dependencies used over its priority order", () => {
+			const systemOrder: Array<number> = [];
+
+			const system1 = new MockSystem();
+			system1.priority = math.huge;
+			system1.onUpdate = (): void => {
+				systemOrder.push(2);
+			};
+
+			const system2 = new MockSystem1();
+			system2.priority = -math.huge;
+			system2.before = [MockSystem];
+			system2.onUpdate = (): void => {
+				systemOrder.push(1);
+			};
+
+			const system3 = new MockSystem2();
+			system3.priority = -math.huge;
+			system3.onUpdate = (): void => {
+				systemOrder.push(4);
+			};
+
+			const system4 = new MockSystem3();
+			system4.priority = 0;
+			system4.after = [MockSystem1];
+			system4.onUpdate = (): void => {
+				systemOrder.push(3);
+			};
+
+			void manager.scheduleSystems([system1, system2, system3, system4]);
+			void manager.start();
+
+			expect(shallowEquals(systemOrder, [])).to.equal(true);
+
+			bindableEvent.Fire();
+			expect(shallowEquals(systemOrder, [1, 2, 3, 4])).to.equal(true);
+		});
+
 		it("allow non-default execution groups", () => {
 			const tempBindableEvent = new Instance("BindableEvent");
 
