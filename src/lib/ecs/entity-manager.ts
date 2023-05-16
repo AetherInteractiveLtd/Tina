@@ -121,7 +121,7 @@ export class EntityManager {
 	}
 
 	/** @hidden */
-	public updatePending(denseArray: Array<number>): void {
+	public updatePending(denseArray: Array<EntityId>): void {
 		for (const entityId of denseArray) {
 			if (!this.alive(entityId)) {
 				return;

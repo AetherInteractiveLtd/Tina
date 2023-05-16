@@ -1,14 +1,14 @@
-import { ComponentId, EntityId } from "../types/ecs";
+import { AllComponentTypes, ComponentId, EntityId } from "../types/ecs";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { AllComponentTypes, AnyComponentInternal } from "./component";
+import { ComponentBitmask, Internal } from "./component";
 import { World } from "./world";
 
 export type RawQuery =
 	| { op: typeof ALL | typeof ANY; dt: Array<RawQuery | AllComponentTypes> }
 	| { op: typeof NOT; dt: RawQuery | AllComponentTypes };
 
-type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<number> };
+type MLeaf = { op: typeof ALL | typeof ANY; dt: Array<ComponentId> };
 type Group = { op: typeof ALL | typeof ANY; dt: [MLeaf, ...Array<QueryMask>] };
 type Not = { op: typeof NOT; dt: QueryMask };
 type QueryMask = Group | Not | MLeaf;
@@ -137,7 +137,7 @@ export class Query {
 	 *
 	 * @returns True if the query mask matches the archetype mask.
 	 */
-	public static match(target: Array<ComponentId>, mask: QueryMask): boolean {
+	public static match(target: ComponentBitmask, mask: QueryMask): boolean {
 		if (typeOf((mask.dt as Array<number>)[0]) === "number") {
 			return Query.partial(target, mask as MLeaf);
 		}
@@ -166,23 +166,19 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entity that has been added to the query since
-	 * the last time this method was called.
+	 * Iterate over all entities that have entered the query since the last
+	 * time this method was called.
 	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over. Please note that this will
-	 * still flush the contents of the query, so the next call to this method
-	 * will not iterate over the same entities.
-	 *
-	 * As this method flushes the contents of the query, it can only be used
-	 * once. If you need to iterate over the same entities multiple times,
-	 * although unconventional, you can use the `Query.entered.dense` array
-	 * directly instead.
-	 *
-	 * This cannot be iterated over multiple times as it will clear the contents
-	 * of the entered set. If you need to iterate over the same set multiple
-	 * times, although unconventional, you can can use the `Query.entered.dense`
-	 * array directly instead.
+	 * @note This cannot be iterated over multiple times as it will clear the
+	 * contents of the entered set. If you need to iterate over the same set
+	 * multiple times, although unconventional, you can iterate over the dense
+	 * array directly:
+	 * ```ts
+	 * const entered = query.entered.dense;
+	 * for (const entityId of entered) {
+	 *     // ...
+	 * }
+	 * ```
 	 */
 	public *enteredQuery(): Generator<EntityId> {
 		for (const entityId of this.entered.dense) {
@@ -193,23 +189,19 @@ export class Query {
 	}
 
 	/**
-	 * Runs a callback for each entity that has been removed from the query
-	 * since the last time this method was called.
+	 * Iterate over all entities that have exited the query since the last
+	 * time this method was called.
 	 *
-	 * If the callback returns `false`, the iteration will stop, and no other
-	 * entities in this query will be iterated over. Please note that this will
-	 * still flush the contents of the query, so the next call to this method
-	 * will not iterate over the same entities.
-	 *
-	 * As this method flushes the contents of the query, it can only be used
-	 * once. If you need to iterate over the same entities multiple times,
-	 * although unconventional, you can use the `Query.exited.dense` array
-	 * directly instead.
-	 *
-	 * This cannot be iterated over multiple times as it will clear the contents
-	 * of the entered set. If you need to iterate over the same set multiple
-	 * times, although unconventional, you can can use the `Query.entered.dense`
-	 * array directly instead.
+	 * @note This cannot be iterated over multiple times as it will clear the
+	 * contents of the exited set. If you need to iterate over the same set
+	 * multiple times, although unconventional, you can iterate over the dense
+	 * array directly:
+	 * ```ts
+	 * const exited = query.exited.dense;
+	 * for (const entityId of exited) {
+	 *     // ...
+	 * }
+	 * ```
 	 */
 	public *exitedQuery(): Generator<EntityId> {
 		for (const entityId of this.exited.dense) {
@@ -291,30 +283,24 @@ export class Query {
 	 */
 	private createQuery = (raw: RawQuery): QueryMask => {
 		if (raw.op === NOT) {
-			return { op: raw.op, dt: this.createQuery(raw.dt as RawQuery) } as QueryMask;
+			return { op: raw.op, dt: this.createQuery(raw.dt as RawQuery) };
 		}
 
-		const numbers: Array<number> = [];
-		const ret: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: [] }] as [MLeaf];
-		for (const i of raw.dt as Array<RawQuery>) {
+		const numbers = new Array<number>();
+		const result: [MLeaf, ...Array<QueryMask>] = [{ op: raw.op, dt: [] }];
+		for (const i of raw.dt as Array<RawQuery | AllComponentTypes>) {
 			if ("componentId" in i) {
-				const componentId = (i as unknown as AnyComponentInternal).componentId;
-				if (componentId !== undefined) {
-					numbers.push(componentId);
-				} else {
-					// TODO: Better error message
-					throw `A Component has not been initialized properly.`;
-				}
+				numbers.push((i as Internal<AllComponentTypes>).componentId);
 			} else {
-				ret.push(this.createQuery(i));
+				result.push(this.createQuery(i as RawQuery));
 			}
 		}
 
-		ret[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
+		result[0].dt = new Array<number>(math.ceil((math.max(-1, ...numbers) + 1) / 32), 0);
 		for (const i of numbers) {
-			ret[0].dt[math.floor(i / 32)] |= 1 << i % 32;
+			result[0].dt[math.floor(i / 32)] |= 1 << i % 32;
 		}
 
-		return { op: raw.op, dt: ret } as QueryMask;
+		return { op: raw.op, dt: result };
 	};
 }
