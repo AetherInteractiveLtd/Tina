@@ -726,5 +726,7 @@ export class World {
 		for (const [entityId, observer] of this.observersToUpdate) {
 			observer.storage.add(entityId);
 		}
+
+		this.observersToUpdate = [];
 	}
 }
