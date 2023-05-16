@@ -4,7 +4,7 @@
 
 <div align="center">
 
-![NPM](https://img.shields.io/npm/l/@rbxts/tina?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/AetherInteractiveLtd/Tina/main.yml?style=flat-square) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/AetherInteractiveLtd/Tina?label=size&style=flat-square) ![stable](https://img.shields.io/badge/stable-1.0.0-informational?style=flat-square)
+![NPM](https://img.shields.io/npm/l/@rbxts/tina?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/AetherInteractiveLtd/Tina/main.yml?style=flat-square) ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/AetherInteractiveLtd/Tina?label=size&style=flat-square) ![npm (scoped)](https://img.shields.io/npm/v/@rbxts/tina?label=version&style=flat-square)
 
 </div>
 
