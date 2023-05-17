@@ -437,7 +437,7 @@ export = (): void => {
 				expect(callCount).to.equal(1);
 			});
 
-			itFOCUS("not be present on next iteration of query if the entity is removed", () => {
+			it("not be present on next iteration of query if the entity is removed", () => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
