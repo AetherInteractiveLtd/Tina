@@ -92,6 +92,7 @@ export class EntityManager {
 				query.exited.add(entityId);
 			}
 			this.entities[entityId].sparseSet.remove(entityId);
+			this.entities[entityId] = this.empty;
 			reusableEntityIds.add(entityId);
 			this.size--;
 		}

@@ -38,7 +38,7 @@ export = (): void => {
 		}
 	});
 
-	describe("A query should", () => {
+	describe("A query should", (): void => {
 		it("should throw if no arguments provided", () => {
 			expect(() => {
 				ALL();
@@ -158,7 +158,7 @@ export = (): void => {
 
 				tempWorld.flush();
 
-				const query = tempWorld.createQuery(ALL(component));
+				const query = tempWorld.createQuery(component);
 
 				expect(query.size()).to.equal(2);
 
@@ -181,13 +181,9 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
-				const component1 = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component1 = ComponentInternalCreation.createComponent({});
 
 				const id1 = tempWorld.add();
 				const id2 = tempWorld.add();
@@ -213,13 +209,9 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
-				const component1 = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component1 = ComponentInternalCreation.createComponent({});
 
 				const id1 = tempWorld.add();
 
@@ -292,13 +284,11 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
 				const id = tempWorld.add();
 
-				const query = tempWorld.createQuery(ALL(component));
+				const query = tempWorld.createQuery(component);
 
 				tempWorld.addComponent(id, component);
 
@@ -323,13 +313,9 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
-				const component1 = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component1 = ComponentInternalCreation.createComponent({});
 
 				const id = tempWorld.add();
 
@@ -363,13 +349,11 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
 				const id = tempWorld.add();
 
-				const query = tempWorld.createQuery(ALL(component));
+				const query = tempWorld.createQuery(component);
 
 				tempWorld.addComponent(id, component);
 				tempWorld.flush();
@@ -427,13 +411,11 @@ export = (): void => {
 				internal_resetGlobalState();
 				const tempWorld = new World();
 
-				const component = ComponentInternalCreation.createComponent({
-					componentData: [],
-				});
+				const component = ComponentInternalCreation.createComponent({});
 
 				const id = tempWorld.add();
 
-				const query = tempWorld.createQuery(ALL(component));
+				const query = tempWorld.createQuery(component);
 
 				tempWorld.addComponent(id, component);
 				tempWorld.flush();
@@ -445,6 +427,38 @@ export = (): void => {
 				for (const _entityId of query.exitedQuery()) {
 					callCount += 1;
 				}
+
+				expect(callCount).to.equal(1);
+
+				for (const _entityId of query.exitedQuery()) {
+					callCount += 1;
+				}
+
+				expect(callCount).to.equal(1);
+			});
+
+			itFOCUS("not be present on next iteration of query if the entity is removed", () => {
+				internal_resetGlobalState();
+				const tempWorld = new World();
+
+				const component = ComponentInternalCreation.createComponent({});
+				const id = tempWorld.add();
+
+				const query = tempWorld.createQuery(component);
+
+				tempWorld.addComponent(id, component);
+				tempWorld.flush();
+				tempWorld.remove(id);
+				tempWorld.flush();
+
+				let callCount = 0;
+
+				for (const entityId of query.exitedQuery()) {
+					callCount += 1;
+					tempWorld.remove(entityId);
+				}
+
+				tempWorld.flush();
 
 				expect(callCount).to.equal(1);
 
