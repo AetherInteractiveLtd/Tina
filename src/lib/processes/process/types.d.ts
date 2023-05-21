@@ -19,9 +19,4 @@ export interface IProcessImplementation {
 	 * @returns A string for it's status.
 	 */
 	status(): TProcessStatus;
-
-	/**
-	 * @hidden (internal usage, DO NOT USE)
-	 */
-	_update(dt: number): void;
 }

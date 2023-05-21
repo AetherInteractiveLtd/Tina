@@ -1,20 +1,14 @@
-import { EventEmitter } from "../../events";
+import { ExecutionGroup } from "../../ecs/system";
 import { Scheduler } from "../scheduler";
 import { TProcessStatus } from "../scheduler/types";
 import { IProcessImplementation } from "./types";
 
-interface IProcessEvent {
-	_default: [dt: number];
-}
-
-export class Process extends EventEmitter<IProcessEvent> implements IProcessImplementation {
+export abstract class Process implements IProcessImplementation {
 	public lastTick: number = os.clock();
 
 	public ticksPerSecond?: number;
 
-	constructor(public readonly name: string, public readonly executionGroup?: RBXScriptSignal) {
-		super();
-
+	constructor(public readonly name: string, public executionGroup?: ExecutionGroup) {
 		Scheduler.add(name, this);
 	}
 
@@ -30,7 +24,9 @@ export class Process extends EventEmitter<IProcessEvent> implements IProcessImpl
 		return Scheduler.status(this.name);
 	}
 
-	public _update(dt: number): void {
-		return this.emit("_default", dt);
+	public delete(): void {
+		return Scheduler.remove(this.name);
 	}
+
+	public abstract update(dt: number): void;
 }

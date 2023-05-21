@@ -1,5 +1,6 @@
 import { RunService } from "@rbxts/services";
 
+import { ConnectionLike, ConnectionUtil } from "../../util/connection-util";
 import { Process } from "../process";
 import { TProcessStatus } from "./types";
 
@@ -7,7 +8,7 @@ export namespace Scheduler {
 	const processes: Map<string, Process> = new Map();
 	const suspended: Map<string, number> = new Map();
 
-	const connections: Map<string, RBXScriptConnection> = new Map();
+	const connections: Map<string, ConnectionLike> = new Map();
 
 	/**
 	 * Updates current process.
@@ -34,20 +35,20 @@ export namespace Scheduler {
 		if (suspended.has(name)) {
 			const leftTicks = suspended.get(name)! - 1;
 
-			if (leftTicks <= 0) {
-				suspended.delete(name);
-			} else {
+			if (leftTicks > 0) {
 				return void suspended.set(name, leftTicks);
 			}
+
+			suspended.delete(name);
 		}
 
-		return process._update(dt);
+		return process.update(dt);
 	};
 
 	export function add(name: string, process: Process): void {
 		return void task.defer(() => {
 			if (process.executionGroup) {
-				const connection = process.executionGroup.Connect((dt: number) =>
+				const connection = ConnectionUtil.connect(process.executionGroup, (dt: number) =>
 					update(name, process, dt),
 				);
 
@@ -59,8 +60,10 @@ export namespace Scheduler {
 	}
 
 	export function remove(name: string): void {
-		connections.get(name)?.Disconnect();
-		connections.delete(name); // Doesn't matter if it exists or not, it's just setting it to nil
+		if (connections.has(name)) {
+			ConnectionUtil.disconnect(connections.get(name)!);
+			connections.delete(name);
+		}
 
 		return void task.defer(() => processes.delete(name));
 	}
@@ -84,7 +87,9 @@ export namespace Scheduler {
 	export function status(name: string): TProcessStatus {
 		const status = processes.has(name) || connections.has(name);
 
-		return status ? "active" : !status ? "dead" : suspended.has(name) ? "suspended" : "unknown";
+		print(processes.has(name), connections.has(name));
+
+		return suspended.has(name) ? "suspended" : status ? "active" : !status ? "dead" : "unknown";
 	}
 
 	/**
