@@ -12,8 +12,9 @@ import { Internals } from "./lib/net/internal";
 import { Client } from "./lib/net/util/client";
 import { Identifiers } from "./lib/net/util/identifiers";
 import { Server } from "./lib/net/util/server";
-import { Process } from "./lib/process/process";
-import Scheduler from "./lib/process/scheduler";
+import { Process } from "./lib/processes/process";
+import { IProcessImplementation } from "./lib/processes/process/types";
+import { Scheduler } from "./lib/processes/scheduler";
 import { Component, ComponentData, Flyweight, FlyweightData, TagComponent } from "./lib/types/ecs";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
@@ -92,14 +93,18 @@ namespace Tina {
 	 * Used to add new processes to the processor.
 	 *
 	 * @param name process name to add.
+	 * @param executionGroup your own executionGroup to run the process on.
 	 * @returns a Process object.
 	 */
-	export function process(name: string): Process {
-		if (Process.processes.has(name)) {
-			return Process.processes.get(name)!;
+	export function process(
+		name: string,
+		executionGroup?: RBXScriptSignal,
+	): IProcessImplementation {
+		if (Scheduler.has(name)) {
+			return Scheduler.get(name)!;
 		}
 
-		return new Process(name, Scheduler);
+		return new Process(name, executionGroup);
 	}
 
 	export const log: Scope = Logger.scope("TINA");
@@ -245,6 +250,10 @@ export { User, Users } from "./lib/user";
 
 /** State namespace */
 export { State } from "./lib/state";
+
+/** Process class and scheduler namespace */
+export { Process } from "./lib/processes/process";
+export { Scheduler } from "./lib/processes/scheduler";
 
 /** Container export */
 export { Container } from "./lib/container";

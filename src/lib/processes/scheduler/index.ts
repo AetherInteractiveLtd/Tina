@@ -65,6 +65,14 @@ export namespace Scheduler {
 		return void task.defer(() => processes.delete(name));
 	}
 
+	export function get(name: string): Process | undefined {
+		return processes.get(name);
+	}
+
+	export function has(name: string): boolean {
+		return processes.has(name);
+	}
+
 	export function suspend(name: string, ticks: number): void {
 		return void suspended.set(name, ticks);
 	}
