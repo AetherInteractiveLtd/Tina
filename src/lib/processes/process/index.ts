@@ -1,32 +1,53 @@
-import { ExecutionGroup } from "../../ecs/system";
-import { Scheduler } from "../scheduler";
-import { TProcessStatus } from "../scheduler/types";
-import { IProcessImplementation } from "./types";
+import { Scheduler, TinaScheduler } from "../scheduler";
+import { ProcessStatus } from "./types";
 
-export abstract class Process implements IProcessImplementation {
-	public lastTick: number = os.clock();
+export abstract class Process {
+	public scheduler: Scheduler;
 
-	public ticksPerSecond?: number;
-
-	constructor(public readonly name: string, public executionGroup?: ExecutionGroup) {
-		Scheduler.add(name, this);
+	constructor(scheduler?: Scheduler) {
+		this.scheduler = scheduler ?? TinaScheduler;
+		this.scheduler.schedule(this);
 	}
 
+	/**
+	 * Suspends current process by the given ticks (defaults to 1).
+	 *
+	 * @param ticks amount of ticks.
+	 */
+	public suspend(ticks = 1): void {
+		return this.scheduler.suspend(this, ticks);
+	}
+
+	/**
+	 * Resumes current process.
+	 */
 	public resume(): void {
-		return Scheduler.unsuspend(this.name);
+		return this.scheduler.unsuspend(this);
 	}
 
-	public suspend(ticks: number): void {
-		return Scheduler.suspend(this.name, ticks);
+	/**
+	 * Returns current process Status.
+	 *
+	 * @returns a string indicating it's current status.
+	 */
+	public status(): ProcessStatus {
+		const isActive = this.scheduler.has(this);
+		const isSuspended = this.scheduler.isSuspended(this);
+
+		return isSuspended ? "suspended" : isActive ? "active" : !isActive ? "dead" : "unknown";
 	}
 
-	public status(): TProcessStatus {
-		return Scheduler.status(this.name);
-	}
-
+	/**
+	 * Deletes current process, not anymore needed.
+	 */
 	public delete(): void {
-		return Scheduler.remove(this.name);
+		return this.scheduler.unschedule(this);
 	}
 
+	/**
+	 * Method invoked every tick (specified on the scheduler)
+	 *
+	 * @param dt delta time between ticks.
+	 */
 	public abstract update(dt: number): void;
 }
