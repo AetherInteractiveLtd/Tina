@@ -2,10 +2,9 @@ import { Scheduler, TinaScheduler } from "../scheduler";
 import { ProcessStatus } from "./types";
 
 export abstract class Process {
-	public scheduler: Scheduler;
+	public scheduler: Scheduler = TinaScheduler;
 
-	constructor(scheduler?: Scheduler) {
-		this.scheduler = scheduler ?? TinaScheduler;
+	constructor() {
 		this.scheduler.schedule(this);
 	}
 
