@@ -12,8 +12,6 @@ import { Internals } from "./lib/net/internal";
 import { Client } from "./lib/net/util/client";
 import { Identifiers } from "./lib/net/util/identifiers";
 import { Server } from "./lib/net/util/server";
-import { Process } from "./lib/process/process";
-import Scheduler from "./lib/process/scheduler";
 import { Component, ComponentData, Flyweight, FlyweightData, TagComponent } from "./lib/types/ecs";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
@@ -86,20 +84,6 @@ namespace Tina {
 	 */
 	export function core(): TinaCore {
 		return new TinaCore();
-	}
-
-	/**
-	 * Used to add new processes to the processor.
-	 *
-	 * @param name process name to add.
-	 * @returns a Process object.
-	 */
-	export function process(name: string): Process {
-		if (Process.processes.has(name)) {
-			return Process.processes.get(name)!;
-		}
-
-		return new Process(name, Scheduler);
 	}
 
 	export const log: Scope = Logger.scope("TINA");
@@ -245,6 +229,10 @@ export { User, Users } from "./lib/user";
 
 /** State namespace */
 export { State } from "./lib/state";
+
+/** Process class and scheduler namespace */
+export { Process } from "./lib/processes/process";
+export { Scheduler } from "./lib/processes/scheduler";
 
 /** Container export */
 export { Container } from "./lib/container";
