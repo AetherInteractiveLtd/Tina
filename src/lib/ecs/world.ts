@@ -15,7 +15,7 @@ import {
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { ComponentBitmask, ComponentType, Internal } from "./component";
+import { ComponentBitmask, Internal } from "./component";
 import { EntityManager } from "./entity-manager";
 import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,16 +65,6 @@ export class World {
 	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
 
-	/**
-	 * Entities that have been queued to have their component data removed from this frame.
-	 * @hidden
-	 */
-	public componentDataToRemoveLater: Array<[EntityId, Internal<AllComponentTypes>]> = [];
-	/**
-	 * Entities that have been queued to have their component data removed from last frame.
-	 * @hidden
-	 */
-	public componentDataToRemoveNow: Array<[EntityId, Internal<AllComponentTypes>]> = [];
 	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
 	/**
@@ -236,39 +226,6 @@ export class World {
 		}
 
 		this.flush();
-	}
-
-	/**
-	 * Disables a component on an entity.
-	 *
-	 * This will keep the component on the entity, but will prevent it from
-	 * being matched by queries. This is useful when you wish to preserve the
-	 * state of a component.
-	 *
-	 * @param entityId The id of the entity to disable the component on.
-	 * @param component The component to disable.
-	 *
-	 * @returns The world instance to allow for method chaining.
-	 */
-	public disableComponent(entityId: EntityId, component: AllComponentTypes): this {
-		if (!this.has(entityId)) {
-			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
-		}
-
-		this.componentsToUpdate.add(entityId);
-
-		debug.profilebegin("World:disableComponent");
-		{
-			const componentId: number = (component as Internal<AllComponentTypes>).componentId;
-			if (
-				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
-			) {
-				this.updateArchetype(entityId, componentId);
-			}
-		}
-		debug.profileend();
-
-		return this;
 	}
 
 	/**
@@ -459,11 +416,22 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeComponent(entityId: EntityId, component: AnyComponent): this {
-		this.disableComponent(entityId, component);
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
+		}
 
-		// schedule data to be removed somewhere else
+		this.componentsToUpdate.add(entityId);
 
-		this.componentDataToRemoveLater.push([entityId, component as Internal<AllComponentTypes>]);
+		debug.profilebegin("World:removeComponent");
+		{
+			const componentId: number = (component as Internal<AllComponentTypes>).componentId;
+			if (
+				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
+			) {
+				this.updateArchetype(entityId, componentId);
+			}
+		}
+		debug.profileend();
 
 		return this;
 	}
@@ -497,7 +465,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeTag(entityId: EntityId, tag: TagComponent): this {
-		return this.disableComponent(entityId, tag);
+		return this.removeComponent(entityId, tag as unknown as AnyComponent);
 	}
 
 	/**
