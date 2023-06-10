@@ -6,8 +6,6 @@ import {
 	ComponentData,
 	ComponentId,
 	EntityId,
-	Flyweight,
-	FlyweightData,
 	PartialComponentToKeys,
 	TagComponent,
 } from "../types/ecs";
@@ -18,8 +16,6 @@ export type ComponentBitmask = Array<number>;
 
 export type Internal<T> = T extends Component<infer K>
 	? ComponentInternal<K>
-	: T extends Flyweight<infer K>
-	? FlyweightInternal<K>
 	: T extends TagComponent
 	? TagComponentInternal
 	: T extends object
@@ -27,7 +23,6 @@ export type Internal<T> = T extends Component<infer K>
 	: never;
 
 export type ComponentInternal<T extends ComponentData> = Component<T> & ComponentInternalFields;
-export type FlyweightInternal<T extends FlyweightData> = Flyweight<T> & ComponentInternalFields;
 export type TagComponentInternal = object & ComponentIdField;
 
 export type ComponentIdField = {
@@ -78,13 +73,8 @@ export type ComponentMethods<T extends ComponentData> = {
 	set(entityId: EntityId, data: PartialComponentToKeys<T>): void;
 };
 
-export type FlyweightMethods<T extends FlyweightData> = {
-	set(data: Partial<T>): void;
-};
-
 export enum ComponentType {
 	Component,
-	Flyweight,
 	Tag,
 }
 
@@ -239,49 +229,6 @@ export namespace ComponentInternalCreation {
 		};
 
 		return tag as TagComponent;
-	}
-
-	/**
-	 * Creates a flyweight component; a component that holds data that is
-	 * shared between all entities that have the component.
-	 *
-	 * Flyweight components are useful for minimizing memory usage by only
-	 * storing one set of data for a given component. Rather than having an
-	 * array of data for each entity, there is only a single set of data.
-	 *
-	 * @param schema The properties of the component.
-	 *
-	 * @returns A flyweight component.
-	 */
-	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
-		componentInstantiationCheck();
-
-		const observers = new Array<Observer>();
-		const flyweight = Sift.Dictionary.merge<[T, FlyweightMethods<T> & ComponentInternalFields]>(
-			schema,
-			{
-				componentId: getNextComponentId(),
-				componentType: ComponentType.Flyweight,
-				observers: observers,
-				/**
-				 * Sets the data for the flyweight.
-				 *
-				 * The set function is used to explicitly update the flyweight
-				 * data. This a semantic choice to make it clear that the flyweight
-				 * data is being updated
-				 *
-				 * @param data The data to update.
-				 */
-				set(data: Partial<T>): void {
-					// eslint-disable-next-line roblox-ts/no-array-pairs
-					for (const [key, value] of pairs(data as FlyweightData)) {
-						(flyweight as FlyweightData)[key] = value;
-					}
-				},
-			},
-		) as FlyweightInternal<T>;
-
-		return flyweight as Flyweight<T>;
 	}
 }
 

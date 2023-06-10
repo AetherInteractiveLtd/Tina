@@ -5,12 +5,10 @@ import Tina from "../..";
 import {
 	AllComponentTypes,
 	AnyComponent,
-	AnyFlyweight,
 	Component,
 	ComponentData,
 	ComponentId,
 	EntityId,
-	FlyweightData,
 	PartialComponentToKeys,
 	TagComponent,
 } from "../types/ecs";
@@ -120,10 +118,6 @@ export class World {
 		component: Component<T>,
 		data?: PartialComponentToKeys<T>,
 	): this;
-	public addComponent<T extends FlyweightData>(
-		entityId: EntityId,
-		component: AnyFlyweight<T>,
-	): this;
 	public addComponent<T extends ComponentData>(
 		entityId: EntityId,
 		component: Component<T>,
@@ -184,7 +178,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver(component: AnyComponent | AnyFlyweight): Observer {
+	public createObserver(component: AnyComponent): Observer {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 
@@ -388,7 +382,7 @@ export class World {
 	 *
 	 * @returns true if the entity has the given component.
 	 */
-	public hasComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): boolean {
+	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
 		const componentId = (component as Internal<AllComponentTypes>).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
@@ -464,13 +458,9 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
+	public removeComponent(entityId: EntityId, component: AnyComponent): this {
 		this.disableComponent(entityId, component);
 
-		if ((component as Internal<AllComponentTypes>).componentType !== ComponentType.Component) {
-			// Component is a Flyweight
-			return this;
-		}
 		// schedule data to be removed somewhere else
 
 		this.componentDataToRemoveLater.push([entityId, component as Internal<AllComponentTypes>]);

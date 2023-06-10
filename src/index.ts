@@ -14,7 +14,7 @@ import { Identifiers } from "./lib/net/util/identifiers";
 import { Server } from "./lib/net/util/server";
 import { Process } from "./lib/process/process";
 import Scheduler from "./lib/process/scheduler";
-import { Component, ComponentData, Flyweight, FlyweightData, TagComponent } from "./lib/types/ecs";
+import { Component, ComponentData, TagComponent } from "./lib/types/ecs";
 import { Users } from "./lib/user";
 import { DefaultUserDeclaration } from "./lib/user/default/types";
 
@@ -185,22 +185,6 @@ namespace Tina {
 	export function createTag(): TagComponent {
 		return ComponentInternalCreation.createTag();
 	}
-
-	/**
-	 * Creates a flyweight component; a component that holds data that is
-	 * shared between all entities that have the component.
-	 *
-	 * Flyweight components are useful for minimizing memory usage by only
-	 * storing one set of data for a given component. Rather than having an
-	 * array of data for each entity, there is only a single set of data.
-	 *
-	 * @param schema The properties of the component.
-	 *
-	 * @returns A flyweight component.
-	 */
-	export function createFlyweight<T extends FlyweightData>(schema: T): Flyweight<T> {
-		return ComponentInternalCreation.createFlyweight(schema);
-	}
 }
 
 /** Export Tina itself */
@@ -228,13 +212,10 @@ export { type World } from "./lib/ecs/world";
 export {
 	AllComponentTypes,
 	AnyComponent,
-	AnyFlyweight,
 	Component,
 	ComponentData,
 	ComponentId,
 	EntityId,
-	Flyweight,
-	FlyweightData,
 	GetComponentSchema,
 	PartialComponentToKeys,
 	TagComponent,
