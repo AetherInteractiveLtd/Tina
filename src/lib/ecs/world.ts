@@ -5,19 +5,17 @@ import Tina from "../..";
 import {
 	AllComponentTypes,
 	AnyComponent,
-	AnyFlyweight,
 	Component,
 	ComponentData,
 	ComponentId,
 	EntityId,
-	FlyweightData,
 	PartialComponentToKeys,
 	TagComponent,
 } from "../types/ecs";
 import { slice } from "../util/array-utils";
 import { Archetype } from "./collections/archetype";
 import { SparseSet } from "./collections/sparse-set";
-import { ComponentBitmask, ComponentType, Internal } from "./component";
+import { ComponentBitmask, Internal } from "./component";
 import { EntityManager } from "./entity-manager";
 import { Observer } from "./observer";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -67,16 +65,6 @@ export class World {
 	/** The world options that were passed to the constructor. */
 	public readonly options: WorldOptions;
 
-	/**
-	 * Entities that have been queued to have their component data removed from this frame.
-	 * @hidden
-	 */
-	public componentDataToRemoveLater: Array<[EntityId, Internal<AllComponentTypes>]> = [];
-	/**
-	 * Entities that have been queued to have their component data removed from last frame.
-	 * @hidden
-	 */
-	public componentDataToRemoveNow: Array<[EntityId, Internal<AllComponentTypes>]> = [];
 	/** A unique identifier for the world. */
 	public id = HttpService.GenerateGUID(false);
 	/**
@@ -119,10 +107,6 @@ export class World {
 		entityId: EntityId,
 		component: Component<T>,
 		data?: PartialComponentToKeys<T>,
-	): this;
-	public addComponent<T extends FlyweightData>(
-		entityId: EntityId,
-		component: AnyFlyweight<T>,
 	): this;
 	public addComponent<T extends ComponentData>(
 		entityId: EntityId,
@@ -184,7 +168,7 @@ export class World {
 	 *
 	 * @returns The newly created observer.
 	 */
-	public createObserver(component: AnyComponent | AnyFlyweight): Observer {
+	public createObserver(component: AnyComponent): Observer {
 		const observer = new Observer(this, component);
 		this.observers.set(component, observer);
 
@@ -242,39 +226,6 @@ export class World {
 		}
 
 		this.flush();
-	}
-
-	/**
-	 * Disables a component on an entity.
-	 *
-	 * This will keep the component on the entity, but will prevent it from
-	 * being matched by queries. This is useful when you wish to preserve the
-	 * state of a component.
-	 *
-	 * @param entityId The id of the entity to disable the component on.
-	 * @param component The component to disable.
-	 *
-	 * @returns The world instance to allow for method chaining.
-	 */
-	public disableComponent(entityId: EntityId, component: AllComponentTypes): this {
-		if (!this.has(entityId)) {
-			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
-		}
-
-		this.componentsToUpdate.add(entityId);
-
-		debug.profilebegin("World:disableComponent");
-		{
-			const componentId: number = (component as Internal<AllComponentTypes>).componentId;
-			if (
-				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
-			) {
-				this.updateArchetype(entityId, componentId);
-			}
-		}
-		debug.profileend();
-
-		return this;
 	}
 
 	/**
@@ -388,7 +339,7 @@ export class World {
 	 *
 	 * @returns true if the entity has the given component.
 	 */
-	public hasComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): boolean {
+	public hasComponent(entityId: EntityId, component: AnyComponent): boolean {
 		const componentId = (component as Internal<AllComponentTypes>).componentId;
 		return this.hasComponentInternal(this.entityManager.entities[entityId].mask, componentId);
 	}
@@ -464,16 +415,23 @@ export class World {
 	 *
 	 * @returns The world instance to allow for method chaining.
 	 */
-	public removeComponent(entityId: EntityId, component: AnyComponent | AnyFlyweight): this {
-		this.disableComponent(entityId, component);
-
-		if ((component as Internal<AllComponentTypes>).componentType !== ComponentType.Component) {
-			// Component is a Flyweight
-			return this;
+	public removeComponent(entityId: EntityId, component: AnyComponent): this {
+		if (!this.has(entityId)) {
+			throw `Entity ${entityId} does not exist in world ${tostring(this)}`;
 		}
-		// schedule data to be removed somewhere else
 
-		this.componentDataToRemoveLater.push([entityId, component as Internal<AllComponentTypes>]);
+		this.componentsToUpdate.add(entityId);
+
+		debug.profilebegin("World:removeComponent");
+		{
+			const componentId: number = (component as Internal<AllComponentTypes>).componentId;
+			if (
+				this.hasComponentInternal(this.entityManager.updateTo[entityId].mask, componentId)
+			) {
+				this.updateArchetype(entityId, componentId);
+			}
+		}
+		debug.profileend();
 
 		return this;
 	}
@@ -507,7 +465,7 @@ export class World {
 	 * @returns The world instance to allow for method chaining.
 	 */
 	public removeTag(entityId: EntityId, tag: TagComponent): this {
-		return this.disableComponent(entityId, tag);
+		return this.removeComponent(entityId, tag as unknown as AnyComponent);
 	}
 
 	/**
